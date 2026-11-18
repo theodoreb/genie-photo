@@ -1,5 +1,13 @@
 services:
+  _defaults:
+    autowire: true
+
   genie_ledger.mcp_route_subscriber:
     class: Drupal\genie_ledger\Routing\McpRouteSubscriber
+    autowire: false
     tags:
       - { name: event_subscriber }
+  Drupal\genie_ledger\Ledger: ~
+  Drupal\genie_ledger\PhotoIntake: ~
+  Drupal\genie_ledger\PhotoStore: ~
+  Drupal\genie_ledger\RevisionPublisher: ~

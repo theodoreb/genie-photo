@@ -1,6 +1,7 @@
 security:
     providers:
-        users_in_memory: { memory: null }
+        players:
+            id: App\Security\PlayerProvider
 
     firewalls:
         dev:
@@ -8,4 +9,15 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: players
+            custom_authenticators:
+                - App\Security\DrupalAuthenticator
+            entry_point: App\Security\DrupalAuthenticator
+            logout:
+                path: app_logout
+                target: app_login
+                enable_csrf: true
+
+    access_control:
+        - { path: ^/(login|oauth/callback)$, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_PLAYER }

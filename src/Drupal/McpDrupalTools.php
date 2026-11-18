@@ -7,6 +7,7 @@ namespace App\Drupal;
 use Mcp\Client;
 use Mcp\Client\Transport\HttpTransport;
 use Mcp\Exception\ExceptionInterface as McpException;
+use Mcp\Schema\Content\TextContent;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -36,10 +37,12 @@ final readonly class McpDrupalTools implements DrupalTools
             $client->disconnect();
         }
 
-        if ($result->isError || !\is_array($result->structuredContent)) {
-            throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned an error or no structured result.', $tool));
+        if ($result->isError) {
+            $text = $result->content[0] instanceof TextContent ? $result->content[0]->text : 'unknown error';
+
+            throw new DrupalToolFailed($text);
         }
 
-        return $result->structuredContent;
+        return $result->structuredContent ?? throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned no structured result.', $tool));
     }
 }

@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<header class="bar">
+    <strong>Genie</strong>
+    <span class="grow" id="status" role="status"></span>
+    <span>{{ app.user.name }}</span>
+    <form method="post" action="{{ path('app_logout') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+        <button>Sign out</button>
+    </form>
+</header>
+
+{% for message in app.flashes('error') %}
+    <p class="error">{{ message }}</p>
+{% endfor %}
+
+<main id="game"
+      data-hub-url="{{ hub_url }}"
+      data-session-url="{{ path('app_session') }}"
+      data-region-url="{{ path('app_region') }}"
+      data-region-token="{{ csrf_token('regions') }}"
+      data-session="{{ session|json_encode }}"
+      data-player="{{ app.user.uid }}">
+    {% if session.photo %}
+        <div id="stage" class="stage">
+            <img id="photo" src="{{ path('app_photo') }}" alt="The group photo" draggable="false">
+            <div id="regions"></div>
+            <div id="draft" class="region draft" hidden></div>
+        </div>
+        <form id="mark" class="bar" hidden>
+            <button name="kind" value="person">This is me</button>
+            {% if session.is_uploader %}
+                <input name="label" maxlength="40" placeholder="Object name" aria-label="Object name">
+                <button name="kind" value="object">Mark object</button>
+            {% endif %}
+        </form>
+        <p class="hint">Drag on the photo to mark your place.</p>
+    {% else %}
+        <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
+            <h1>Add the group photo</h1>
+            <p>It stays on this machine. No AI assistant receives it.</p>
+            <input type="hidden" name="_token" value="{{ csrf_token('photo') }}">
+            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+            <button>Upload</button>
+        </form>
+    {% endif %}
+</main>
+{% endblock %}

@@ -6,9 +6,14 @@ namespace Drupal\Tests\genie_ledger\Unit;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\Plugin\mcp_server\Tool\MyStatusTool;
+use Drupal\genie_ledger\RevisionPublisher;
 use Drupal\Tests\UnitTestCase;
 use Mcp\Server\ClientGateway;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -37,7 +42,10 @@ final class MyStatusToolTest extends UnitTestCase {
    * Builds the tool for a current user.
    */
   private function tool(?AccountProxyInterface $currentUser = NULL): MyStatusTool {
-    return new MyStatusTool([], 'my_status', NULL, $currentUser ?? $this->createStub(AccountProxyInterface::class));
+    $keyValue = $this->createStub(KeyValueFactoryInterface::class);
+    $keyValue->method('get')->willReturn($this->createStub(KeyValueStoreInterface::class));
+    $ledger = new Ledger($keyValue, $this->createStub(LockBackendInterface::class), new RevisionPublisher());
+    return new MyStatusTool([], 'my_status', NULL, $currentUser ?? $this->createStub(AccountProxyInterface::class), $ledger);
   }
 
   /**
