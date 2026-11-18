@@ -1,0 +1,26 @@
+#!/bin/sh
+# Clones the current commit into an empty folder, starts it, and runs the wish smoke test.
+# Ports 7225 and 8000 must be free.
+set -eu
+source_repo="$(cd "$(dirname "$0")/.." && pwd)"
+target="$(mktemp -d)/genie-photo"
+git clone --quiet --branch "$(git -C "$source_repo" branch --show-current)" "$source_repo" "$target"
+cd "$target"
+
+started=$(date +%s)
+bin/start >"$target.log" 2>&1 &
+start_pid=$!
+stop() {
+    kill "$start_pid" 2>/dev/null || true
+    (cd "$target/drupal" && DRUPACK_NO_UPDATE_CHECK=1 ./drupack stop . >/dev/null 2>&1) || true
+}
+trap stop EXIT
+
+until curl -fs -o /dev/null http://127.0.0.1:8000/login; do
+    kill -0 "$start_pid" 2>/dev/null || { tail -20 "$target.log" >&2; exit 1; }
+    [ $(($(date +%s) - started)) -lt 300 ] || { echo 'Not ready after 300 seconds.' >&2; exit 1; }
+    sleep 2
+done
+
+bin/smoke-wish alice 'hide my face'
+echo "ready and working after $(($(date +%s) - started)) seconds"

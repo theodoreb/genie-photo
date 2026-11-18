@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f020ba412fb680275be83f4cfb46090",
+    "content-hash": "30abd9b0394fa3c1a29e6a4bc4de9058",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1788,6 +1788,49 @@
                 "source": "https://github.com/drupal/core-recommended/tree/11.4.12"
             },
             "time": "2026-11-06T22:05:10+00:00"
+        },
+        {
+            "name": "drupal/drupack",
+            "version": "1.0.0-rc4",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/drupack.git",
+                "reference": "f64af24e0dfbb883a9e2eca3a426bcc535b7278a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://git.drupalcode.org/api/v4/projects/project%2Fdrupack/repository/archive.zip?sha=f64af24e0dfbb883a9e2eca3a426bcc535b7278a",
+                "reference": "f64af24e0dfbb883a9e2eca3a426bcc535b7278a",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^2",
+                "composer-runtime-api": "^2.2",
+                "composer/semver": "^3",
+                "php": ">=8.1"
+            },
+            "bin": [
+                "composer/drupack-install"
+            ],
+            "type": "composer-plugin",
+            "extra": {
+                "class": "Drupal\\Drupack\\Composer\\Plugin"
+            },
+            "autoload": {
+                "psr-4": {
+                    "Drupal\\Drupack\\Composer\\": "composer/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Installs drupack, which serves a Drupal project with its own PHP and web server, into the project root.",
+            "homepage": "https://github.com/tresbientech/drupack",
+            "support": {
+                "source": "https://git.drupalcode.org/project/drupack/-/tree/1.0.0-rc4"
+            },
+            "time": "2026-11-18T04:23:59+00:00"
         },
         {
             "name": "drupal/key",
@@ -16038,6 +16081,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "drupal/ai": 20,
+        "drupal/drupack": 5,
         "drupal/mcp_server": 10,
         "drupal/mcp_server_oauth": 15
     },

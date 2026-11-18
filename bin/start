@@ -1,0 +1,28 @@
+#!/bin/sh
+# Installs what is missing, starts Drupal and serves the web view. Ctrl-C stops the web view.
+set -eu
+cd "$(dirname "$0")/.."
+
+for tool in php composer curl; do
+    command -v "$tool" >/dev/null || { echo "This project needs $tool." >&2; exit 1; }
+done
+
+composer install --no-interaction --no-progress
+# Drupal runs on the PHP inside Drupack, so this machine's PHP extensions do not matter to it.
+composer --working-dir=drupal install --no-interaction --no-progress --ignore-platform-reqs
+
+if [ -f drupal/web/sites/default/settings.php ]; then
+    (cd drupal && DRUPACK_NO_UPDATE_CHECK=1 ./drupack start . --listen 127.0.0.1:7225 --yes </dev/null)
+else
+    bin/dev-drupal
+fi
+
+# Drupack serves HTTPS only on a machine that trusts its local root.
+if curl -fs -o /dev/null https://127.0.0.1:7225/.well-known/oauth-authorization-server; then
+    echo 'DRUPAL_URL=https://127.0.0.1:7225' >.env.local
+else
+    echo 'DRUPAL_URL=http://127.0.0.1:7225' >.env.local
+fi
+
+echo 'Open http://127.0.0.1:8000 and sign in as alice, bob, carol or dan, password genie.'
+exec bin/dev-web

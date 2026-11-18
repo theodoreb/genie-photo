@@ -1,0 +1,10 @@
+#!/bin/sh
+# Fails when Drupal or the web view listens on anything but loopback.
+set -eu
+listeners="$(ss -ltnH '( sport = :7225 or sport = :8000 )' | awk '{print $4}')"
+[ -n "$listeners" ] || { echo 'Nothing listens on 7225 or 8000.' >&2; exit 1; }
+if echo "$listeners" | grep -qvE '^(127\.0\.0\.1|\[::1\]):'; then
+    echo "Listening beyond loopback: $listeners" >&2
+    exit 1
+fi
+echo "$listeners"
