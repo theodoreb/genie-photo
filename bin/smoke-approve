@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+// Critical path of approval: all four players approve the same picture, a new wish
+// voids the approvals, and an assistant cannot use the web view's approval tool.
+
+declare(strict_types=1);
+
+use App\Drupal\DrupalToolFailed;
+use App\Tests\Smoke\SmokeSite;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$site = new SmokeSite();
+$tokens = [];
+foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
+    $tokens[$player] = $site->signInToWebView($player);
+    if (0 === $index) {
+        $site->uploadPhoto($tokens[$player]);
+    }
+    $site->markPlace($tokens[$player], 100 + 350 * $index);
+}
+
+$approveAll = static function () use ($site, $tokens): array {
+    $hash = $site->tools->call($tokens['alice'], 'session_get')['export']['hash'];
+    foreach ($tokens as $token) {
+        $state = $site->tools->call($token, 'export_approve', ['hash' => $hash]);
+    }
+
+    return $state;
+};
+
+$assistant = $site->signIn('alice');
+try {
+    $site->tools->call($assistant, 'export_approve', ['hash' => 'x']);
+    exit("An assistant reached the web view's approval tool.\n");
+} catch (DrupalToolFailed) {
+}
+
+if (!$approveAll()['final']) {
+    exit("Four approvals did not make the picture final.\n");
+}
+$site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'hide my face']);
+if ($site->tools->call($tokens['alice'], 'session_get')['export']['final']) {
+    exit("A new wish did not void the approvals.\n");
+}
+
+$state = $approveAll();
+if (!$state['final']) {
+    exit("The new picture did not become final.\n");
+}
+echo $state['hash'], "\n";

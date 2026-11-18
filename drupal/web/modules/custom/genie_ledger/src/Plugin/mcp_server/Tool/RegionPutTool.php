@@ -56,6 +56,7 @@ final class RegionPutTool extends LedgerToolBase {
       $box = $this->box($arguments, $session);
       if ($arguments['kind'] === 'person') {
         $this->assertOwnPlace($box, $uid, $session);
+        $session->players[$uid] = $name;
         $session->regions["person-$uid"] = ['kind' => 'person', 'owner' => $uid, 'label' => $name] + $box;
         return;
       }

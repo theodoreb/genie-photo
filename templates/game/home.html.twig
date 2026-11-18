@@ -21,6 +21,7 @@
       data-frame-url="{{ path('app_frame', {revision: 0})|replace({'/0': '/'}) }}"
       data-region-url="{{ path('app_region') }}"
       data-protect-url="{{ path('app_protect') }}"
+      data-approve-url="{{ path('app_approve') }}"
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
       data-player="{{ app.user.uid }}">
@@ -31,6 +32,11 @@
                 <img id="frame" class="frame" alt="The photo as every wish leaves it">
                 <p id="blocked" class="hint" hidden></p>
                 <p class="hint">Ask your assistant to make a wish, such as "hide my face".</p>
+                <div class="bar approval">
+                    <button id="approve" type="button" hidden>I approve this picture</button>
+                    <a id="download" download="genie-photo.png" hidden>Download the final photo</a>
+                    <span id="approval"></span>
+                </div>
             </section>
             <section>
                 <h2>Mark your place</h2>

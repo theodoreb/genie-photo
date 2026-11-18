@@ -39,17 +39,22 @@ final class Ledger {
   }
 
   /**
-   * Applies a change under the lock, raises the revision and announces it.
+   * Applies a change under the lock and announces it.
    *
    * @param callable(\Drupal\genie_ledger\Session): void $change
    *   Changes the session. An exception leaves the stored session untouched.
+   * @param bool $changesPicture
+   *   TRUE raises the revision and voids every approval.
    */
-  public function write(callable $change): Session {
+  public function write(callable $change, bool $changesPicture = TRUE): Session {
     $this->acquire();
     try {
       $session = $this->read();
       $change($session);
-      $session->revision++;
+      if ($changesPicture) {
+        $session->revision++;
+        $session->approvals = [];
+      }
       $this->store->set(self::KEY, $session);
     }
     finally {

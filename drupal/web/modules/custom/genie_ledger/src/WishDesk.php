@@ -21,6 +21,7 @@ final class WishDesk {
     private readonly Ledger $ledger,
     private readonly Framer $framer,
     private readonly WishInterpreter $interpreter,
+    private readonly Exports $exports,
   ) {}
 
   /**
@@ -95,6 +96,33 @@ final class WishDesk {
   }
 
   /**
+   * Records a player's approval of the picture with this hash.
+   *
+   * @return array<string, mixed>
+   *   The state of the export.
+   *
+   * @throws \InvalidArgumentException
+   *   When the player takes no part or the picture has changed.
+   */
+  public function approve(int $uid, string $hash): array {
+    $seen = $this->ledger->read();
+    $export = $this->exports->current($seen);
+    if (!isset($seen->players[$uid])) {
+      throw new \InvalidArgumentException('Mark your place in the photo first.');
+    }
+    if ($export === NULL || !hash_equals($export->hash, $hash)) {
+      throw new \InvalidArgumentException('The picture has changed. Look at it again.');
+    }
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $hash, $seen): void {
+      if ($session->revision !== $seen->revision) {
+        throw new \InvalidArgumentException('The picture has changed. Look at it again.');
+      }
+      $session->approvals[$uid] = $hash;
+    }, FALSE);
+    return $this->exportState($session, $uid, $export);
+  }
+
+  /**
    * Describes the session for one player, without image data.
    *
    * @return array<string, mixed>
@@ -102,6 +130,7 @@ final class WishDesk {
    */
   public function view(int $uid): array {
     $session = $this->ledger->read();
+    $export = $session->photo === NULL ? NULL : $this->exports->current($session);
     $regions = [];
     foreach ($session->regions as $id => $region) {
       $regions[] = $region + [
@@ -118,6 +147,27 @@ final class WishDesk {
       'wish' => $session->wishes[$uid] ?? Operation::Show->value,
       'centered' => isset($session->centered[$uid]),
       'frame' => $session->photo === NULL ? NULL : $this->describe($this->framer->frame($session)),
+      'export' => $export === NULL ? NULL : $this->exportState($session, $uid, $export),
+    ];
+  }
+
+  /**
+   * Describes who has approved the picture.
+   *
+   * @return array<string, mixed>
+   *   The hash, the names still awaited, and whether the picture is final.
+   */
+  private function exportState(Session $session, int $uid, Export $export): array {
+    $waiting = array_filter(
+      $session->players,
+      static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $export->hash,
+      ARRAY_FILTER_USE_KEY,
+    );
+    return [
+      'hash' => $export->hash,
+      'approved_by_you' => ($session->approvals[$uid] ?? NULL) === $export->hash,
+      'waiting_for' => array_values($waiting),
+      'final' => $session->players !== [] && $waiting === [],
     ];
   }
 

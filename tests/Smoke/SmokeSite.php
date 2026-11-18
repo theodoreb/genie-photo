@@ -39,6 +39,14 @@ final readonly class SmokeSite
         return $this->players->signIn($player);
     }
 
+    /**
+     * Signs in the way the web view does, which unlocks its approval tool.
+     */
+    public function signInToWebView(string $player): string
+    {
+        return (new PlayerSession($this->drupalUrl.'/mcp', $_ENV['PUBLIC_URL'].'/oauth/callback'))->signIn($player);
+    }
+
     public function uploadPhoto(string $token): void
     {
         $image = imagecreatetruecolor(2000, 1000);

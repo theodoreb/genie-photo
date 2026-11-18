@@ -68,4 +68,18 @@ final class Session {
    */
   public array $stickers = [];
 
+  /**
+   * Who takes part: the uploader and everyone with a place, by account id.
+   *
+   * @var array<int, string>
+   */
+  public array $players = [];
+
+  /**
+   * The picture hash each player approved at this revision, by account id.
+   *
+   * @var array<int, string>
+   */
+  public array $approvals = [];
+
 }

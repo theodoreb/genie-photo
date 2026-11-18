@@ -8,6 +8,7 @@ services:
     tags:
       - { name: event_subscriber }
   Drupal\genie_ledger\Darkroom: ~
+  Drupal\genie_ledger\Exports: ~
   Drupal\genie_ledger\Framer: ~
   Drupal\genie_ledger\KeywordInterpreter: ~
   Drupal\genie_ledger\Ledger: ~

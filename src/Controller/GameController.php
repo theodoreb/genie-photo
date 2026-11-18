@@ -80,6 +80,19 @@ final class GameController extends AbstractController
         return $this->redirectToRoute('app_home');
     }
 
+    #[Route('/approve', name: 'app_approve', methods: ['POST'])]
+    #[IsCsrfTokenValid('regions', tokenKey: '_token')]
+    public function approve(Request $request): JsonResponse
+    {
+        try {
+            return $this->json($this->tools->call($this->tokens->accessToken(), 'export_approve', [
+                'hash' => $request->request->getString('hash'),
+            ]));
+        } catch (DrupalToolFailed $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
     #[Route('/objects/protect', name: 'app_protect', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function protect(Request $request): JsonResponse

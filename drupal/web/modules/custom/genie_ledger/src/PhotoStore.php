@@ -34,21 +34,24 @@ final class PhotoStore {
   }
 
   /**
-   * Returns the rendered frame of a revision, when one is stored.
+   * Returns the stored picture of a revision, when there is one.
    */
-  public function frame(int $revision): ?string {
-    $uri = self::FRAMES . "/$revision.png";
-    return file_exists($uri) ? file_get_contents($uri) : NULL;
+  public function export(int $revision): ?Export {
+    $base = self::FRAMES . "/$revision";
+    return file_exists("$base.sha256") ? new Export(file_get_contents("$base.png"), file_get_contents("$base.sha256")) : NULL;
   }
 
   /**
-   * Stores a rendered frame in place of the frames of older revisions.
+   * Stores a picture in place of the pictures of older revisions.
    */
-  public function saveFrame(int $revision, string $png): void {
+  public function saveExport(int $revision, Export $export): void {
     $this->fileSystem->deleteRecursive(self::FRAMES);
     $directory = self::FRAMES;
     $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
-    $this->fileSystem->saveData($png, self::FRAMES . "/$revision.png", FileExists::Replace);
+    $base = self::FRAMES . "/$revision";
+    $this->fileSystem->saveData($export->png, "$base.png", FileExists::Replace);
+    // The hash goes last, because its presence marks a complete pair.
+    $this->fileSystem->saveData($export->hash, "$base.sha256", FileExists::Replace);
   }
 
   /**

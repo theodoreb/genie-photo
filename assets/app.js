@@ -10,6 +10,9 @@ const status = document.querySelector('#status');
 const frame = document.querySelector('#frame');
 const blocked = document.querySelector('#blocked');
 const objects = document.querySelector('#objects');
+const approve = document.querySelector('#approve');
+const approval = document.querySelector('#approval');
+const download = document.querySelector('#download');
 
 let session = JSON.parse(game.dataset.session);
 let box = null;
@@ -38,6 +41,7 @@ function render() {
     } else {
         blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
+    renderApproval();
     objects.replaceChildren(...session.regions.filter((region) => region.kind === 'object').map(objectRow));
     regions.replaceChildren(...session.regions.map((region) => {
         const element = document.createElement('div');
@@ -47,6 +51,20 @@ function render() {
         place(element, region);
         return element;
     }));
+}
+
+function renderApproval() {
+    const { export: picture } = session;
+    approve.hidden = !picture || picture.approved_by_you || picture.final;
+    download.hidden = !picture?.final;
+    if (!picture) {
+        approval.textContent = '';
+        return;
+    }
+    download.href = game.dataset.frameUrl + session.revision;
+    approval.textContent = picture.final
+        ? 'Everyone approved this picture.'
+        : `Waiting for: ${picture.waiting_for.join(', ')}`;
 }
 
 function objectRow(region) {
@@ -145,6 +163,11 @@ async function sendRegion(event) {
 }
 
 if (stage) {
+    approve.addEventListener('click', () => {
+        const body = new FormData();
+        body.set('hash', session.export.hash);
+        post(game.dataset.approveUrl, body);
+    });
     trackDrag();
     mark.addEventListener('submit', sendRegion);
 }

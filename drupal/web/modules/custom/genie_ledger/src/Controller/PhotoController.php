@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\genie_ledger\Darkroom;
-use Drupal\genie_ledger\Frame;
-use Drupal\genie_ledger\Framer;
+use Drupal\genie_ledger\Exports;
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PhotoIntake;
 use Drupal\genie_ledger\PhotoStore;
@@ -32,8 +30,7 @@ final class PhotoController extends ControllerBase {
     private readonly Ledger $ledger,
     private readonly PhotoIntake $intake,
     private readonly PhotoStore $photos,
-    private readonly Framer $framer,
-    private readonly Darkroom $darkroom,
+    private readonly Exports $exports,
   ) {}
 
   /**
@@ -52,12 +49,14 @@ final class PhotoController extends ControllerBase {
     }
 
     $uploader = (int) $this->currentUser()->id();
-    $session = $this->ledger->write(function (Session $session) use ($photo, $uploader): void {
+    $name = $this->currentUser()->getAccountName();
+    $session = $this->ledger->write(function (Session $session) use ($photo, $uploader, $name): void {
       if ($session->photo !== NULL) {
         throw new ConflictHttpException('This session already has its photo.');
       }
       $this->photos->save($photo['jpeg']);
       $session->uploader = $uploader;
+      $session->players[$uploader] = $name;
       $session->photo = ['width' => $photo['width'], 'height' => $photo['height']];
     });
 
@@ -85,16 +84,11 @@ final class PhotoController extends ControllerBase {
     if ($session->photo === NULL || $revision !== $session->revision) {
       throw new NotFoundHttpException();
     }
-    $frame = $this->framer->frame($session);
-    if (!$frame instanceof Frame) {
+    $export = $this->exports->current($session);
+    if ($export === NULL) {
       throw new ConflictHttpException('No frame fits every wish.');
     }
-    $png = $this->photos->frame($revision);
-    if ($png === NULL) {
-      $png = $this->darkroom->render($this->photos->read(), $session, $frame);
-      $this->photos->saveFrame($revision, $png);
-    }
-    return new Response($png, 200, [
+    return new Response($export->png, 200, [
       'Content-Type' => 'image/png',
       'Cache-Control' => 'private, no-store',
     ]);

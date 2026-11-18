@@ -14,12 +14,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class PlayerSession
 {
-    private const REDIRECT_URI = 'http://127.0.0.1:9/callback';
-
     private HttpClientInterface $http;
 
-    public function __construct(private readonly string $mcpEndpoint)
-    {
+    public function __construct(
+        private readonly string $mcpEndpoint,
+        private readonly string $redirectUri = 'http://127.0.0.1:9/callback',
+    ) {
         $this->http = HttpClient::create(['timeout' => 60]);
     }
 
@@ -34,7 +34,7 @@ final class PlayerSession
             'grant_type' => 'authorization_code',
             'client_id' => $clientId,
             'code' => $code,
-            'redirect_uri' => self::REDIRECT_URI,
+            'redirect_uri' => $this->redirectUri,
             'code_verifier' => $verifier,
         ]])->toArray()['access_token'];
     }
@@ -55,7 +55,7 @@ final class PlayerSession
     {
         return $this->http->request('POST', $endpoint, ['json' => [
             'client_name' => 'genie smoke test',
-            'redirect_uris' => [self::REDIRECT_URI],
+            'redirect_uris' => [$this->redirectUri],
             'grant_types' => ['authorization_code', 'refresh_token'],
             'response_types' => ['code'],
             'token_endpoint_auth_method' => 'none',
@@ -72,7 +72,7 @@ final class PlayerSession
         $browser->request('GET', $endpoint.'?'.http_build_query([
             'response_type' => 'code',
             'client_id' => $clientId,
-            'redirect_uri' => self::REDIRECT_URI,
+            'redirect_uri' => $this->redirectUri,
             'state' => $state,
             'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
             'code_challenge_method' => 'S256',
@@ -80,7 +80,7 @@ final class PlayerSession
 
         for ($step = 0; $step < 10; ++$step) {
             $location = $browser->getInternalResponse()->getHeader('Location');
-            if (null !== $location && str_starts_with($location, self::REDIRECT_URI)) {
+            if (null !== $location && str_starts_with($location, $this->redirectUri)) {
                 parse_str((string) parse_url($location, \PHP_URL_QUERY), $query);
                 if (!isset($query['code'])) {
                     throw new \RuntimeException('Authorization refused: '.$location);
