@@ -6,6 +6,7 @@ namespace Drupal\genie_ledger\Drush\Commands;
 
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PhotoStore;
+use Drupal\genie_ledger\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
@@ -20,6 +21,7 @@ final class GenieCommands extends DrushCommands {
   public function __construct(
     private readonly Ledger $ledger,
     private readonly PhotoStore $photos,
+    private readonly WishInterpreter $interpreter,
   ) {
     parent::__construct();
   }
@@ -32,6 +34,16 @@ final class GenieCommands extends DrushCommands {
     $this->ledger->reset();
     $this->photos->delete();
     $this->logger()->success('The genie session is empty.');
+  }
+
+  /**
+   * Shows how the genie reads a wish, and what understood it.
+   */
+  #[CLI\Command(name: 'genie:interpret')]
+  #[CLI\Argument(name: 'wish', description: 'The words of the wish.')]
+  public function interpret(string $wish): void {
+    $result = $this->interpreter->interpret($wish, []);
+    $this->output()->writeln($result === NULL ? 'unclear' : "{$result->operation->value} ({$result->source})");
   }
 
 }

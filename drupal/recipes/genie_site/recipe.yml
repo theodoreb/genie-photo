@@ -8,6 +8,7 @@ install:
   - simple_oauth_pkce
   - simple_oauth_server_metadata
   - simple_oauth_client_registration
+  - ai
   - genie_ledger
 config:
   import:
@@ -17,6 +18,8 @@ config:
     simple_oauth_client_registration: '*'
     mcp_server: '*'
     mcp_server_oauth: '*'
+    ai: '*'
+    key: '*'
     genie_ledger: '*'
   actions:
     simple_oauth.settings:

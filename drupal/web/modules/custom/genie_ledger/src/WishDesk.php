@@ -20,7 +20,7 @@ final class WishDesk {
   public function __construct(
     private readonly Ledger $ledger,
     private readonly Framer $framer,
-    private readonly KeywordInterpreter $interpreter,
+    private readonly WishInterpreter $interpreter,
   ) {}
 
   /**

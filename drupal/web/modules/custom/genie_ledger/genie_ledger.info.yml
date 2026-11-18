@@ -4,6 +4,7 @@ description: 'Stores the genie photo session and exposes it to Symfony over MCP.
 core_version_requirement: ^11.4
 package: Genie
 dependencies:
+  - ai:ai
   - mcp_server:mcp_server
   - mcp_server_oauth:mcp_server_oauth
   - simple_oauth:simple_oauth
