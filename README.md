@@ -29,10 +29,11 @@ Open http://127.0.0.1:8000 and sign in as `alice`, `bob`, `carol` or `dan`. The 
 
 ## Connect an assistant
 
-Add this MCP server to your assistant, which then opens the Drupal sign-in page:
+Add this MCP server to your assistant, which then opens the Drupal sign-in page. With Claude Code:
 
-```text
-http://127.0.0.1:7225/mcp
+```sh
+claude mcp add --transport http genie http://127.0.0.1:7225/mcp
+claude mcp login genie
 ```
 
 Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local root. `.env.local` holds the address in use.
@@ -48,7 +49,7 @@ Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local 
 
 Marking places, protecting objects and handling proposed boxes stay on the web view.
 
-The MCP flow, elicitation included, was tested with the PHP MCP SDK client.
+Sign-in, wishes and the approval prompt were tested with Claude Code 2.1, on HTTP and HTTPS. Mark your place on the web view before making a wish.
 
 ## Optional local models
 
