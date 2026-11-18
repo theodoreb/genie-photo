@@ -297,6 +297,7 @@ final class WishDesk {
         'id' => $id,
         'protected' => isset($session->protected[$id]),
         'suggested_by' => $session->suggestions[$id] ?? [],
+        'has_sticker' => isset($session->stickers[$region['owner']]) && $region['kind'] === 'person',
       ];
     }
     return [
