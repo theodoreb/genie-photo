@@ -26,5 +26,6 @@ bin/smoke-wish alice 'hide my face'
 echo "ready and working after $(($(date +%s) - started)) seconds"
 
 stop
+trap - EXIT
 chmod -R u+w "$target"
 rm -rf "$(dirname "$target")"
