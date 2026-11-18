@@ -13,6 +13,11 @@ final readonly class Sticker {
   public const EMPTY = '.';
   public const ORIGINAL = '*';
   public const MAX_COLORS = 16;
+  /**
+   * Longest row or row list accepted before it is cut to size.
+   */
+  private const MAX_INPUT = 64;
+
   public const MAX_BLUR = 8;
 
   /**
@@ -32,7 +37,10 @@ final readonly class Sticker {
   ) {}
 
   /**
-   * Validates what a client sent.
+   * Validates what a client sent and fits it to the grid.
+   *
+   * Assistants miscount long rows, so short input is padded with empty cells
+   * and extra cells are cut.
    *
    * @param mixed $rows
    *   The rows.
@@ -45,8 +53,8 @@ final readonly class Sticker {
    *   When a value breaks the sticker format.
    */
   public static function fromInput(mixed $rows, mixed $palette, mixed $blur): self {
-    if (!is_array($rows) || !array_is_list($rows) || count($rows) !== self::SIZE) {
-      throw new \InvalidArgumentException('A sticker has 32 rows.');
+    if (!is_array($rows) || !array_is_list($rows) || count($rows) > self::MAX_INPUT) {
+      throw new \InvalidArgumentException('A sticker is a list of 32 rows.');
     }
     if (!is_array($palette) || !array_is_list($palette) || count($palette) > self::MAX_COLORS) {
       throw new \InvalidArgumentException('A palette is a list of at most 16 colors.');
@@ -59,17 +67,21 @@ final readonly class Sticker {
         throw new \InvalidArgumentException('Palette colors look like #ff8800.');
       }
     }
-    foreach ($rows as $row) {
-      if (!is_string($row) || !preg_match('/^[.*0-9a-f]{32}$/D', $row)) {
-        throw new \InvalidArgumentException('Each row has 32 cells: ".", "*" or a palette digit from 0 to f.');
+    $grid = array_fill(0, self::SIZE, str_repeat(self::EMPTY, self::SIZE));
+    foreach ($rows as $index => $row) {
+      if (!is_string($row) || !preg_match('/^[.*0-9a-f]{0,' . self::MAX_INPUT . '}$/D', $row)) {
+        throw new \InvalidArgumentException('Rows hold ".", "*" or a palette digit from 0 to f.');
       }
       foreach (str_split($row) as $cell) {
         if (ctype_xdigit($cell) && hexdec($cell) >= count($palette)) {
           throw new \InvalidArgumentException("Cell $cell has no color in the palette.");
         }
       }
+      if ($index < self::SIZE) {
+        $grid[$index] = str_pad(substr($row, 0, self::SIZE), self::SIZE, self::EMPTY);
+      }
     }
-    return new self($rows, $palette, $blur);
+    return new self($grid, $palette, $blur);
   }
 
 }
