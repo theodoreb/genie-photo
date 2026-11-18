@@ -134,6 +134,9 @@ final class Darkroom {
   /**
    * Lists the non-empty cells that cover at least one pixel of the region.
    *
+   * Cells stay square, and the sticker sits at the top of a tall region, where
+   * a standing person's head is.
+   *
    * @param array{width: int, height: int} $region
    *   The player's region.
    * @param \Drupal\genie_ledger\Sticker $sticker
@@ -143,14 +146,16 @@ final class Darkroom {
    *   Cell value, then left, top, width and height inside the region.
    */
   private function cells(array $region, Sticker $sticker): \Generator {
+    $side = min($region['width'], $region['height']);
+    $margin = intdiv($region['width'] - $side, 2);
     foreach ($sticker->rows as $rowIndex => $row) {
-      $top = intdiv($rowIndex * $region['height'], Sticker::SIZE);
-      $height = intdiv(($rowIndex + 1) * $region['height'], Sticker::SIZE) - $top;
+      $top = intdiv($rowIndex * $side, Sticker::SIZE);
+      $height = intdiv(($rowIndex + 1) * $side, Sticker::SIZE) - $top;
       foreach (str_split($row) as $columnIndex => $cell) {
-        $left = intdiv($columnIndex * $region['width'], Sticker::SIZE);
-        $width = intdiv(($columnIndex + 1) * $region['width'], Sticker::SIZE) - $left;
+        $left = intdiv($columnIndex * $side, Sticker::SIZE);
+        $width = intdiv(($columnIndex + 1) * $side, Sticker::SIZE) - $left;
         if ($cell !== Sticker::EMPTY && $width > 0 && $height > 0) {
-          yield [$cell, $left, $top, $width, $height];
+          yield [$cell, $margin + $left, $top, $width, $height];
         }
       }
     }

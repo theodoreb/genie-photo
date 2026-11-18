@@ -16,7 +16,7 @@ use Mcp\Server\ClientGateway;
 #[Tool(
   id: 'set_sticker',
   label: new TranslatableMarkup('Set my sticker'),
-  description: new TranslatableMarkup('Draws a 32 by 32 pixel-art sticker over your place in the shared photo. Each row is 32 characters: "." leaves the photo untouched, "*" keeps the photo pixels, and a hex digit picks a palette color. Blur from 0 to 8 applies to every non-empty cell. A new sticker replaces the earlier one.'),
+  description: new TranslatableMarkup('Draws a 32 by 32 pixel-art sticker on your head in the shared photo. It is square, as wide as your place and starts at the top of it. You never see the photo, so you draw blind. Each row is 32 characters: "." leaves the photo untouched, "*" keeps the photo pixels, and a hex digit picks a palette color. Blur from 0 to 8 applies to every non-empty cell. A new sticker replaces the earlier one.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [
