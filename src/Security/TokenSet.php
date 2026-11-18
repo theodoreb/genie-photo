@@ -10,7 +10,6 @@ namespace App\Security;
 final readonly class TokenSet
 {
     public function __construct(
-        public string $clientId,
         public string $accessToken,
         public string $refreshToken,
         public int $expiresAt,

@@ -29,11 +29,11 @@ final class BoxProposerTest extends UnitTestCase {
    * Boxes outside the image are dropped and the others are scaled.
    */
   public function testBoxesAreScaledAndChecked(): void {
-    $good = ['kind' => 'person', 'label' => 'a', 'x' => 500, 'y' => 0, 'width' => 100, 'height' => 500];
+    $good = ['kind' => 'person', 'x' => 500, 'y' => 0, 'width' => 100, 'height' => 500];
     $outside = ['x' => 950] + $good;
 
     $this->assertSame(
-      [['kind' => 'person', 'label' => 'a', 'x' => 800, 'y' => 0, 'width' => 160, 'height' => 400]],
+      [['kind' => 'person', 'x' => 800, 'y' => 0, 'width' => 160, 'height' => 400]],
       BoxProposer::toPixels([$good, $outside, 'nonsense'], 1600, 800),
     );
   }

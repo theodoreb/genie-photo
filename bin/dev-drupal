@@ -1,5 +1,5 @@
 #!/bin/sh
-# Reinstalls the development Drupal site from its recipe and serves it on 7225.
+# Reinstalls the Drupal site from its recipe and serves it on 7225. bin/start then sets up the web view's client.
 set -eu
 cd "$(dirname "$0")/../drupal"
 export DRUPACK_NO_UPDATE_CHECK=1
@@ -13,4 +13,5 @@ echo "require dirname(DRUPAL_ROOT) . '/genie.php';" >> web/sites/default/setting
 mkdir -p private/files
 ./drupack drush recipe ../recipes/genie_demo -y >/dev/null
 ./drupack drush cache:rebuild >/dev/null
+touch private/.installed
 ./drupack start . --listen 127.0.0.1:7225 --yes </dev/null

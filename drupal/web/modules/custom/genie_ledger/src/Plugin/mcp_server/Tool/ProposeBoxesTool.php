@@ -21,7 +21,7 @@ use Mcp\Server\ClientGateway;
   idempotent: FALSE,
   openWorld: FALSE,
 )]
-final class ProposeBoxesTool extends LedgerToolBase {
+final class ProposeBoxesTool extends WebViewToolBase {
 
   /**
    * {@inheritdoc}

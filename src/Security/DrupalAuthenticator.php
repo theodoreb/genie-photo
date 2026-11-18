@@ -52,7 +52,7 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
         }
 
         try {
-            $this->tokens = $this->oauth->exchange($pending['clientId'], $code, $pending['verifier']);
+            $this->tokens = $this->oauth->exchange($code, $pending['verifier']);
             $status = $this->tools->call($this->tokens->accessToken, 'my_status');
         } catch (HttpException|DrupalToolFailed $e) {
             throw new CustomUserMessageAuthenticationException('Drupal did not accept the sign-in.', previous: $e);

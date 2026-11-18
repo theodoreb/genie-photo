@@ -51,6 +51,7 @@ final class Ledger {
     try {
       $session = $this->read();
       $change($session);
+      $session->update++;
       if ($changesPicture) {
         $session->revision++;
         $session->approvals = [];

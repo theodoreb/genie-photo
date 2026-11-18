@@ -22,16 +22,16 @@ use Mcp\Server\ClientGateway;
     'properties' => [
       'rows' => [
         'type' => 'array',
-        'items' => ['type' => 'string', 'minLength' => 32, 'maxLength' => 32],
-        'minItems' => 32,
-        'maxItems' => 32,
+        'items' => ['type' => 'string', 'minLength' => Sticker::SIZE, 'maxLength' => Sticker::SIZE],
+        'minItems' => Sticker::SIZE,
+        'maxItems' => Sticker::SIZE,
       ],
       'palette' => [
         'type' => 'array',
         'items' => ['type' => 'string', 'description' => 'A color such as #ff8800.'],
-        'maxItems' => 16,
+        'maxItems' => Sticker::MAX_COLORS,
       ],
-      'blur' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 8],
+      'blur' => ['type' => 'integer', 'minimum' => 0, 'maximum' => Sticker::MAX_BLUR],
     ],
     'required' => ['rows', 'palette', 'blur'],
   ],

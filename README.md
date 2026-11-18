@@ -41,13 +41,12 @@ Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local 
 |---|---|
 | `my_status` | Names the signed-in player |
 | `session_get` | Describes the session, without image data |
-| `region_put` | Marks your place, or an object for the uploader |
 | `make_wish` | Sends a wish to the genie |
-| `protect_set` | Protects or releases an object, for the uploader |
 | `set_sticker` | Places your 32 by 32 pixel sticker |
-| `propose_boxes`, `proposal_dismiss` | Asks the local model for boxes, for the uploader |
-| `wait_for_update` | Waits up to 25 seconds for a change |
+| `wait_for_update` | Waits up to 25 seconds for a change, approvals included |
 | `approve_export` | Asks you to approve, through MCP elicitation |
+
+Marking places, protecting objects and handling proposed boxes stay on the web view.
 
 The MCP flow, elicitation included, was tested with the PHP MCP SDK client.
 
@@ -68,7 +67,7 @@ ollama pull llava
 - Drupal in `drupal/` holds the rules, in the module `genie_ledger`. Drupal's `mcp_server` module serves assistants directly.
 - Drupal AI runs the local models on Symfony AI's platform: `WishInterpreter.php` and `BoxProposer.php`.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes.
-- Pixels travel over HTTP routes that accept only the web view's token.
+- Pixels travel over HTTP routes that accept only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Checks
 

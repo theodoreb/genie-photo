@@ -17,6 +17,18 @@ final class WishDesk {
     'stop_center' => 'Granted, %s. You no longer need the middle.',
   ];
 
+  /**
+   * Largest share of the photo one person's region may take.
+   */
+  private const MAX_PERSON_SHARE = 0.25;
+
+  /**
+   * Largest share of another box a new box may overlap and leave it standing.
+   */
+  private const MAX_OVERLAP_SHARE = 0.5;
+
+  private const MAX_LABEL = 40;
+
   public function __construct(
     private readonly Ledger $ledger,
     private readonly Framer $framer,
@@ -118,10 +130,141 @@ final class WishDesk {
     $session = $this->ledger->write(static function (Session $session) use ($boxes): void {
       $session->proposals = [];
       foreach ($boxes as $index => $box) {
-        $session->proposals["proposal-$index"] = $box;
+        $claimed = array_filter($session->regions, static fn (array $region): bool => self::claims($region, $box));
+        if ($claimed === []) {
+          $session->proposals["proposal-$index"] = $box;
+        }
       }
     });
-    return ['available' => TRUE, 'count' => count($boxes), 'revision' => $session->revision];
+    return ['available' => TRUE, 'count' => count($session->proposals), 'revision' => $session->revision];
+  }
+
+  /**
+   * Marks the caller's place, or an object for the uploader.
+   *
+   * @param int $uid
+   *   The player.
+   * @param string $name
+   *   The player's name.
+   * @param array<string, mixed> $input
+   *   The region as a client sent it.
+   *
+   * @return array{revision: int}
+   *   The new revision.
+   *
+   * @throws \InvalidArgumentException
+   *   When the region breaks a rule.
+   */
+  public function putRegion(int $uid, string $name, array $input): array {
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $name, $input): void {
+      $box = self::box($input, $session);
+      if ($input['kind'] === 'person') {
+        self::assertOwnPlace($box, $uid, $session);
+        $session->players[$uid] = $name;
+        $id = "person-$uid";
+        $region = ['kind' => 'person', 'owner' => $uid, 'label' => $name] + $box;
+      }
+      else {
+        if ($session->uploader !== $uid) {
+          throw new \InvalidArgumentException('Only the uploader marks objects.');
+        }
+        $label = trim((string) ($input['label'] ?? ''));
+        if ($label === '' || mb_strlen($label) > self::MAX_LABEL) {
+          throw new \InvalidArgumentException(sprintf('An object needs a name of at most %d characters.', self::MAX_LABEL));
+        }
+        $id = 'object-' . md5($label);
+        $region = ['kind' => 'object', 'owner' => $uid, 'label' => $label] + $box;
+      }
+      $session->regions[$id] = $region;
+      $session->proposals = array_filter(
+        $session->proposals,
+        static fn (array $proposal): bool => !self::claims($region, $proposal),
+      );
+    });
+    return ['revision' => $session->revision];
+  }
+
+  /**
+   * Validates a box sent by a client against the photo.
+   *
+   * @param array<string, mixed> $input
+   *   The region as a client sent it.
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   *
+   * @return array{x: int, y: int, width: int, height: int}
+   *   The box.
+   */
+  private static function box(array $input, Session $session): array {
+    if ($session->photo === NULL) {
+      throw new \InvalidArgumentException('The session has no photo yet.');
+    }
+    if (!in_array($input['kind'] ?? NULL, ['person', 'object'], TRUE)) {
+      throw new \InvalidArgumentException('A region is a person or an object.');
+    }
+    $box = [];
+    foreach (['x', 'y', 'width', 'height'] as $field) {
+      if (!is_int($input[$field] ?? NULL)) {
+        throw new \InvalidArgumentException("The region needs an integer $field.");
+      }
+      $box[$field] = $input[$field];
+    }
+    if ($box['x'] < 0 || $box['y'] < 0 || $box['width'] < 1 || $box['height'] < 1
+      || $box['x'] + $box['width'] > $session->photo['width']
+      || $box['y'] + $box['height'] > $session->photo['height']) {
+      throw new \InvalidArgumentException('The region must lie inside the photo.');
+    }
+    return $box;
+  }
+
+  /**
+   * Stops a player from claiming the photo or another player's place.
+   *
+   * Cover and exclude wishes act on this box.
+   *
+   * @param array{x: int, y: int, width: int, height: int} $box
+   *   The box.
+   * @param int $uid
+   *   The player marking it.
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   */
+  private static function assertOwnPlace(array $box, int $uid, Session $session): void {
+    if ($box['width'] * $box['height'] > $session->photo['width'] * $session->photo['height'] * self::MAX_PERSON_SHARE) {
+      throw new \InvalidArgumentException('Your place can take at most a quarter of the photo.');
+    }
+    foreach ($session->regions as $region) {
+      if ($region['kind'] === 'person' && $region['owner'] !== $uid && self::covers($box, $region)) {
+        throw new \InvalidArgumentException(sprintf('This box covers %s.', $region['label']));
+      }
+    }
+  }
+
+  /**
+   * Tells whether a marked region already stands for a proposed box.
+   *
+   * @param array<string, mixed> $region
+   *   The marked region.
+   * @param array<string, mixed> $proposal
+   *   The proposed box.
+   */
+  private static function claims(array $region, array $proposal): bool {
+    return $region['kind'] === $proposal['kind'] && self::covers($region, $proposal);
+  }
+
+  /**
+   * Tells whether a box overlaps more than the allowed share of another.
+   *
+   * @param array{x: int, y: int, width: int, height: int} $box
+   *   The box.
+   * @param array{x: int, y: int, width: int, height: int} $other
+   *   The box it may cover.
+   */
+  private static function covers(array $box, array $other): bool {
+    $width = min($box['x'] + $box['width'], $other['x'] + $other['width']) - max($box['x'], $other['x']);
+    $height = min($box['y'] + $box['height'], $other['y'] + $other['height']) - max($box['y'], $other['y']);
+    return $width > 0 && $height > 0
+      && $width * $height > $other['width'] * $other['height'] * self::MAX_OVERLAP_SHARE;
   }
 
   /**
@@ -154,10 +297,10 @@ final class WishDesk {
    */
   public function approve(int $uid, string $hash): array {
     $seen = $this->ledger->read();
-    $export = $this->exports->current($seen);
     if (!isset($seen->players[$uid])) {
       throw new \InvalidArgumentException('Mark your place in the photo first.');
     }
+    $export = $this->exports->current($seen);
     if ($export === NULL || !hash_equals($export->hash, $hash)) {
       throw new \InvalidArgumentException('The picture has changed. Look at it again.');
     }
@@ -189,6 +332,7 @@ final class WishDesk {
     }
     return [
       'revision' => $session->revision,
+      'update' => $session->update,
       'photo' => $session->photo,
       'is_uploader' => $session->uploader === $uid,
       'regions' => $regions,

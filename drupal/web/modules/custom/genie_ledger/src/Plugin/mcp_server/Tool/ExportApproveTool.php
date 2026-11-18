@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
-use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\genie_ledger\Access\WebViewAccess;
 use Drupal\mcp_server\Attribute\Tool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
@@ -32,14 +29,7 @@ use Mcp\Server\ClientGateway;
   idempotent: TRUE,
   openWorld: FALSE,
 )]
-final class ExportApproveTool extends LedgerToolBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function checkAccess(AccountInterface $account): AccessResultInterface {
-    return parent::checkAccess($account)->andIf((new WebViewAccess())->access($account));
-  }
+final class ExportApproveTool extends WebViewToolBase {
 
   /**
    * {@inheritdoc}

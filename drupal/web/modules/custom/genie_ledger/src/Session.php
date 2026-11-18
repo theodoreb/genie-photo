@@ -76,9 +76,14 @@ final class Session {
   public array $players = [];
 
   /**
+   * Counts every change, including approvals, which keep the revision.
+   */
+  public int $update = 0;
+
+  /**
    * Boxes proposed by the local model and not yet confirmed, by id.
    *
-   * @var array<string, array{kind: string, label: string, x: int, y: int, width: int, height: int}>
+   * @var array<string, array{kind: string, x: int, y: int, width: int, height: int}>
    */
   public array $proposals = [];
 

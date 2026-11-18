@@ -6,6 +6,7 @@ namespace App\Tests\Smoke;
 
 use App\Drupal\DrupalPhotos;
 use App\Drupal\McpDrupalTools;
+use App\Security\DrupalOAuth;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
@@ -20,7 +21,6 @@ final readonly class SmokeSite
     public HttpClientInterface $http;
     public McpDrupalTools $tools;
     public DrupalPhotos $photos;
-    private PlayerSession $players;
 
     public function __construct()
     {
@@ -30,21 +30,33 @@ final readonly class SmokeSite
         $this->http = HttpClient::create();
         $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
         $this->photos = new DrupalPhotos($this->http, $this->drupalUrl.'/genie');
-        $this->players = new PlayerSession($this->drupalUrl.'/mcp');
         (new Process(['./drupack', 'drush', 'genie:reset'], $root.'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
     }
 
     /**
-     * Signs in the way the web view does, the only client that reaches the pixels.
+     * Signs in with the web view's client, the only one that reaches the pixels.
      */
     public function signIn(string $player): string
     {
-        return (new PlayerSession($this->drupalUrl.'/mcp', $_ENV['PUBLIC_URL'].'/oauth/callback'))->signIn($player);
+        return (new PlayerSession(
+            $this->drupalUrl.'/mcp',
+            $this->webCallback(),
+            DrupalOAuth::CLIENT_ID,
+            $_ENV['GENIE_WEB_SECRET'],
+        ))->signIn($player);
     }
 
+    /**
+     * Signs in as an assistant that registered the web view's own address.
+     */
     public function signInAsAssistant(string $player): string
     {
-        return $this->players->signIn($player);
+        return (new PlayerSession($this->drupalUrl.'/mcp', $this->webCallback()))->signIn($player);
+    }
+
+    private function webCallback(): string
+    {
+        return $_ENV['PUBLIC_URL'].'/oauth/callback';
     }
 
     public static function fail(string $reason): never

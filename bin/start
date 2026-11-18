@@ -11,18 +11,29 @@ composer install --no-interaction --no-progress
 # Drupal runs on the PHP inside Drupack, so this machine's PHP extensions do not matter to it.
 composer --working-dir=drupal install --no-interaction --no-progress --ignore-platform-reqs
 
-if [ -f drupal/web/sites/default/settings.php ]; then
-    (cd drupal && DRUPACK_NO_UPDATE_CHECK=1 ./drupack start . --listen 127.0.0.1:7225 --yes </dev/null)
+export DRUPACK_NO_UPDATE_CHECK=1
+# The marker appears only after a complete install, so a failed one runs again.
+if [ -f drupal/private/.installed ]; then
+    (cd drupal && { ./drupack stop . >/dev/null 2>&1 || true; } && ./drupack start . --listen 127.0.0.1:7225 --yes </dev/null)
 else
     bin/dev-drupal
 fi
 
 # Drupack serves HTTPS only on a machine that trusts its local root.
+drupal_url=http://127.0.0.1:7225
 if curl -fs -o /dev/null https://127.0.0.1:7225/.well-known/oauth-authorization-server; then
-    echo 'DRUPAL_URL=https://127.0.0.1:7225' >.env.local
-else
-    echo 'DRUPAL_URL=http://127.0.0.1:7225' >.env.local
+    drupal_url=https://127.0.0.1:7225
 fi
+
+callback="$(sed -n 's/^PUBLIC_URL=//p' .env)/oauth/callback"
+secret="$(cd drupal && ./drupack drush genie:web-client "$callback")"
+umask 077
+{
+    grep -vE '^(DRUPAL_URL|GENIE_WEB_SECRET)=' .env.local 2>/dev/null || true
+    echo "DRUPAL_URL=$drupal_url"
+    echo "GENIE_WEB_SECRET=$secret"
+} >.env.new.local
+mv .env.new.local .env.local
 
 echo 'Open http://127.0.0.1:8000 and sign in as alice, bob, carol or dan, password genie.'
 exec bin/dev-web

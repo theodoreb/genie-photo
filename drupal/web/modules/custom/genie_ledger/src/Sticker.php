@@ -12,8 +12,8 @@ final readonly class Sticker {
   public const SIZE = 32;
   public const EMPTY = '.';
   public const ORIGINAL = '*';
-  private const MAX_COLORS = 16;
-  private const MAX_BLUR = 8;
+  public const MAX_COLORS = 16;
+  public const MAX_BLUR = 8;
 
   /**
    * Builds a sticker from checked values.

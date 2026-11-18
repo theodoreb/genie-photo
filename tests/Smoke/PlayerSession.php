@@ -19,6 +19,8 @@ final class PlayerSession
     public function __construct(
         private readonly string $mcpEndpoint,
         private readonly string $redirectUri = 'http://127.0.0.1:9/callback',
+        private readonly ?string $clientId = null,
+        private readonly ?string $clientSecret = null,
     ) {
         $this->http = HttpClient::create(['timeout' => 60]);
     }
@@ -26,7 +28,7 @@ final class PlayerSession
     public function signIn(string $name, string $password = 'genie'): string
     {
         $server = $this->discoverAuthorizationServer();
-        $clientId = $this->register($server['registration_endpoint']);
+        $clientId = $this->clientId ?? $this->register($server['registration_endpoint']);
         $verifier = bin2hex(random_bytes(32));
         $code = $this->authorize($server['authorization_endpoint'], $clientId, $verifier, $name, $password);
 
@@ -36,7 +38,7 @@ final class PlayerSession
             'code' => $code,
             'redirect_uri' => $this->redirectUri,
             'code_verifier' => $verifier,
-        ]])->toArray()['access_token'];
+        ] + (null === $this->clientSecret ? [] : ['client_secret' => $this->clientSecret])])->toArray()['access_token'];
     }
 
     /**

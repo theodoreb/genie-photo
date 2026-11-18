@@ -62,7 +62,7 @@ function render() {
         element.dataset.mine = String(region.owner === Number(game.dataset.player));
         return element;
     });
-    const proposed = session.proposals.map((box) => regionElement(box, 'region proposal'));
+    const proposed = session.proposals.map((box) => regionElement({ ...box, label: box.kind }, 'region proposal'));
     regions.replaceChildren(...marks, ...proposed);
 }
 
@@ -82,7 +82,7 @@ function renderApproval() {
 
 function proposalRow(box) {
     const row = document.createElement('li');
-    row.textContent = `Proposed: ${box.label} `;
+    row.textContent = `Proposed: ${box.kind} `;
     if (session.is_uploader) {
         const button = document.createElement('button');
         button.textContent = 'Dismiss';
@@ -187,6 +187,8 @@ function trackDrag() {
 
     stage.addEventListener('pointerdown', (event) => {
         start = pointInPhoto(event);
+        box = null;
+        draft.hidden = true;
         stage.setPointerCapture(event.pointerId);
         mark.hidden = true;
     });

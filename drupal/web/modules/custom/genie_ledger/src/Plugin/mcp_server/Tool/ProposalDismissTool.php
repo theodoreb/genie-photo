@@ -26,7 +26,7 @@ use Mcp\Server\ClientGateway;
   idempotent: TRUE,
   openWorld: FALSE,
 )]
-final class ProposalDismissTool extends LedgerToolBase {
+final class ProposalDismissTool extends WebViewToolBase {
 
   /**
    * {@inheritdoc}

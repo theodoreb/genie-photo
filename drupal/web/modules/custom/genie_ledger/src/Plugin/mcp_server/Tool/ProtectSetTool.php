@@ -29,7 +29,7 @@ use Mcp\Server\ClientGateway;
   idempotent: TRUE,
   openWorld: FALSE,
 )]
-final class ProtectSetTool extends LedgerToolBase {
+final class ProtectSetTool extends WebViewToolBase {
 
   /**
    * {@inheritdoc}

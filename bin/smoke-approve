@@ -2,7 +2,7 @@
 <?php
 
 // Critical path of approval: all four players approve the same picture, a new wish
-// voids the approvals, and an assistant reaches neither the photo nor the web view's approval tool.
+// voids the approvals, and an assistant reaches neither the photo nor the web view's tools.
 
 declare(strict_types=1);
 
@@ -40,10 +40,12 @@ try {
         throw $e;
     }
 }
-try {
-    $site->tools->call($assistant, 'export_approve', ['hash' => 'x']);
-    SmokeSite::fail("An assistant reached the web view's approval tool.");
-} catch (DrupalToolFailed) {
+foreach (['export_approve', 'region_put', 'protect_set', 'propose_boxes', 'proposal_dismiss'] as $tool) {
+    try {
+        $site->tools->call($assistant, $tool, ['hash' => 'x']);
+        SmokeSite::fail("An assistant reached $tool.");
+    } catch (DrupalToolFailed) {
+    }
 }
 
 if (!$approveAll()['final']) {

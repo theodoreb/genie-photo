@@ -20,6 +20,7 @@ final class BoxProposer {
 
   private const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
   private const MAX_BOXES = 12;
+  private const TIMEOUT_SECONDS = 300;
 
   /**
    * The model answers in thousandths of the photo's width and height.
@@ -28,7 +29,7 @@ final class BoxProposer {
 
   private const INSTRUCTIONS = <<<'TEXT'
     Find each person and each notable object in this group photo.
-    For each one give kind ("person" or "object"), a short label, and a box.
+    For each one give kind ("person" or "object") and a box.
     Coordinates go from 0 to 1000, as thousandths of the image width and height.
     TEXT;
 
@@ -41,15 +42,17 @@ final class BoxProposer {
   /**
    * Returns the proposed boxes, or NULL when no local model can answer.
    *
-   * @return list<array{kind: string, label: string, x: int, y: int, width: int, height: int}>|null
+   * @return list<array{kind: string, x: int, y: int, width: int, height: int}>|null
    *   The boxes in photo pixels.
    */
   public function propose(string $jpeg, int $width, int $height): ?array {
-    $url = (string) $this->configFactory->get('ai.inference_provider.genie_ollama')->get('configuration.base_url');
-    // The photo must never leave this machine, whatever the provider says.
-    if (!self::isLoopback($url)) {
+    // The photo must never leave this machine, whatever the providers say.
+    if (!$this->usesOnlyLoopback()) {
       return NULL;
     }
+    // A vision model on a CPU takes minutes, and the HTTP client reads this
+    // limit on each request.
+    ini_set('default_socket_timeout', (string) self::TIMEOUT_SECONDS);
     try {
       $answer = $this->platforms->createInstance('managed:genie')->invoke(
         $this->configFactory->get('genie_ledger.settings')->get('vision_model'),
@@ -62,6 +65,20 @@ final class BoxProposer {
       return NULL;
     }
     return is_array($boxes) ? self::toPixels($boxes, $width, $height) : NULL;
+  }
+
+  /**
+   * Tells whether every provider of the genie platform is on this machine.
+   */
+  private function usesOnlyLoopback(): bool {
+    $providers = $this->configFactory->get('ai.platform.genie')->get('platform_plugin_configuration.providers');
+    foreach ($providers as $provider) {
+      $url = (string) $this->configFactory->get("ai.inference_provider.$provider")->get('configuration.base_url');
+      if (!self::isLoopback($url)) {
+        return FALSE;
+      }
+    }
+    return $providers !== [];
   }
 
   /**
@@ -81,14 +98,13 @@ final class BoxProposer {
    * @param int $height
    *   The photo height.
    *
-   * @return list<array{kind: string, label: string, x: int, y: int, width: int, height: int}>
+   * @return list<array{kind: string, x: int, y: int, width: int, height: int}>
    *   The usable boxes.
    */
   public static function toPixels(array $boxes, int $width, int $height): array {
     $result = [];
     foreach ($boxes as $box) {
-      if (!is_array($box) || !in_array($box['kind'] ?? NULL, ['person', 'object'], TRUE)
-        || !is_string($box['label'] ?? NULL)) {
+      if (!is_array($box) || !in_array($box['kind'] ?? NULL, ['person', 'object'], TRUE)) {
         continue;
       }
       foreach (['x', 'y', 'width', 'height'] as $field) {
@@ -102,7 +118,6 @@ final class BoxProposer {
       }
       $result[] = [
         'kind' => $box['kind'],
-        'label' => mb_substr(trim($box['label']), 0, 40),
         'x' => intdiv($box['x'] * $width, self::SCALE),
         'y' => intdiv($box['y'] * $height, self::SCALE),
         'width' => max(1, intdiv($box['width'] * $width, self::SCALE)),
@@ -134,13 +149,12 @@ final class BoxProposer {
                 'type' => 'object',
                 'properties' => [
                   'kind' => ['type' => 'string', 'enum' => ['person', 'object']],
-                  'label' => ['type' => 'string'],
                   'x' => $number,
                   'y' => $number,
                   'width' => $number,
                   'height' => $number,
                 ],
-                'required' => ['kind', 'label', 'x', 'y', 'width', 'height'],
+                'required' => ['kind', 'x', 'y', 'width', 'height'],
                 'additionalProperties' => FALSE,
               ],
             ],

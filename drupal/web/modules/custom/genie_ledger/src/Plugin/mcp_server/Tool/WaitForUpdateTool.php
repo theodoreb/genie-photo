@@ -10,16 +10,16 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 
 /**
- * Waits until the session moves past a revision.
+ * Waits until the session changes.
  */
 #[Tool(
   id: 'wait_for_update',
   label: new TranslatableMarkup('Wait for a change'),
-  description: new TranslatableMarkup('Waits up to 25 seconds for the session to move past the revision you know. Call it again if nothing changed.'),
+  description: new TranslatableMarkup('Waits up to 25 seconds for the session to move past the update number session_get gave you. Approvals count. Call it again if nothing changed.'),
   inputSchema: [
     'type' => 'object',
-    'properties' => ['after_revision' => ['type' => 'integer']],
-    'required' => ['after_revision'],
+    'properties' => ['after_update' => ['type' => 'integer']],
+    'required' => ['after_update'],
   ],
   readOnly: TRUE,
   destructive: FALSE,
@@ -35,18 +35,18 @@ final class WaitForUpdateTool extends LedgerToolBase {
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
-    if (!is_int($arguments['after_revision'] ?? NULL)) {
-      throw new ToolCallException('Give the revision you know as an integer.');
+    if (!is_int($arguments['after_update'] ?? NULL)) {
+      throw new ToolCallException('Give the update number you know as an integer.');
     }
     $deadline = microtime(TRUE) + self::MAX_SECONDS;
     do {
-      $revision = $this->ledger->read()->revision;
-      if ($revision > $arguments['after_revision']) {
-        return ['changed' => TRUE, 'revision' => $revision];
+      $session = $this->ledger->read();
+      if ($session->update > $arguments['after_update']) {
+        return ['changed' => TRUE, 'update' => $session->update, 'revision' => $session->revision];
       }
       usleep(self::POLL_MICROSECONDS);
     } while (microtime(TRUE) < $deadline);
-    return ['changed' => FALSE, 'revision' => $revision];
+    return ['changed' => FALSE, 'update' => $session->update, 'revision' => $session->revision];
   }
 
 }

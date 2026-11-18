@@ -44,6 +44,9 @@ final class ApproveExportTool extends LedgerToolBase {
       $answer = $gateway->elicit(
         'Do you approve the shared photo exactly as it looks now? Any later change cancels this approval.',
         new ElicitationSchema(['approve' => new BooleanSchemaDefinition('I approve this photo')], ['approve']),
+        // The SDK can replay this tool with a stored answer. The key ties that
+        // answer to this picture, so a changed picture asks again.
+        key: "approve-$hash",
       );
     }
     catch (ClientException) {
