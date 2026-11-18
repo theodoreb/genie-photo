@@ -22,6 +22,8 @@ final class WishDesk {
     private readonly Framer $framer,
     private readonly WishInterpreter $interpreter,
     private readonly Exports $exports,
+    private readonly BoxProposer $proposer,
+    private readonly PhotoStore $photos,
   ) {}
 
   /**
@@ -96,6 +98,52 @@ final class WishDesk {
   }
 
   /**
+   * Asks the local model for boxes, which people then confirm.
+   *
+   * @return array{available: bool, count: int, revision: int}
+   *   The outcome. Without a local model nothing changes.
+   *
+   * @throws \InvalidArgumentException
+   *   When the caller is not the uploader.
+   */
+  public function proposeBoxes(int $uid): array {
+    $current = $this->ledger->read();
+    if ($current->uploader !== $uid || $current->photo === NULL) {
+      throw new \InvalidArgumentException('Only the uploader asks for proposals, once the photo is in.');
+    }
+    $boxes = $this->proposer->propose($this->photos->read(), $current->photo['width'], $current->photo['height']);
+    if ($boxes === NULL) {
+      return ['available' => FALSE, 'count' => 0, 'revision' => $current->revision];
+    }
+    $session = $this->ledger->write(static function (Session $session) use ($boxes): void {
+      $session->proposals = [];
+      foreach ($boxes as $index => $box) {
+        $session->proposals["proposal-$index"] = $box;
+      }
+    });
+    return ['available' => TRUE, 'count' => count($boxes), 'revision' => $session->revision];
+  }
+
+  /**
+   * Removes a wrong proposal.
+   *
+   * @return array{revision: int}
+   *   The new revision.
+   *
+   * @throws \InvalidArgumentException
+   *   When the caller is not the uploader.
+   */
+  public function dismissProposal(int $uid, string $proposal): array {
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $proposal): void {
+      if ($session->uploader !== $uid) {
+        throw new \InvalidArgumentException('Only the uploader dismisses proposals.');
+      }
+      unset($session->proposals[$proposal]);
+    });
+    return ['revision' => $session->revision];
+  }
+
+  /**
    * Records a player's approval of the picture with this hash.
    *
    * @return array<string, mixed>
@@ -144,6 +192,11 @@ final class WishDesk {
       'photo' => $session->photo,
       'is_uploader' => $session->uploader === $uid,
       'regions' => $regions,
+      'proposals' => array_map(
+        static fn (string $id, array $box): array => $box + ['id' => $id],
+        array_keys($session->proposals),
+        $session->proposals,
+      ),
       'wish' => $session->wishes[$uid] ?? Operation::Show->value,
       'centered' => isset($session->centered[$uid]),
       'frame' => $session->photo === NULL ? NULL : $this->describe($this->framer->frame($session)),

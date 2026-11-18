@@ -85,7 +85,7 @@ final class WishInterpreter {
    */
   private function ask(string $text): string {
     $operations = array_map(static fn (Operation $operation): string => $operation->value, Operation::cases());
-    $model = $this->configFactory->get('ai.inference_provider.genie_ollama')->get('configuration.models');
+    $model = $this->configFactory->get('genie_ledger.settings')->get('text_model');
 
     return $this->platforms->createInstance('managed:genie')->invoke(
       $model,

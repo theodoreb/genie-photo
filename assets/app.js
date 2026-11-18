@@ -10,9 +10,14 @@ const status = document.querySelector('#status');
 const frame = document.querySelector('#frame');
 const blocked = document.querySelector('#blocked');
 const objects = document.querySelector('#objects');
+const proposals = document.querySelector('#proposals');
+const propose = document.querySelector('#propose');
 const approve = document.querySelector('#approve');
 const approval = document.querySelector('#approval');
 const download = document.querySelector('#download');
+
+// A drag smaller than this, in photo pixels, counts as a click.
+const CLICK_PIXELS = 4;
 
 let session = JSON.parse(game.dataset.session);
 let box = null;
@@ -29,6 +34,14 @@ function place(element, region) {
     element.style.height = percent(region.height, height);
 }
 
+function regionElement(region, className) {
+    const element = document.createElement('div');
+    element.className = className;
+    element.textContent = region.label;
+    place(element, region);
+    return element;
+}
+
 function render() {
     status.textContent = `Revision ${session.revision}`;
     if (!stage) {
@@ -42,15 +55,15 @@ function render() {
         blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
     renderApproval();
+    proposals.replaceChildren(...session.proposals.map(proposalRow));
     objects.replaceChildren(...session.regions.filter((region) => region.kind === 'object').map(objectRow));
-    regions.replaceChildren(...session.regions.map((region) => {
-        const element = document.createElement('div');
-        element.className = `region ${region.kind}`;
+    const marks = session.regions.map((region) => {
+        const element = regionElement(region, `region ${region.kind}`);
         element.dataset.mine = String(region.owner === Number(game.dataset.player));
-        element.textContent = region.label;
-        place(element, region);
         return element;
-    }));
+    });
+    const proposed = session.proposals.map((box) => regionElement(box, 'region proposal'));
+    regions.replaceChildren(...marks, ...proposed);
 }
 
 function renderApproval() {
@@ -65,6 +78,44 @@ function renderApproval() {
     approval.textContent = picture.final
         ? 'Everyone approved this picture.'
         : `Waiting for: ${picture.waiting_for.join(', ')}`;
+}
+
+function proposalRow(box) {
+    const row = document.createElement('li');
+    row.textContent = `Proposed: ${box.label} `;
+    if (session.is_uploader) {
+        const button = document.createElement('button');
+        button.textContent = 'Dismiss';
+        button.addEventListener('click', () => {
+            const body = new FormData();
+            body.set('proposal', box.id);
+            post(game.dataset.dismissUrl, body);
+        });
+        row.append(button);
+    }
+    return row;
+}
+
+function proposalAt(point) {
+    return session.proposals.find((box) => point.x >= box.x && point.x <= box.x + box.width
+        && point.y >= box.y && point.y <= box.y + box.height);
+}
+
+async function findPeople() {
+    propose.disabled = true;
+    status.textContent = 'The local model is looking at the photo.';
+    const body = new FormData();
+    body.set('_token', game.dataset.regionToken);
+    const response = await fetch(game.dataset.proposeUrl, { method: 'POST', body });
+    const result = await response.json();
+    propose.disabled = false;
+    if (!response.ok) {
+        status.textContent = result.error;
+    } else if (!result.available) {
+        status.textContent = 'No local model is running. Mark places by hand.';
+    } else {
+        status.textContent = `${result.count} boxes proposed.`;
+    }
 }
 
 function objectRow(region) {
@@ -140,9 +191,17 @@ function trackDrag() {
         place(draft, box);
     });
 
-    stage.addEventListener('pointerup', () => {
+    stage.addEventListener('pointerup', (event) => {
         start = null;
-        mark.hidden = !box || box.width < 1 || box.height < 1;
+        if (!box || box.width < CLICK_PIXELS || box.height < CLICK_PIXELS) {
+            const proposal = proposalAt(pointInPhoto(event));
+            box = proposal ? { x: proposal.x, y: proposal.y, width: proposal.width, height: proposal.height } : null;
+            draft.hidden = !box;
+            if (box) {
+                place(draft, box);
+            }
+        }
+        mark.hidden = !box;
     });
 }
 
@@ -168,6 +227,7 @@ if (stage) {
         body.set('hash', session.export.hash);
         post(game.dataset.approveUrl, body);
     });
+    propose?.addEventListener('click', findPeople);
     trackDrag();
     mark.addEventListener('submit', sendRegion);
 }

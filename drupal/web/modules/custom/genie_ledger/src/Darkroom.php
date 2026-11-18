@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger;
 
 /**
- * Renders the shared picture: stickers, then covers, then the crop.
+ * Renders the shared picture: private areas, stickers, covers, then the crop.
  */
 final class Darkroom {
 
@@ -16,26 +16,22 @@ final class Darkroom {
    */
   public function render(string $jpeg, Session $session, Frame $frame): string {
     $image = imagecreatefromstring($jpeg);
-    $people = array_filter($session->regions, static fn (array $region): bool => $region['kind'] === 'person');
+    $hidden = $this->hiddenRegions($session);
 
-    foreach ($people as $region) {
-      if (isset($session->stickers[$region['owner']])) {
+    // Hidden pixels go first, so no sticker blur can carry them elsewhere.
+    $this->paintOver($image, $hidden);
+    foreach ($session->regions as $id => $region) {
+      if ($region['kind'] === 'person' && isset($session->stickers[$region['owner']])) {
+        $others = array_diff_key($session->regions, [$id => TRUE]);
+        $saved = array_map(fn (array $other): \GdImage => $this->copyOf($image, $other), $others);
         $this->pasteSticker($image, $region, $session->stickers[$region['owner']]);
+        foreach ($others as $otherId => $other) {
+          imagecopy($image, $saved[$otherId], $other['x'], $other['y'], 0, 0, $other['width'], $other['height']);
+        }
       }
     }
-    $cover = imagecolorallocate($image, ...self::COVER_COLOR);
-    foreach ($people as $region) {
-      if (($session->wishes[$region['owner']] ?? NULL) === Operation::Cover->value) {
-        imagefilledrectangle(
-          $image,
-          $region['x'],
-          $region['y'],
-          $region['x'] + $region['width'] - 1,
-          $region['y'] + $region['height'] - 1,
-          $cover,
-        );
-      }
-    }
+    // A cover wins over any sticker on the same place.
+    $this->paintOver($image, $hidden);
 
     $crop = imagecrop($image, [
       'x' => $frame->x,
@@ -46,6 +42,59 @@ final class Darkroom {
     ob_start();
     imagepng($crop);
     return ob_get_clean();
+  }
+
+  /**
+   * Lists what must not show: covers, excluded players, unclaimed people.
+   *
+   * @return list<array{x: int, y: int, width: int, height: int}>
+   *   The regions.
+   */
+  private function hiddenRegions(Session $session): array {
+    $private = [Operation::Cover->value, Operation::Exclude->value];
+    $hidden = array_filter($session->regions, static fn (array $region): bool => $region['kind'] === 'person'
+      && in_array($session->wishes[$region['owner']] ?? NULL, $private, TRUE));
+    $unclaimed = array_filter($session->proposals, static fn (array $box): bool => $box['kind'] === 'person');
+    return [...array_values($hidden), ...array_values($unclaimed)];
+  }
+
+  /**
+   * Fills regions with the opaque cover color.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param list<array{x: int, y: int, width: int, height: int}> $regions
+   *   The regions.
+   */
+  private function paintOver(\GdImage $image, array $regions): void {
+    $cover = imagecolorallocate($image, ...self::COVER_COLOR);
+    foreach ($regions as $region) {
+      imagefilledrectangle(
+        $image,
+        $region['x'],
+        $region['y'],
+        $region['x'] + $region['width'] - 1,
+        $region['y'] + $region['height'] - 1,
+        $cover,
+      );
+    }
+  }
+
+  /**
+   * Copies a region of the photo.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param array{x: int, y: int, width: int, height: int} $region
+   *   The region.
+   */
+  private function copyOf(\GdImage $image, array $region): \GdImage {
+    return imagecrop($image, [
+      'x' => $region['x'],
+      'y' => $region['y'],
+      'width' => $region['width'],
+      'height' => $region['height'],
+    ]);
   }
 
   /**
@@ -62,12 +111,7 @@ final class Darkroom {
    *   The sticker.
    */
   private function pasteSticker(\GdImage $image, array $region, Sticker $sticker): void {
-    $layer = imagecrop($image, [
-      'x' => $region['x'],
-      'y' => $region['y'],
-      'width' => $region['width'],
-      'height' => $region['height'],
-    ]);
+    $layer = $this->copyOf($image, $region);
     $colors = array_map(
       static fn (string $color): int => imagecolorallocate($layer, ...sscanf($color, '#%02x%02x%02x')),
       $sticker->palette,

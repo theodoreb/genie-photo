@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger\Drush\Commands;
 
+use Drupal\genie_ledger\BoxProposer;
 use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\PhotoIntake;
 use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\WishInterpreter;
 use Drush\Attributes as CLI;
@@ -22,6 +24,8 @@ final class GenieCommands extends DrushCommands {
     private readonly Ledger $ledger,
     private readonly PhotoStore $photos,
     private readonly WishInterpreter $interpreter,
+    private readonly BoxProposer $proposer,
+    private readonly PhotoIntake $intake,
   ) {
     parent::__construct();
   }
@@ -44,6 +48,17 @@ final class GenieCommands extends DrushCommands {
   public function interpret(string $wish): void {
     $result = $this->interpreter->interpret($wish, []);
     $this->output()->writeln($result === NULL ? 'unclear' : "{$result->operation->value} ({$result->source})");
+  }
+
+  /**
+   * Shows the boxes the local vision model proposes for an image file.
+   */
+  #[CLI\Command(name: 'genie:propose-boxes')]
+  #[CLI\Argument(name: 'file', description: 'Path of the image.')]
+  public function proposeBoxes(string $file): void {
+    $photo = $this->intake->normalize(file_get_contents($file));
+    $boxes = $this->proposer->propose($photo['jpeg'], $photo['width'], $photo['height']);
+    $this->output()->writeln($boxes === NULL ? 'unavailable' : json_encode($boxes, JSON_THROW_ON_ERROR));
   }
 
 }

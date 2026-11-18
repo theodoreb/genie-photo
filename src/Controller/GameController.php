@@ -80,31 +80,35 @@ final class GameController extends AbstractController
         return $this->redirectToRoute('app_home');
     }
 
+    #[Route('/proposals', name: 'app_proposals', methods: ['POST'])]
+    #[IsCsrfTokenValid('regions', tokenKey: '_token')]
+    public function propose(): JsonResponse
+    {
+        return $this->callTool('propose_boxes');
+    }
+
+    #[Route('/proposals/dismiss', name: 'app_proposal_dismiss', methods: ['POST'])]
+    #[IsCsrfTokenValid('regions', tokenKey: '_token')]
+    public function dismissProposal(Request $request): JsonResponse
+    {
+        return $this->callTool('proposal_dismiss', ['proposal' => $request->request->getString('proposal')]);
+    }
+
     #[Route('/approve', name: 'app_approve', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function approve(Request $request): JsonResponse
     {
-        try {
-            return $this->json($this->tools->call($this->tokens->accessToken(), 'export_approve', [
-                'hash' => $request->request->getString('hash'),
-            ]));
-        } catch (DrupalToolFailed $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return $this->callTool('export_approve', ['hash' => $request->request->getString('hash')]);
     }
 
     #[Route('/objects/protect', name: 'app_protect', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function protect(Request $request): JsonResponse
     {
-        try {
-            return $this->json($this->tools->call($this->tokens->accessToken(), 'protect_set', [
-                'object' => $request->request->getString('object'),
-                'protected' => $request->request->getBoolean('protected'),
-            ]));
-        } catch (DrupalToolFailed $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return $this->callTool('protect_set', [
+            'object' => $request->request->getString('object'),
+            'protected' => $request->request->getBoolean('protected'),
+        ]);
     }
 
     #[Route('/regions', name: 'app_region', methods: ['POST'])]
@@ -112,15 +116,24 @@ final class GameController extends AbstractController
     public function region(Request $request): JsonResponse
     {
         $form = $request->request;
+
+        return $this->callTool('region_put', [
+            'kind' => $form->getString('kind'),
+            'label' => $form->getString('label'),
+            'x' => $form->getInt('x'),
+            'y' => $form->getInt('y'),
+            'width' => $form->getInt('width'),
+            'height' => $form->getInt('height'),
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function callTool(string $tool, array $arguments = []): JsonResponse
+    {
         try {
-            return $this->json($this->tools->call($this->tokens->accessToken(), 'region_put', [
-                'kind' => $form->getString('kind'),
-                'label' => $form->getString('label'),
-                'x' => $form->getInt('x'),
-                'y' => $form->getInt('y'),
-                'width' => $form->getInt('width'),
-                'height' => $form->getInt('height'),
-            ]));
+            return $this->json($this->tools->call($this->tokens->accessToken(), $tool, $arguments));
         } catch (DrupalToolFailed $e) {
             return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }

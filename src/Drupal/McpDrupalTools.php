@@ -17,6 +17,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final readonly class McpDrupalTools
 {
+    // A local vision model can take minutes on a CPU.
+    private const REQUEST_TIMEOUT_SECONDS = 300;
+
     public function __construct(
         #[Autowire('%env(DRUPAL_URL)%/mcp')]
         private string $endpoint,
@@ -32,7 +35,7 @@ final readonly class McpDrupalTools
      */
     public function call(string $bearerToken, string $tool, array $arguments = []): array
     {
-        $client = Client::builder()->build();
+        $client = Client::builder()->setRequestTimeout(self::REQUEST_TIMEOUT_SECONDS)->build();
         $transport = new HttpTransport($this->endpoint, headers: ['Authorization' => 'Bearer '.$bearerToken]);
 
         try {

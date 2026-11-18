@@ -22,6 +22,8 @@
       data-region-url="{{ path('app_region') }}"
       data-protect-url="{{ path('app_protect') }}"
       data-approve-url="{{ path('app_approve') }}"
+      data-propose-url="{{ path('app_proposals') }}"
+      data-dismiss-url="{{ path('app_proposal_dismiss') }}"
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
       data-player="{{ app.user.uid }}">
@@ -52,7 +54,11 @@
                         <button name="kind" value="object">Mark object</button>
                     {% endif %}
                 </form>
-                <p class="hint">Drag on the photo.</p>
+                <p class="hint">Drag on the photo, or click a proposed box.</p>
+                {% if session.is_uploader %}
+                    <p><button id="propose" type="button">Find people with the local model</button></p>
+                {% endif %}
+                <ul id="proposals" class="objects"></ul>
                 <ul id="objects" class="objects"></ul>
             </section>
         </div>

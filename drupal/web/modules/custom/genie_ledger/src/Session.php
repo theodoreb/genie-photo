@@ -76,6 +76,13 @@ final class Session {
   public array $players = [];
 
   /**
+   * Boxes proposed by the local model and not yet confirmed, by id.
+   *
+   * @var array<string, array{kind: string, label: string, x: int, y: int, width: int, height: int}>
+   */
+  public array $proposals = [];
+
+  /**
    * The picture hash each player approved at this revision, by account id.
    *
    * @var array<int, string>

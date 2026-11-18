@@ -10,4 +10,4 @@ configuration:
   supports_embeddings: false
   completions_path: /v1/chat/completions
   embeddings_path: /v1/embeddings
-  models: llama3.2
+  models: ''
