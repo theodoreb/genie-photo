@@ -70,8 +70,12 @@ final class Places {
     }
     foreach ($objects as $object) {
       $label = self::label($object['label'] ?? NULL);
-      $session->regions['object-' . md5($label)] = ['kind' => 'object', 'owner' => $uid, 'label' => $label]
-        + self::box($object['box'] ?? NULL, $session);
+      $id = 'object-' . md5($label);
+      // Protection depends on this box, so only the uploader moves a known one.
+      if (!isset($session->regions[$id]) || $session->uploader === $uid) {
+        $session->regions[$id] = ['kind' => 'object', 'owner' => $uid, 'label' => $label]
+          + self::box($object['box'] ?? NULL, $session);
+      }
     }
   }
 
@@ -111,17 +115,17 @@ final class Places {
       $description = $proposal['label'];
       unset($proposal['label']);
       $place = $proposal;
-      // The person this player no longer claims to be goes back on offer.
-      if ($previous !== NULL) {
-        $session->proposals['proposal-' . substr(md5(serialize($previous['head'])), 0, 8)] = [
-          'label' => $previous['description'],
-          'head' => $previous['head'],
-          'x' => $previous['x'],
-          'y' => $previous['y'],
-          'width' => $previous['width'],
-          'height' => $previous['height'],
-        ];
-      }
+    }
+    // The person this player gave up goes back on offer, covered.
+    if ($previous !== NULL && !self::sameHead($previous['head'], $place['head'])) {
+      $session->proposals['proposal-' . substr(md5(serialize($previous['head'])), 0, 8)] = [
+        'label' => $previous['description'],
+        'head' => $previous['head'],
+        'x' => $previous['x'],
+        'y' => $previous['y'],
+        'width' => $previous['width'],
+        'height' => $previous['height'],
+      ];
     }
     unset($session->regions[$id]);
     $holder = self::claimedHead($session, $place['head']);
@@ -197,7 +201,8 @@ final class Places {
    */
   private static function head(mixed $input, Session $session): array {
     $box = self::box($input, $session);
-    if ($box['width'] * $box['height'] > $session->photo['width'] * $session->photo['height'] * self::MAX_HEAD_SHARE) {
+    // A sticker fills the square around the head, so the longer side counts.
+    if (max($box['width'], $box['height']) ** 2 > $session->photo['width'] * $session->photo['height'] * self::MAX_HEAD_SHARE) {
       throw new \InvalidArgumentException('A head can take at most a quarter of the photo.');
     }
     return $box;
