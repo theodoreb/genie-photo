@@ -51,6 +51,25 @@ final class WishDesk {
   }
 
   /**
+   * Places the player's sticker.
+   *
+   * @return array{granted: bool, reply: string, revision: int}
+   *   The outcome.
+   */
+  public function setSticker(int $uid, string $name, Sticker $sticker): array {
+    if (!isset($this->ledger->read()->regions["person-$uid"])) {
+      return $this->refusal('Mark your place in the photo first, on the web view.');
+    }
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $sticker): void {
+      $session->stickers[$uid] = $sticker;
+    });
+    $reply = ($session->wishes[$uid] ?? NULL) === Operation::Cover->value
+      ? sprintf('Noted, %s. Your cover hides the sticker until you ask to be shown.', $name)
+      : sprintf('Granted, %s. Your sticker is on the photo.', $name);
+    return ['granted' => TRUE, 'reply' => $reply, 'revision' => $session->revision];
+  }
+
+  /**
    * Lets the uploader protect an object or release it.
    *
    * @return array{revision: int}

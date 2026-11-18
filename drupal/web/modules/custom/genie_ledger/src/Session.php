@@ -61,4 +61,11 @@ final class Session {
    */
   public array $suggestions = [];
 
+  /**
+   * The sticker of each player, by account id.
+   *
+   * @var array<int, \Drupal\genie_ledger\Sticker>
+   */
+  public array $stickers = [];
+
 }
