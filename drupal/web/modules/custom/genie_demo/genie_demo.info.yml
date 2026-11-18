@@ -1,0 +1,7 @@
+name: 'Genie demo accounts'
+type: module
+description: 'Creates four demo players on a site that listens on loopback only.'
+core_version_requirement: ^11.4
+package: Genie
+dependencies:
+  - genie_ledger:genie_ledger

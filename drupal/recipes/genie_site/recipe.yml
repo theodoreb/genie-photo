@@ -1,0 +1,19 @@
+name: 'Genie site'
+type: Site
+description: 'Accounts, OAuth and the ledger behind the genie photo.'
+install:
+  - mcp_server
+  - mcp_server_oauth
+  - simple_oauth
+  - simple_oauth_pkce
+  - simple_oauth_server_metadata
+  - simple_oauth_client_registration
+  - genie_ledger
+config:
+  import:
+    simple_oauth: '*'
+    simple_oauth_pkce: '*'
+    simple_oauth_server_metadata: '*'
+    simple_oauth_client_registration: '*'
+    mcp_server: '*'
+    mcp_server_oauth: '*'

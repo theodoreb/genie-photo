@@ -1,0 +1,11 @@
+--- a/modules/simple_oauth_client_registration/src/Dto/ClientRegistration.php
++++ b/modules/simple_oauth_client_registration/src/Dto/ClientRegistration.php
+@@ -228,7 +228,7 @@
+       if ($this->applicationType !== 'web') {
+         // RFC 8252 permits HTTP only for literal loopback IP redirects.
+         $host = parse_url($uri, PHP_URL_HOST);
+-        if ($scheme === 'http' && in_array($host, ['127.0.0.1', '[::1]'], TRUE)) {
++        if ($scheme === 'http' && in_array($host, ['127.0.0.1', '[::1]', 'localhost'], TRUE)) {
+           continue;
+         }
+         if ($scheme !== 'http') {

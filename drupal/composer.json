@@ -1,0 +1,88 @@
+{
+    "name": "genie-photo/drupal",
+    "description": "Drupal backend of the genie photo: accounts and all session data, reached over MCP.",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "ext-pdo_sqlite": "*",
+        "composer/installers": "^2.3",
+        "cweagans/composer-patches": "2.0.0",
+        "drupal/ai": "2.x-dev@dev",
+        "drupal/core-composer-scaffold": "^11.4",
+        "drupal/core-recommended": "^11.4",
+        "drupal/mcp_server": "^2.0@beta",
+        "drupal/mcp_server_oauth": "^1.0@alpha",
+        "drupal/simple_oauth": "^6.1",
+        "drupal/tool": "^1.0@dev",
+        "drush/drush": "^13.6",
+        "e0ipso/simple_oauth_21": "^1.13"
+    },
+    "require-dev": {
+        "drupal/core-dev": "^11.4"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "drupal/core-composer-scaffold": true,
+            "php-http/discovery": true,
+            "php-tuf/composer-integration": true,
+            "phpstan/extension-installer": true,
+            "tbachert/spi": true,
+            "symfony/runtime": true,
+            "cweagans/composer-patches": true
+        },
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "extra": {
+        "drupack": {
+            "mercure": true
+        },
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            },
+            "file-mapping": {
+                "[web-root]/example.gitignore": false
+            }
+        },
+        "installer-paths": {
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "recipes/{$name}": [
+                "type:drupal-recipe"
+            ],
+            "drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ]
+        },
+        "patches": {
+            "e0ipso/simple_oauth_21": {
+                "Allow http://localhost redirect URIs for native clients": "patches/simple_oauth_21-localhost-redirect.patch"
+            }
+        },
+        "composer-patches": {
+            "disable-resolvers": ["\\cweagans\\Composer\\Resolver\\Dependencies"]
+        }
+    }
+}

@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+
+// Signs in as a demo player like an MCP client and calls my_status on Drupal.
+// With --bad-token, checks that Drupal answers 401 with a Bearer challenge.
+
+declare(strict_types=1);
+
+use App\Drupal\DrupalToolFailed;
+use App\Drupal\McpDrupalTools;
+use App\Tests\Smoke\PlayerSession;
+use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\HttpClient\HttpClient;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+
+$endpoint = $_ENV['DRUPAL_URL'].'/mcp';
+
+if ('--bad-token' === ($argv[1] ?? '')) {
+    $response = HttpClient::create()->request('POST', $endpoint, ['json' => [], 'headers' => ['Authorization' => 'Bearer nope']]);
+    $challenge = $response->getHeaders(false)['www-authenticate'][0] ?? '';
+    $refused = 401 === $response->getStatusCode() && str_starts_with($challenge, 'Bearer');
+    echo $refused ? "refused with a challenge\n" : "NOT REFUSED: {$response->getStatusCode()}\n";
+    exit($refused ? 0 : 1);
+}
+
+$token = (new PlayerSession($endpoint))->signIn($argv[1] ?? 'alice');
+try {
+    echo (new McpDrupalTools($endpoint))->call($token, 'my_status')['name'], "\n";
+} catch (DrupalToolFailed $e) {
+    fwrite(STDERR, $e->getMessage()."\n");
+    exit(1);
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Runs every check: Symfony style and tests, then Drupal standards, analysis and tests.
+set -eu
+cd "$(dirname "$0")/.."
+vendor/bin/php-cs-fixer check --no-interaction
+vendor/bin/phpunit
+(cd drupal && vendor/bin/phpcs && vendor/bin/phpstan analyse --no-progress --memory-limit=1G)
+bin/test-drupal

@@ -1,0 +1,7 @@
+name: genie-drupal
+recipe: recipes/genie_demo
+site_name: Genie
+settings: genie.php
+port: 7225
+platforms: [linux-amd64]
+libc: both

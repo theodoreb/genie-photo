@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.genie_player
+id: genie
+name: genie
+description: 'Play in the genie photo as yourself'
+grant_types:
+  authorization_code:
+    status: true
+  refresh_token:
+    status: true
+umbrella: false
+parent: null
+granularity_id: role
+granularity_configuration:
+  role: genie_player

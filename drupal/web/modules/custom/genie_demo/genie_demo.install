@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Creates the demo players.
+ */
+
+use Drupal\user\Entity\User;
+
+/**
+ * Implements hook_install().
+ *
+ * Recipes install modules in syncing mode, so the flag is ignored here.
+ */
+function genie_demo_install(bool $is_syncing): void {
+  foreach (['alice', 'bob', 'carol', 'dan'] as $name) {
+    $account = User::create(['name' => $name, 'mail' => "$name@example.com", 'status' => 1]);
+    $account->setPassword('genie');
+    $account->addRole('genie_player');
+    $account->save();
+  }
+}

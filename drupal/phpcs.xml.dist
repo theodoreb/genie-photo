@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="genie">
+  <description>Drupal coding standards for the code of this site.</description>
+  <arg name="extensions" value="php,module,inc,install,test,profile,theme,info,yml"/>
+  <arg name="colors"/>
+  <arg value="sp"/>
+  <file>genie.php</file>
+  <file>web/modules/custom</file>
+  <file>web/themes/custom</file>
+  <file>recipes</file>
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+</ruleset>

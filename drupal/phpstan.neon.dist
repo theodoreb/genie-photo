@@ -1,0 +1,6 @@
+parameters:
+  level: 3
+  paths:
+    - genie.php
+    - web/modules/custom
+    - web/themes/custom

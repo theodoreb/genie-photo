@@ -1,0 +1,5 @@
+#!/bin/sh
+# Runs the genie_ledger unit tests, with any phpunit options given.
+set -eu
+cd "$(dirname "$0")/../drupal"
+exec vendor/bin/phpunit -c web/core/phpunit.xml.dist web/modules/custom/genie_ledger "$@"

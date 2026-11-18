@@ -1,0 +1,17 @@
+{
+    "_hash": "baca17db64dfe382fa78c70523ca1d999032005732b167ffb684a5fa1db20f71",
+    "patches": {
+        "e0ipso/simple_oauth_21": [
+            {
+                "package": "e0ipso/simple_oauth_21",
+                "description": "Allow http://localhost redirect URIs for native clients",
+                "url": "patches/simple_oauth_21-localhost-redirect.patch",
+                "sha256": "f0e0746efa8d671e943c0ab3a07845d346ed787bdee16707f52293f8bdc8a13a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

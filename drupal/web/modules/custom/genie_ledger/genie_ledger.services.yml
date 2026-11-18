@@ -1,0 +1,5 @@
+services:
+  genie_ledger.mcp_route_subscriber:
+    class: Drupal\genie_ledger\Routing\McpRouteSubscriber
+    tags:
+      - { name: event_subscriber }
