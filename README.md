@@ -67,7 +67,7 @@ Sign-in, the tools and the approval prompt were tested with Claude Code 2.1 and 
 
 ## Optional local model
 
-The site works without one. Wishes then go through a keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull llama3.2` lets a local model read wishes.
+The site works without one. Wishes then go through a keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people.
 
 ## How it fits together
 
