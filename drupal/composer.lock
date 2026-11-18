@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8892ebac93b4ca44498af7dcc95dfdab",
+    "content-hash": "5f020ba412fb680275be83f4cfb46090",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2200,84 +2200,6 @@
             "homepage": "https://www.drupal.org/project/token",
             "support": {
                 "source": "https://git.drupalcode.org/project/token"
-            }
-        },
-        {
-            "name": "drupal/tool",
-            "version": "1.0.0-beta12",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/tool.git",
-                "reference": "1.0.0-beta12"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/tool-1.0.0-beta12.zip",
-                "reference": "1.0.0-beta12",
-                "shasum": "cb3fa3b0aab7d3ee59c4c09cfd8b68cc04f7cd48"
-            },
-            "require": {
-                "drupal/core": "^10.5 || ^11",
-                "php": ">=8.2"
-            },
-            "require-dev": {
-                "drupal/ai": "^1.2.16",
-                "drupal/ai_agents": "^1.2"
-            },
-            "type": "drupal-module",
-            "extra": {
-                "drupal": {
-                    "version": "1.0.0-beta12",
-                    "datestamp": "1792530025",
-                    "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Beta releases are not covered by Drupal security advisories."
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "ajits",
-                    "homepage": "https://www.drupal.org/user/981944"
-                },
-                {
-                    "name": "b_sharpe",
-                    "homepage": "https://www.drupal.org/user/2512258"
-                },
-                {
-                    "name": "jurgenhaas",
-                    "homepage": "https://www.drupal.org/user/168924"
-                },
-                {
-                    "name": "marcus_johansson",
-                    "homepage": "https://www.drupal.org/user/385947"
-                },
-                {
-                    "name": "mglaman",
-                    "homepage": "https://www.drupal.org/user/2416470"
-                },
-                {
-                    "name": "michaellander",
-                    "homepage": "https://www.drupal.org/user/636494"
-                },
-                {
-                    "name": "yautja_cetanu",
-                    "homepage": "https://www.drupal.org/user/626050"
-                }
-            ],
-            "description": "Provides a tool plugin for creating well defined actions.",
-            "homepage": "https://www.drupal.org/project/tool",
-            "keywords": [
-                "Actively maintained",
-                "Administration tools"
-            ],
-            "support": {
-                "source": "https://drupal.org/project/tool",
-                "issues": "https://drupal.org/project/issues/tool"
             }
         },
         {
@@ -16117,8 +16039,7 @@
     "stability-flags": {
         "drupal/ai": 20,
         "drupal/mcp_server": 10,
-        "drupal/mcp_server_oauth": 15,
-        "drupal/tool": 20
+        "drupal/mcp_server_oauth": 15
     },
     "prefer-stable": true,
     "prefer-lowest": false,

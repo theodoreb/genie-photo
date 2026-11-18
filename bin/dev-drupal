@@ -6,7 +6,7 @@ export DRUPACK_NO_UPDATE_CHECK=1
 ./drupack stop . >/dev/null 2>&1 || true
 chmod -R u+w web/sites/default 2>/dev/null || true
 rm -rf web/sites/default/files web/sites/default/settings.php private
-./drupack drush site:install minimal --db-url=sqlite://sites/default/files/.ht.sqlite \
+./drupack drush site:install minimal --db-url=sqlite://localhost/sites/default/files/.ht.sqlite \
   --site-name=Genie --account-name=admin --account-pass="$(od -An -N12 -tx1 /dev/urandom | tr -d ' \n')" -y >/dev/null 2>&1
 chmod u+w web/sites/default web/sites/default/settings.php
 echo "require dirname(DRUPAL_ROOT) . '/genie.php';" >> web/sites/default/settings.php

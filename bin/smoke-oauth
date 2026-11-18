@@ -25,9 +25,12 @@ if ('--bad-token' === ($argv[1] ?? '')) {
     exit($refused ? 0 : 1);
 }
 
-$token = (new PlayerSession($endpoint))->signIn($argv[1] ?? 'alice');
+$player = $argv[1] ?? 'alice';
+$token = (new PlayerSession($endpoint))->signIn($player);
 try {
-    echo (new McpDrupalTools($endpoint))->call($token, 'my_status')['name'], "\n";
+    $name = (new McpDrupalTools($endpoint))->call($token, 'my_status')['name'];
+    echo $name, "\n";
+    exit($name === $player ? 0 : 1);
 } catch (DrupalToolFailed $e) {
     fwrite(STDERR, $e->getMessage()."\n");
     exit(1);

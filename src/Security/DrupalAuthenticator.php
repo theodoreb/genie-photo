@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Drupal\DrupalToolFailed;
-use App\Drupal\DrupalTools;
+use App\Drupal\McpDrupalTools;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +31,7 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
 
     public function __construct(
         private readonly DrupalOAuth $oauth,
-        private readonly DrupalTools $tools,
+        private readonly McpDrupalTools $tools,
         private readonly PlayerTokens $playerTokens,
         private readonly UrlGeneratorInterface $urls,
     ) {

@@ -2,10 +2,10 @@
 
 /**
  * @file
- * The packed site keeps its data in Site data. The Drupack engine serving this.
+ * Settings of the genie site, required last by settings.php.
  */
 
-// Folder in development has no Site data, so keys and photos go in ./private.
+// A packed site keeps keys and photos in Site data, development in ./private.
 $genie_data = getenv('DRUPACK_RUNTIME_DATA_DIR') ?: __DIR__ . '/private';
 $settings['file_private_path'] = "$genie_data/files";
 
@@ -21,8 +21,11 @@ if (PHP_SAPI !== 'cli' && !is_dir($genie_keys)) {
   $genie_staging = "$genie_keys." . bin2hex(random_bytes(8));
   $genie_openssl = ['config' => __DIR__ . '/openssl.cnf'];
   $genie_key = openssl_pkey_new($genie_openssl + ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
-  if ($genie_key === FALSE || !openssl_pkey_export($genie_key, $genie_private, NULL, $genie_openssl) || !mkdir($genie_staging, 0700, TRUE)) {
+  if ($genie_key === FALSE || !openssl_pkey_export($genie_key, $genie_private, NULL, $genie_openssl)) {
     throw new RuntimeException('Cannot generate the OAuth key pair: ' . openssl_error_string());
+  }
+  if (!mkdir($genie_staging, 0700, TRUE)) {
+    throw new RuntimeException("Cannot create $genie_staging");
   }
   $genie_pems = ['private.key' => $genie_private, 'public.key' => openssl_pkey_get_details($genie_key)['key']];
   foreach ($genie_pems as $genie_name => $genie_pem) {

@@ -10,8 +10,8 @@ use Drupal\consumers\Entity\ConsumerInterface;
 /**
  * Implements hook_ENTITY_TYPE_presave() for consumer entities.
  *
- * A dynamically registered assistant gets the genie scope and nothing else,
- * whatever it asked for at registration.
+ * A dynamically registered client gets genie as its default scope, whatever it
+ * asked for at registration.
  */
 function genie_ledger_consumer_presave(ConsumerInterface $consumer): void {
   if ($consumer->isNew() && !$consumer->get('is_default')->value) {

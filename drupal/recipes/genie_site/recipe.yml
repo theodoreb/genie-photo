@@ -17,3 +17,11 @@ config:
     simple_oauth_client_registration: '*'
     mcp_server: '*'
     mcp_server_oauth: '*'
+    genie_ledger: '*'
+  actions:
+    simple_oauth.settings:
+      simpleConfigUpdate:
+        disable_openid_connect: true
+    simple_oauth_pkce.settings:
+      simpleConfigUpdate:
+        plain_enabled: false

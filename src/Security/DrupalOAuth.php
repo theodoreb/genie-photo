@@ -47,7 +47,6 @@ final readonly class DrupalOAuth
                 'response_type' => 'code',
                 'client_id' => $clientId,
                 'redirect_uri' => $this->redirectUri(),
-                'scope' => 'genie',
                 'state' => $state,
                 'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
                 'code_challenge_method' => 'S256',

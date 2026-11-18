@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Drupal\DrupalPhotos;
 use App\Drupal\DrupalToolFailed;
-use App\Drupal\DrupalTools;
+use App\Drupal\McpDrupalTools;
 use App\Security\PlayerTokens;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
 final class GameController extends AbstractController
 {
     public function __construct(
-        private readonly DrupalTools $tools,
+        private readonly McpDrupalTools $tools,
         private readonly DrupalPhotos $photos,
         private readonly PlayerTokens $tokens,
     ) {

@@ -7,4 +7,4 @@ dependencies:
   - mcp_server:mcp_server
   - mcp_server_oauth:mcp_server_oauth
   - simple_oauth:simple_oauth
-  - simple_oauth:simple_oauth_server_metadata
+  - simple_oauth_21:simple_oauth_server_metadata

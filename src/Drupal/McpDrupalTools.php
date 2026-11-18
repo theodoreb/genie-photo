@@ -15,7 +15,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *
  * Drupal then runs each tool as that player, so it enforces ownership itself.
  */
-final readonly class McpDrupalTools implements DrupalTools
+final readonly class McpDrupalTools
 {
     public function __construct(
         #[Autowire('%env(DRUPAL_URL)%/mcp')]
@@ -23,6 +23,13 @@ final readonly class McpDrupalTools implements DrupalTools
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $arguments
+     *
+     * @return array<string, mixed>
+     *
+     * @throws DrupalToolFailed when Drupal cannot be reached or the tool reports an error
+     */
     public function call(string $bearerToken, string $tool, array $arguments = []): array
     {
         $client = Client::builder()->build();

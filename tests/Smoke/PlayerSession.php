@@ -73,7 +73,6 @@ final class PlayerSession
             'response_type' => 'code',
             'client_id' => $clientId,
             'redirect_uri' => self::REDIRECT_URI,
-            'scope' => 'genie',
             'state' => $state,
             'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
             'code_challenge_method' => 'S256',
