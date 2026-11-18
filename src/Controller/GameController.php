@@ -51,6 +51,15 @@ final class GameController extends AbstractController
         ]);
     }
 
+    #[Route('/frame/{revision}', name: 'app_frame', requirements: ['revision' => '\d+'], methods: ['GET'])]
+    public function frame(int $revision): Response
+    {
+        return new Response($this->photos->frame($this->tokens->accessToken(), $revision), headers: [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
     #[Route('/photo', name: 'app_photo_upload', methods: ['POST'])]
     #[IsCsrfTokenValid('photo', tokenKey: '_token')]
     public function upload(Request $request): RedirectResponse

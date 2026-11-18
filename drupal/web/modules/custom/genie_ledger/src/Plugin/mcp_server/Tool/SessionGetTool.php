@@ -14,7 +14,7 @@ use Mcp\Server\ClientGateway;
 #[Tool(
   id: 'session_get',
   label: new TranslatableMarkup('Session'),
-  description: new TranslatableMarkup('Lists the revision, the photo size and the marked regions.'),
+  description: new TranslatableMarkup('Lists the revision, the photo size, the marked regions and the state of the frame.'),
   readOnly: TRUE,
   destructive: FALSE,
   idempotent: TRUE,
@@ -26,13 +26,7 @@ final class SessionGetTool extends LedgerToolBase {
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
-    $session = $this->ledger->read();
-    return [
-      'revision' => $session->revision,
-      'photo' => $session->photo,
-      'is_uploader' => $session->uploader === (int) $this->currentUser->id(),
-      'regions' => array_values($session->regions),
-    ];
+    return $this->desk->view((int) $this->currentUser->id());
   }
 
 }

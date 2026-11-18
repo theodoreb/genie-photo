@@ -2,50 +2,34 @@
 <?php
 
 // Critical path of the live view: alice uploads the photo and listens on the hub,
-// bob marks his region, and alice hears the new revision.
+// bob marks his place, and alice hears the new revision.
 
 declare(strict_types=1);
 
-use App\Drupal\DrupalPhotos;
-use App\Drupal\McpDrupalTools;
-use App\Tests\Smoke\PlayerSession;
-use Symfony\Component\Dotenv\Dotenv;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\Process\Process;
+use App\Tests\Smoke\SmokeSite;
 
 require dirname(__DIR__).'/vendor/autoload.php';
-(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
 
-$drupal = $_ENV['DRUPAL_URL'];
-$http = HttpClient::create();
-$tools = new McpDrupalTools($drupal.'/mcp');
+$site = new SmokeSite();
+$alice = $site->signIn('alice');
+$bob = $site->signIn('bob');
+$site->uploadPhoto($alice);
 
-(new Process(['./drupack', 'drush', 'genie:reset'], dirname(__DIR__).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
-
-$players = new PlayerSession($drupal.'/mcp');
-$alice = $players->signIn('alice');
-$bob = $players->signIn('bob');
-
-$image = imagecreatetruecolor(2000, 1000);
-ob_start();
-imagejpeg($image);
-(new DrupalPhotos($http, $drupal.'/genie/photo'))->put($alice, ob_get_clean());
-
-$photo = $tools->call($alice, 'session_get')['photo'];
+$photo = $site->tools->call($alice, 'session_get')['photo'];
 if (1600 !== $photo['width'] || 800 !== $photo['height']) {
     exit("Photo was not scaled: {$photo['width']}x{$photo['height']}\n");
 }
 
-$stream = $http->request('GET', $drupal.'/.well-known/mercure', [
+$stream = $site->http->request('GET', $site->drupalUrl.'/.well-known/mercure', [
     'query' => ['match' => 'genie/session'],
     'headers' => ['Accept' => 'text/event-stream'],
     'timeout' => 15,
 ]);
 $stream->getHeaders();
 
-$revision = $tools->call($bob, 'region_put', ['kind' => 'person', 'x' => 10, 'y' => 10, 'width' => 100, 'height' => 100])['revision'];
+$revision = $site->markPlace($bob);
 
-foreach ($http->stream($stream, 10) as $chunk) {
+foreach ($site->http->stream($stream, 10) as $chunk) {
     if ($chunk->isTimeout() || $chunk->isLast()) {
         exit("No update reached the subscriber.\n");
     }

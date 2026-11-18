@@ -7,6 +7,8 @@ const regions = document.querySelector('#regions');
 const draft = document.querySelector('#draft');
 const mark = document.querySelector('#mark');
 const status = document.querySelector('#status');
+const frame = document.querySelector('#frame');
+const blocked = document.querySelector('#blocked');
 
 let session = JSON.parse(game.dataset.session);
 let box = null;
@@ -27,6 +29,13 @@ function render() {
     status.textContent = `Revision ${session.revision}`;
     if (!stage) {
         return;
+    }
+    frame.hidden = !session.frame.ready;
+    blocked.hidden = session.frame.ready;
+    if (session.frame.ready) {
+        frame.src = game.dataset.frameUrl + session.revision;
+    } else {
+        blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
     regions.replaceChildren(...session.regions.map((region) => {
         const element = document.createElement('div');

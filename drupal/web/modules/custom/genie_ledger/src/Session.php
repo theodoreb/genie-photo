@@ -33,4 +33,11 @@ final class Session {
    */
   public array $regions = [];
 
+  /**
+   * The standing wish of each player, by account id.
+   *
+   * @var array<int, string>
+   */
+  public array $wishes = [];
+
 }

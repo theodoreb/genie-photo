@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+// Critical path of a wish: a player marks their place, makes a wish, and the shared frame changes.
+
+declare(strict_types=1);
+
+use App\Tests\Smoke\SmokeSite;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$player = $argv[1] ?? 'alice';
+$wish = $argv[2] ?? 'hide my face';
+
+$site = new SmokeSite();
+$token = $site->signIn($player);
+$site->uploadPhoto($token);
+$before = $site->photos->frame($token, $site->markPlace($token));
+
+$outcome = $site->tools->call($token, 'make_wish', ['wish' => $wish]);
+echo $outcome['reply'], "\n";
+if (!$outcome['granted']) {
+    exit(1);
+}
+
+$after = $site->photos->frame($token, $outcome['revision']);
+if (hash('sha256', $before) === hash('sha256', $after)) {
+    exit("The frame did not change.\n");
+}
+echo "revision {$outcome['revision']}\n";

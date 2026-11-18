@@ -27,8 +27,13 @@ header.bar { border-bottom: 1px solid var(--line); }
 .upload { max-width: 28rem; margin: 3rem auto; padding: 0 1rem; display: grid; gap: .75rem; }
 .upload h1, .upload p { margin: 0; }
 
-.stage { position: relative; width: fit-content; max-width: 100%; margin: 1rem auto 0; touch-action: none; cursor: crosshair; user-select: none; }
-.stage img { display: block; max-width: 100%; max-height: 75vh; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 1.5rem; padding: 1rem; }
+.panels h2 { margin: 0 0 .5rem; font-size: 1rem; }
+.panels .hint, .panels .bar { padding-inline: 0; }
+.frame { display: block; max-width: 100%; max-height: 70vh; }
+
+.stage { position: relative; width: fit-content; max-width: 100%; touch-action: none; cursor: crosshair; user-select: none; }
+.stage img { display: block; max-width: 100%; max-height: 70vh; }
 
 .region { position: absolute; border: 2px solid var(--accent); color: #fff; font-size: .8rem; pointer-events: none; }
 .region.object { border-color: var(--object); }

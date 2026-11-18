@@ -7,7 +7,11 @@ services:
     autowire: false
     tags:
       - { name: event_subscriber }
+  Drupal\genie_ledger\Darkroom: ~
+  Drupal\genie_ledger\Framer: ~
+  Drupal\genie_ledger\KeywordInterpreter: ~
   Drupal\genie_ledger\Ledger: ~
   Drupal\genie_ledger\PhotoIntake: ~
   Drupal\genie_ledger\PhotoStore: ~
   Drupal\genie_ledger\RevisionPublisher: ~
+  Drupal\genie_ledger\WishDesk: ~

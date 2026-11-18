@@ -15,7 +15,7 @@ final readonly class DrupalPhotos
 {
     public function __construct(
         private HttpClientInterface $http,
-        #[Autowire('%env(DRUPAL_URL)%/genie/photo')]
+        #[Autowire('%env(DRUPAL_URL)%/genie')]
         private string $endpoint,
     ) {
     }
@@ -26,7 +26,7 @@ final readonly class DrupalPhotos
     public function put(string $bearerToken, string $bytes): void
     {
         try {
-            $this->http->request('PUT', $this->endpoint, [
+            $this->http->request('PUT', $this->endpoint.'/photo', [
                 'auth_bearer' => $bearerToken,
                 'headers' => ['Content-Type' => 'application/octet-stream'],
                 'body' => $bytes,
@@ -38,6 +38,11 @@ final readonly class DrupalPhotos
 
     public function get(string $bearerToken): string
     {
-        return $this->http->request('GET', $this->endpoint, ['auth_bearer' => $bearerToken])->getContent();
+        return $this->http->request('GET', $this->endpoint.'/photo', ['auth_bearer' => $bearerToken])->getContent();
+    }
+
+    public function frame(string $bearerToken, int $revision): string
+    {
+        return $this->http->request('GET', $this->endpoint.'/frame/'.$revision, ['auth_bearer' => $bearerToken])->getContent();
     }
 }

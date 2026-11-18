@@ -18,24 +18,36 @@
 <main id="game"
       data-hub-url="{{ hub_url }}"
       data-session-url="{{ path('app_session') }}"
+      data-frame-url="{{ path('app_frame', {revision: 0})|replace({'/0': '/'}) }}"
       data-region-url="{{ path('app_region') }}"
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
       data-player="{{ app.user.uid }}">
     {% if session.photo %}
-        <div id="stage" class="stage">
-            <img id="photo" src="{{ path('app_photo') }}" alt="The group photo" draggable="false">
-            <div id="regions"></div>
-            <div id="draft" class="region draft" hidden></div>
+        <div class="panels">
+            <section>
+                <h2>The shared photo</h2>
+                <img id="frame" class="frame" alt="The photo as every wish leaves it">
+                <p id="blocked" class="hint" hidden></p>
+                <p class="hint">Ask your assistant to make a wish, such as "hide my face".</p>
+            </section>
+            <section>
+                <h2>Mark your place</h2>
+                <div id="stage" class="stage">
+                    <img id="photo" src="{{ path('app_photo') }}" alt="The original group photo" draggable="false">
+                    <div id="regions"></div>
+                    <div id="draft" class="region draft" hidden></div>
+                </div>
+                <form id="mark" class="bar" hidden>
+                    <button name="kind" value="person">This is me</button>
+                    {% if session.is_uploader %}
+                        <input name="label" maxlength="40" placeholder="Object name" aria-label="Object name">
+                        <button name="kind" value="object">Mark object</button>
+                    {% endif %}
+                </form>
+                <p class="hint">Drag on the photo.</p>
+            </section>
         </div>
-        <form id="mark" class="bar" hidden>
-            <button name="kind" value="person">This is me</button>
-            {% if session.is_uploader %}
-                <input name="label" maxlength="40" placeholder="Object name" aria-label="Object name">
-                <button name="kind" value="object">Mark object</button>
-            {% endif %}
-        </form>
-        <p class="hint">Drag on the photo to mark your place.</p>
     {% else %}
         <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>

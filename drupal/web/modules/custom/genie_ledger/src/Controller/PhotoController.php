@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\genie_ledger\Darkroom;
+use Drupal\genie_ledger\Frame;
+use Drupal\genie_ledger\Framer;
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PhotoIntake;
 use Drupal\genie_ledger\PhotoStore;
@@ -12,6 +15,7 @@ use Drupal\genie_ledger\Session;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -28,6 +32,8 @@ final class PhotoController extends ControllerBase {
     private readonly Ledger $ledger,
     private readonly PhotoIntake $intake,
     private readonly PhotoStore $photos,
+    private readonly Framer $framer,
+    private readonly Darkroom $darkroom,
   ) {}
 
   /**
@@ -67,6 +73,29 @@ final class PhotoController extends ControllerBase {
     }
     return new BinaryFileResponse(PhotoStore::URI, 200, [
       'Content-Type' => 'image/jpeg',
+      'Cache-Control' => 'private, no-store',
+    ]);
+  }
+
+  /**
+   * Sends the shared picture of the current revision.
+   */
+  public function frame(int $revision): Response {
+    $session = $this->ledger->read();
+    if ($session->photo === NULL || $revision !== $session->revision) {
+      throw new NotFoundHttpException();
+    }
+    $frame = $this->framer->frame($session);
+    if (!$frame instanceof Frame) {
+      throw new ConflictHttpException('No frame fits every wish.');
+    }
+    $png = $this->photos->frame($revision);
+    if ($png === NULL) {
+      $png = $this->darkroom->render($this->photos->read(), $session, $frame);
+      $this->photos->saveFrame($revision, $png);
+    }
+    return new Response($png, 200, [
+      'Content-Type' => 'image/png',
       'Cache-Control' => 'private, no-store',
     ]);
   }

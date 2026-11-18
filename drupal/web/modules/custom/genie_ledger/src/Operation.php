@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\genie_ledger;
+
+/**
+ * What a wish asks for. The player comes from the signed-in account.
+ */
+enum Operation: string {
+
+  case Cover = 'cover';
+  case Exclude = 'exclude';
+  case Show = 'visible';
+
+}
