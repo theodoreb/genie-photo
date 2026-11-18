@@ -9,7 +9,7 @@ No assistant and no cloud model receives the photo. The genie reads words. PHP c
 You need PHP 8.4 or later, Composer and curl. Ports 7225 and 8000 must be free. Tested on Linux x86-64.
 
 ```sh
-git clone <this repository> genie-photo
+git clone https://github.com/theodoreb/genie-photo.git
 cd genie-photo
 bin/start
 ```
@@ -84,3 +84,7 @@ ollama pull llava
 | `bin/verify-loopback` | Both servers listen on loopback only |
 
 Smoke scripts reset the session. To reset it by hand, run `cd drupal && ./drupack drush genie:reset`.
+
+## License
+
+GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
