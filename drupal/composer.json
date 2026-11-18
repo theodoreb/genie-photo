@@ -12,7 +12,6 @@
     "require": {
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
-        "codewithkyrian/transformers": "^0.6.2",
         "composer/installers": "^2.3",
         "cweagans/composer-patches": "2.0.0",
         "drupal/ai": "2.x-dev@dev",
@@ -23,11 +22,12 @@
         "drupal/mcp_server_oauth": "^1.0@alpha",
         "drupal/simple_oauth": "^6.1",
         "drush/drush": "^13.6",
-        "e0ipso/simple_oauth_21": "^1.13",
-        "symfony/ai-transformers-php-platform": "^0.14"
+        "e0ipso/simple_oauth_21": "^1.13"
     },
     "require-dev": {
-        "drupal/core-dev": "^11.4"
+        "codewithkyrian/transformers": "^0.6.2",
+        "drupal/core-dev": "^11.4",
+        "symfony/ai-transformers-php-platform": "^0.14"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
