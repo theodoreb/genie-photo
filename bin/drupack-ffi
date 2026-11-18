@@ -1,0 +1,39 @@
+#!/bin/sh
+# Replaces drupal/drupack with the build that has PHP's FFI extension, on Linux x86-64 with glibc 2.28 or later.
+# Other systems keep the official file.
+set -eu
+cd "$(dirname "$0")/../drupal"
+
+tag=drupack-1.0.0-rc4-ffi
+file=$tag-linux-amd64-glibc
+sha256=e6a5bbcf1f0403de9aaf725adeff16d09b3b11ebc4ae1cb08d104aca3685e88b
+url=https://github.com/theodoreb/genie-photo/releases/download/$tag/$file
+
+matches() {
+    echo "$sha256  $1" | sha256sum --check --status
+}
+
+[ "$(uname -sm)" = 'Linux x86_64' ] || exit 0
+# getconf prints nothing usable on musl.
+glibc="$(getconf GNU_LIBC_VERSION 2>/dev/null | cut -d' ' -f2)"
+[ -n "$glibc" ] || exit 0
+printf '2.28\n%s\n' "$glibc" | sort -V -c 2>/dev/null || exit 0
+
+if [ -f drupack ] && matches drupack; then
+    exit 0
+fi
+
+download="$(mktemp ./.drupack-ffi.XXXXXX)"
+trap 'rm -f "$download"' EXIT
+if ! curl -fsSL --retry 2 -o "$download" "$url"; then
+    echo "Could not download $file. Keeping the official Drupack." >&2
+    exit 0
+fi
+# The file comes from the network and is about to run, so a wrong checksum stops the start.
+if ! matches "$download"; then
+    echo "$file does not match its checksum. It was not installed." >&2
+    exit 1
+fi
+chmod 755 "$download"
+mv -f "$download" drupack
+echo "Installed $file."

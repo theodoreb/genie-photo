@@ -9,7 +9,11 @@ done
 
 composer install --no-interaction --no-progress
 # Drupal runs on the PHP inside Drupack, so this machine's PHP extensions do not matter to it.
-composer --working-dir=drupal install --no-interaction --no-progress --ignore-platform-reqs
+# Composer's Drupack plugin puts the official file back on every install, so a current vendor folder skips it.
+if [ ! -x drupal/drupack ] || [ drupal/composer.lock -nt drupal/vendor/composer/installed.json ]; then
+    composer --working-dir=drupal install --no-interaction --no-progress --ignore-platform-reqs
+fi
+bin/drupack-ffi
 
 export DRUPACK_NO_UPDATE_CHECK=1
 # The marker appears only after a complete install, so a failed one runs again.
