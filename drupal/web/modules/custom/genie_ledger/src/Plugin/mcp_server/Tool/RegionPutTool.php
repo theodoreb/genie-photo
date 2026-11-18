@@ -42,7 +42,7 @@ final class RegionPutTool extends LedgerToolBase {
   private const MAX_PERSON_SHARE = 0.25;
 
   /**
-   * Largest share of another player's region a new region may overlap.
+   * Largest share of another region a player's place may overlap.
    */
   private const MAX_OVERLAP_SHARE = 0.5;
 
@@ -116,14 +116,14 @@ final class RegionPutTool extends LedgerToolBase {
       throw new ToolCallException('Your place can take at most a quarter of the photo.');
     }
     foreach ($session->regions as $region) {
-      if ($region['kind'] !== 'person' || $region['owner'] === $uid) {
+      if ($region['kind'] === 'person' && $region['owner'] === $uid) {
         continue;
       }
       $overlapWidth = min($box['x'] + $box['width'], $region['x'] + $region['width']) - max($box['x'], $region['x']);
       $overlapHeight = min($box['y'] + $box['height'], $region['y'] + $region['height']) - max($box['y'], $region['y']);
       if ($overlapWidth > 0 && $overlapHeight > 0
         && $overlapWidth * $overlapHeight > $region['width'] * $region['height'] * self::MAX_OVERLAP_SHARE) {
-        throw new ToolCallException(sprintf('This box covers the place of %s.', $region['label']));
+        throw new ToolCallException(sprintf('This box covers %s.', $region['label']));
       }
     }
   }
