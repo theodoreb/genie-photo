@@ -23,6 +23,9 @@ else
     bin/dev-drupal
 fi
 
+# The model comes once from Hugging Face. Without it the assistants find the people.
+(cd drupal && ./drupack drush genie:detector-prepare) || echo 'The person detector is not ready. Assistants will find the people.' >&2
+
 # Drupack serves HTTPS only on a machine that trusts its local root.
 drupal_url=http://127.0.0.1:7225
 if curl -fs -o /dev/null https://127.0.0.1:7225/.well-known/oauth-authorization-server; then

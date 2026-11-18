@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Drush\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\genie_ledger\Access\WebViewAccess;
 use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\PersonDetector;
 use Drupal\genie_ledger\PhotoStore;
+use Drupal\genie_ledger\Session;
 use Drupal\genie_ledger\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
@@ -25,8 +28,49 @@ final class GenieCommands extends DrushCommands {
     private readonly PhotoStore $photos,
     private readonly WishInterpreter $interpreter,
     private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly PersonDetector $detector,
+    private readonly FileSystemInterface $fileSystem,
   ) {
     parent::__construct();
+  }
+
+  /**
+   * Finds the people in the session photo. The photo upload starts this.
+   */
+  #[CLI\Command(name: 'genie:detect')]
+  public function detect(): void {
+    $photo = $this->ledger->read()->detection;
+    if (($photo['status'] ?? NULL) !== 'pending') {
+      return;
+    }
+    $found = ['status' => 'failed', 'photo' => $photo['photo'], 'boxes' => []];
+    try {
+      $found = ['status' => 'ready'] + ['boxes' => $this->detector->detect($this->fileSystem->realpath(PhotoStore::URI))] + $found;
+    }
+    catch (\Throwable $e) {
+      $this->logger()->error($e->getMessage());
+    }
+    // A reset and a new upload may have come while the model ran.
+    $this->ledger->write(static function (Session $session) use ($found): void {
+      if (($session->detection['photo'] ?? NULL) === $found['photo']) {
+        $session->detection = $found;
+      }
+    }, FALSE);
+  }
+
+  /**
+   * Downloads the person detector's model, when this PHP can run it.
+   */
+  #[CLI\Command(name: 'genie:detector-prepare')]
+  public function prepareDetector(): void {
+    if (!$this->detector->available()) {
+      return;
+    }
+    $file = $this->fileSystem->tempnam('temporary://', 'genie');
+    imagejpeg(imagecreatetruecolor(64, 64), $this->fileSystem->realpath($file));
+    $this->detector->detect($this->fileSystem->realpath($file));
+    $this->fileSystem->delete($file);
+    $this->logger()->success('The person detector is ready.');
   }
 
   /**

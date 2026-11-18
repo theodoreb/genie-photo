@@ -12,6 +12,7 @@ services:
   Drupal\genie_ledger\Framer: ~
   Drupal\genie_ledger\KeywordInterpreter: ~
   Drupal\genie_ledger\Ledger: ~
+  Drupal\genie_ledger\PersonDetector: ~
   Drupal\genie_ledger\PhotoIntake: ~
   Drupal\genie_ledger\PhotoStore: ~
   Drupal\genie_ledger\RevisionPublisher: ~

@@ -27,12 +27,26 @@ final class Session {
   public ?array $photo = NULL;
 
   /**
+   * The local person detector's work on this photo, when this PHP can run it.
+   *
+   * @var array{status: string, photo: string, boxes: list<array{x: int, y: int, width: int, height: int}>}|null
+   */
+  public ?array $detection = NULL;
+
+  /**
+   * What each player's assistant painted on their whole person, by account id.
+   *
+   * @var array<int, \Drupal\genie_ledger\BodyPaint>
+   */
+  public array $paints = [];
+
+  /**
    * Claimed people and found objects in photo pixels, by region id.
    *
    * A person's box is the body. The head box inside it takes covers and
-   * stickers.
+   * stickers. Cells hold the traced outline, and rank counts from the front.
    *
-   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}}>
+   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int}>
    */
   public array $regions = [];
 
@@ -86,7 +100,7 @@ final class Session {
   /**
    * People a scan found and nobody claimed yet, by id.
    *
-   * @var array<string, array{label: string, x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}}>
+   * @var array<string, array{label: string, x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int}>
    */
   public array $proposals = [];
 

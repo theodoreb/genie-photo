@@ -27,6 +27,44 @@ final class Darkroom {
   private const GRID_MAJOR = 4;
 
   /**
+   * Longer side of the outline view, in pixels.
+   */
+  private const OUTLINE_VIEW_SIDE = 1600;
+
+  /**
+   * Outline cells between two numbers.
+   */
+  private const OUTLINE_LABEL_EVERY = 5;
+
+  /**
+   * Largest zoom of a person in their view.
+   */
+  private const BODY_VIEW_MAX_SCALE = 4;
+
+  /**
+   * Fewest sheet pixels between two grid numbers.
+   */
+  private const MIN_LABEL_GAP = 32;
+
+  /**
+   * Smallest cell side, in sheet pixels, that gets its own faint line.
+   */
+  private const MIN_FAINT_LINE = 8;
+
+  private const PIXEL_ART_COLORS = 16;
+
+  private const BOX_COLORS = [
+    [230, 90, 0],
+    [210, 0, 60],
+    [0, 140, 70],
+    [30, 90, 230],
+    [160, 0, 180],
+    [0, 140, 150],
+    [120, 80, 0],
+    [210, 0, 130],
+  ];
+
+  /**
    * Returns the frame as PNG bytes.
    */
   public function render(string $jpeg, Session $session, Frame $frame): string {
@@ -96,6 +134,13 @@ final class Darkroom {
 
     // Hidden pixels go first, so no sticker blur can carry them elsewhere.
     $this->paintOver($image, $hidden);
+    $owners = Outlines::owners($session);
+    foreach ($session->regions as $id => $region) {
+      if ($region['kind'] === 'person' && isset($session->paints[$region['owner']])) {
+        $this->paintPerson($image, $session->photo, array_keys($owners, $id, TRUE), $session->paints[$region['owner']]);
+      }
+    }
+    $traced = Outlines::owners($session, TRUE);
     foreach ($session->regions as $id => $region) {
       if ($region['kind'] === 'person' && isset($session->stickers[$region['owner']])) {
         $others = [];
@@ -104,16 +149,231 @@ final class Darkroom {
             $others[] = $other['head'];
           }
         }
-        $saved = array_map(fn (array $head): \GdImage => $this->copyOf($image, $head), $others);
+        foreach ($traced as $cell => $owner) {
+          if ($owner !== $id) {
+            $others[] = Outlines::area($cell, $session->photo);
+          }
+        }
+        $saved = array_map(fn (array $area): \GdImage => $this->copyOf($image, $area), $others);
         $this->pasteSticker($image, self::stickerArea($region['head'], $session->photo), $session->stickers[$region['owner']]);
-        foreach ($others as $index => $head) {
-          imagecopy($image, $saved[$index], $head['x'], $head['y'], 0, 0, $head['width'], $head['height']);
+        foreach ($others as $index => $area) {
+          imagecopy($image, $saved[$index], $area['x'], $area['y'], 0, 0, $area['width'], $area['height']);
         }
       }
     }
     // A cover wins over any sticker on the same place.
     $this->paintOver($image, $hidden);
     return $image;
+  }
+
+  /**
+   * Shows the photo under the outline grid, with the detector's boxes.
+   *
+   * @return string
+   *   JPEG bytes. Cell 0, 0 starts after the margin that holds the numbers.
+   */
+  public function outlineView(string $jpeg, Session $session): string {
+    $photo = $session->photo;
+    $scale = self::OUTLINE_VIEW_SIDE / max($photo['width'], $photo['height']);
+    $width = (int) round($photo['width'] * $scale);
+    $height = (int) round($photo['height'] * $scale);
+    $view = $this->framed(imagescale(imagecreatefromstring($jpeg), $width, $height, IMG_BICUBIC));
+    $side = Outlines::cellSize($photo) * $scale;
+    $this->drawGrid($view, $width, $height, $side, 1, self::OUTLINE_LABEL_EVERY, 0, 0);
+
+    imagesetthickness($view, 4);
+    $ink = imagecolorallocate($view, 255, 255, 255);
+    $number = 0;
+    foreach (Places::detected($session) as $label => $box) {
+      $color = imagecolorallocate($view, ...self::BOX_COLORS[$number++ % count(self::BOX_COLORS)]);
+      $left = self::GRID_MARGIN + (int) round($box['x'] * $scale);
+      $top = self::GRID_MARGIN + (int) round($box['y'] * $scale);
+      imagerectangle($view, $left, $top, $left + (int) round($box['width'] * $scale), $top + (int) round($box['height'] * $scale), $color);
+      imagefilledrectangle($view, $left, $top, $left + 30, $top + 20, $color);
+      imagestring($view, 5, $left + 5, $top + 2, $label, $ink);
+    }
+    return self::encodeJpeg($view);
+  }
+
+  /**
+   * Shows a player's person as the picture has it, under the fine grid.
+   *
+   * Cells the player cannot paint are dimmed.
+   *
+   * @return string
+   *   JPEG bytes. The numbers name fine rows and columns of the whole photo.
+   */
+  public function bodyView(string $jpeg, Session $session, int $uid): string {
+    $photo = $session->photo;
+    $cells = array_keys(Outlines::owners($session), "person-$uid", TRUE);
+    $bounds = self::bounds($cells, $photo);
+    $image = $this->develop($jpeg, $session);
+    $dim = imagecolorallocatealpha($image, 0, 0, 0, 45);
+    $owned = array_flip($cells);
+    $columns = Outlines::columns($photo);
+    $cell = Outlines::cellSize($photo);
+    for ($y = $bounds['y']; $y < $bounds['y'] + $bounds['height']; $y += $cell) {
+      for ($x = $bounds['x']; $x < $bounds['x'] + $bounds['width']; $x += $cell) {
+        if (!isset($owned[intdiv($y, $cell) * $columns + intdiv($x, $cell)])) {
+          imagefilledrectangle($image, $x, $y, $x + $cell - 1, $y + $cell - 1, $dim);
+        }
+      }
+    }
+    $scale = max(1, min(self::BODY_VIEW_MAX_SCALE, intdiv(self::OUTLINE_VIEW_SIDE, max($bounds['width'], $bounds['height']))));
+    $width = $bounds['width'] * $scale;
+    $height = $bounds['height'] * $scale;
+    $view = $this->framed(imagescale($this->copyOf($image, $bounds), $width, $height, IMG_NEAREST_NEIGHBOUR));
+    $this->drawGrid(
+      $view,
+      $width,
+      $height,
+      Outlines::fineSize($photo) * $scale,
+      Outlines::FINE_PER_CELL,
+      Outlines::FINE_PER_CELL * (int) ceil(self::MIN_LABEL_GAP / ($cell * $scale)),
+      intdiv($bounds['x'], Outlines::fineSize($photo)),
+      intdiv($bounds['y'], Outlines::fineSize($photo)),
+    );
+    return self::encodeJpeg($view);
+  }
+
+  /**
+   * Puts a picture on a white sheet with room for the grid numbers.
+   */
+  private function framed(\GdImage $picture): \GdImage {
+    $view = imagecreatetruecolor(imagesx($picture) + self::GRID_MARGIN, imagesy($picture) + self::GRID_MARGIN);
+    imagefill($view, 0, 0, imagecolorallocate($view, 255, 255, 255));
+    imagecopy($view, $picture, self::GRID_MARGIN, self::GRID_MARGIN, 0, 0, imagesx($picture), imagesy($picture));
+    return $view;
+  }
+
+  /**
+   * Draws a numbered grid over a framed picture.
+   *
+   * @param \GdImage $view
+   *   The sheet.
+   * @param int $width
+   *   The picture's width.
+   * @param int $height
+   *   The picture's height.
+   * @param float|int $side
+   *   The side of a grid cell in sheet pixels.
+   * @param int $major
+   *   Grid cells between two bright lines.
+   * @param int $labelEvery
+   *   Grid cells between two numbers.
+   * @param int $firstColumn
+   *   The number of the leftmost column.
+   * @param int $firstRow
+   *   The number of the top row.
+   */
+  private function drawGrid(\GdImage $view, int $width, int $height, float|int $side, int $major, int $labelEvery, int $firstColumn, int $firstRow): void {
+    $ink = imagecolorallocate($view, 0, 0, 0);
+    $faint = imagecolorallocatealpha($view, 255, 255, 255, 95);
+    $bright = imagecolorallocatealpha($view, 255, 225, 0, 40);
+    for ($line = 0; $line * $side <= $width; $line++) {
+      $at = self::GRID_MARGIN + (int) round($line * $side);
+      $number = $firstColumn + $line;
+      if ($number % $major === 0 || $side >= self::MIN_FAINT_LINE) {
+        imageline($view, $at, self::GRID_MARGIN, $at, self::GRID_MARGIN + $height, $number % $major === 0 ? $bright : $faint);
+      }
+      if ($number % $labelEvery === 0) {
+        imagestring($view, 3, $at + 1, 14, (string) $number, $ink);
+      }
+    }
+    for ($line = 0; $line * $side <= $height; $line++) {
+      $at = self::GRID_MARGIN + (int) round($line * $side);
+      $number = $firstRow + $line;
+      if ($number % $major === 0 || $side >= self::MIN_FAINT_LINE) {
+        imageline($view, self::GRID_MARGIN, $at, self::GRID_MARGIN + $width, $at, $number % $major === 0 ? $bright : $faint);
+      }
+      if ($number % $labelEvery === 0) {
+        imagestring($view, 3, 6, $at + 1, (string) $number, $ink);
+      }
+    }
+  }
+
+  /**
+   * Finds the rectangle around some cells.
+   *
+   * @param list<int> $cells
+   *   The cell indexes.
+   * @param array{width: int, height: int} $photo
+   *   The photo size.
+   *
+   * @return array{x: int, y: int, width: int, height: int}
+   *   The rectangle, inside the photo.
+   */
+  private static function bounds(array $cells, array $photo): array {
+    $areas = array_map(static fn (int $cell): array => Outlines::area($cell, $photo), $cells);
+    $left = min(array_column($areas, 'x'));
+    $top = min(array_column($areas, 'y'));
+    $right = max(array_map(static fn (array $area): int => $area['x'] + $area['width'], $areas));
+    $bottom = max(array_map(static fn (array $area): int => $area['y'] + $area['height'], $areas));
+    return ['x' => $left, 'y' => $top, 'width' => $right - $left, 'height' => $bottom - $top];
+  }
+
+  /**
+   * Repaints a person, inside the cells they own.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param array{width: int, height: int} $photo
+   *   The photo size.
+   * @param list<int> $cells
+   *   The cells the person owns.
+   * @param \Drupal\genie_ledger\BodyPaint $paint
+   *   The paint.
+   */
+  private function paintPerson(\GdImage $image, array $photo, array $cells, BodyPaint $paint): void {
+    if ($cells === []) {
+      return;
+    }
+    $bounds = self::bounds($cells, $photo);
+    $original = $this->copyOf($image, $bounds);
+    $fine = Outlines::fineSize($photo);
+    $layer = $paint->pixelate ? $this->pixelated($original, $fine) : $this->copyOf($image, $bounds);
+    $colors = array_map(
+      static fn (string $color): int => imagecolorallocate($layer, ...sscanf($color, '#%02x%02x%02x')),
+      $paint->palette,
+    );
+    foreach ($paint->spans as [$row, $first, $last, $cell]) {
+      $top = $row * $fine - $bounds['y'];
+      $left = max(0, $first * $fine - $bounds['x']);
+      $right = min($bounds['width'], ($last + 1) * $fine - $bounds['x']);
+      if ($cell === Sticker::EMPTY || $top < 0 || $top >= $bounds['height'] || $left >= $right) {
+        continue;
+      }
+      if ($cell === Sticker::ORIGINAL) {
+        imagecopy($layer, $original, $left, $top, $left, $top, $right - $left, $fine);
+      }
+      else {
+        imagefilledrectangle($layer, $left, $top, $right - 1, $top + $fine - 1, $colors[hexdec($cell)]);
+      }
+    }
+    foreach ($cells as $cell) {
+      $area = Outlines::area($cell, $photo);
+      imagecopy($image, $layer, $area['x'], $area['y'], $area['x'] - $bounds['x'], $area['y'] - $bounds['y'], $area['width'], $area['height']);
+    }
+  }
+
+  /**
+   * Turns a picture into pixel art with a short palette.
+   *
+   * @param \GdImage $picture
+   *   The picture.
+   * @param int $fine
+   *   The side of one art pixel.
+   */
+  private function pixelated(\GdImage $picture, int $fine): \GdImage {
+    $width = imagesx($picture);
+    $height = imagesy($picture);
+    $columns = (int) ceil($width / $fine);
+    $rows = (int) ceil($height / $fine);
+    $small = imagescale($picture, $columns, $rows, IMG_BILINEAR_FIXED);
+    imagetruecolortopalette($small, FALSE, self::PIXEL_ART_COLORS);
+    $art = imagecreatetruecolor($width, $height);
+    imagecopyresized($art, $small, 0, 0, 0, 0, $columns * $fine, $rows * $fine, $columns, $rows);
+    return $art;
   }
 
   /**

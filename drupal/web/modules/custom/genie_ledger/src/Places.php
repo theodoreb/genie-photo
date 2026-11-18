@@ -32,6 +32,11 @@ final class Places {
   private const MAX_HEAD_SHARE = 0.25;
 
   /**
+   * Largest share of a person's box their head may take.
+   */
+  private const MAX_HEAD_OF_BODY = 0.6;
+
+  /**
    * Share of a head another box must overlap to count as the same head.
    */
   private const SAME_HEAD_SHARE = 0.5;
@@ -59,14 +64,22 @@ final class Places {
     if (!is_array($objects) || !array_is_list($objects) || count($objects) > self::MAX_OBJECTS) {
       throw new \InvalidArgumentException(sprintf('Objects is a list of at most %d entries.', self::MAX_OBJECTS));
     }
+    $rank = self::nextRank($session);
     foreach ($people as $person) {
       $head = self::head($person['head'] ?? NULL, $session);
-      $body = self::box($person['body'] ?? NULL, $session);
+      $body = self::bodyOf($person, $session);
+      $cells = Outlines::parse($person['outline'] ?? [], $body, $session->photo);
       $label = self::label($person['description'] ?? NULL);
       if (self::claimedHead($session, $head) === NULL) {
         self::dropProposalsOn($session, $head);
-        $session->proposals['proposal-' . substr(md5(serialize($head)), 0, 8)] = ['label' => $label, 'head' => $head] + $body;
+        $session->proposals['proposal-' . substr(md5(serialize($head)), 0, 8)] = [
+          'label' => $label,
+          'head' => $head,
+          'cells' => $cells,
+          'rank' => $rank,
+        ] + $body;
       }
+      $rank++;
     }
     foreach ($objects as $object) {
       $label = self::label($object['label'] ?? NULL);
@@ -89,11 +102,11 @@ final class Places {
    * @param string $name
    *   The player's name.
    * @param mixed $person
-   *   The id of a proposed box, or NULL with explicit boxes.
+   *   The id of a proposed box, or NULL to correct the player's own place.
    * @param mixed $head
-   *   The head box when no id is given.
+   *   The player's head box, which replaces the one on file.
    * @param mixed $body
-   *   The body box when no id is given.
+   *   The body box when no id is given. Without it the place keeps its body.
    *
    * @throws \InvalidArgumentException
    *   When the box is gone or stands for another player.
@@ -102,11 +115,8 @@ final class Places {
     self::assertPhoto($session);
     $id = "person-$uid";
     $previous = $session->regions[$id] ?? NULL;
-    if ($person === NULL) {
-      $place = ['head' => self::head($head, $session)] + self::box($body, $session);
-      $description = $previous['description'] ?? $name;
-    }
-    else {
+    $samePerson = FALSE;
+    if ($person !== NULL) {
       if (!is_string($person) || !isset($session->proposals[$person])) {
         throw new \InvalidArgumentException('This box is gone. Look at the photo again.');
       }
@@ -115,12 +125,34 @@ final class Places {
       $description = $proposal['label'];
       unset($proposal['label']);
       $place = $proposal;
+      if ($head !== NULL) {
+        $place['head'] = self::headOn($head, $place, $session);
+      }
+    }
+    elseif ($body === NULL && $previous !== NULL) {
+      $samePerson = TRUE;
+      $description = $previous['description'];
+      $place = [
+        'head' => self::headOn($head, $previous, $session),
+        'cells' => $previous['cells'] ?? [],
+        'rank' => $previous['rank'] ?? self::nextRank($session),
+        'x' => $previous['x'],
+        'y' => $previous['y'],
+        'width' => $previous['width'],
+        'height' => $previous['height'],
+      ];
+    }
+    else {
+      $place = ['head' => self::head($head, $session), 'cells' => [], 'rank' => self::nextRank($session)] + self::box($body, $session);
+      $description = $previous['description'] ?? $name;
     }
     // The person this player gave up goes back on offer, covered.
-    if ($previous !== NULL && !self::sameHead($previous['head'], $place['head'])) {
+    if ($previous !== NULL && !$samePerson && !self::sameHead($previous['head'], $place['head'])) {
       $session->proposals['proposal-' . substr(md5(serialize($previous['head'])), 0, 8)] = [
         'label' => $previous['description'],
         'head' => $previous['head'],
+        'cells' => $previous['cells'] ?? [],
+        'rank' => $previous['rank'] ?? self::nextRank($session),
         'x' => $previous['x'],
         'y' => $previous['y'],
         'width' => $previous['width'],
@@ -135,6 +167,80 @@ final class Places {
     self::dropProposalsOn($session, $place['head']);
     $session->players[$uid] = $name;
     $session->regions[$id] = ['kind' => 'person', 'owner' => $uid, 'label' => $name, 'description' => $description] + $place;
+  }
+
+  /**
+   * Lists the people the detector found, by the label the outline view shows.
+   *
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   *
+   * @return array<string, array{x: int, y: int, width: int, height: int}>
+   *   Boxes by label: P1, P2 and so on, from left to right.
+   */
+  public static function detected(Session $session): array {
+    $detected = [];
+    foreach ($session->detection['boxes'] ?? [] as $index => $box) {
+      $detected['P' . ($index + 1)] = $box;
+    }
+    return $detected;
+  }
+
+  /**
+   * Finds a scanned person's body: the detector's box, or the one sent.
+   *
+   * @param mixed $person
+   *   The person a scan reported.
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   *
+   * @return array{x: int, y: int, width: int, height: int}
+   *   The box.
+   */
+  private static function bodyOf(mixed $person, Session $session): array {
+    $label = $person['detected'] ?? NULL;
+    if ($label === NULL) {
+      return self::box($person['body'] ?? NULL, $session);
+    }
+    $detected = self::detected($session);
+    if (!is_string($label) || !isset($detected[$label])) {
+      throw new \InvalidArgumentException('The detector found no such person. Use a label from the outline view.');
+    }
+    return $detected[$label];
+  }
+
+  /**
+   * Validates a head box against the person it belongs to.
+   *
+   * @param mixed $input
+   *   The head box.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The person's box.
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   *
+   * @return array{x: int, y: int, width: int, height: int}
+   *   The head box.
+   */
+  private static function headOn(mixed $input, array $body, Session $session): array {
+    $head = self::head($input, $session);
+    $x = $head['x'] + $head['width'] / 2;
+    $y = $head['y'] + $head['height'] / 2;
+    if ($x < $body['x'] || $x > $body['x'] + $body['width'] || $y < $body['y'] || $y > $body['y'] + $body['height']) {
+      throw new \InvalidArgumentException('This head is not on your person. Look at the photo again.');
+    }
+    if ($head['width'] * $head['height'] > $body['width'] * $body['height'] * self::MAX_HEAD_OF_BODY) {
+      throw new \InvalidArgumentException('This head box is too large for your person. Draw it around the head alone.');
+    }
+    return $head;
+  }
+
+  /**
+   * Returns the rank behind everyone known so far.
+   */
+  private static function nextRank(Session $session): int {
+    $ranks = array_column([...$session->proposals, ...array_values($session->regions)], 'rank');
+    return $ranks === [] ? 0 : max($ranks) + 1;
   }
 
   /**

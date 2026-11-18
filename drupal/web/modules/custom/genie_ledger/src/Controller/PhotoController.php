@@ -7,6 +7,7 @@ namespace Drupal\genie_ledger\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\genie_ledger\Exports;
 use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\PersonDetector;
 use Drupal\genie_ledger\PhotoIntake;
 use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\Session;
@@ -31,6 +32,7 @@ final class PhotoController extends ControllerBase {
     private readonly PhotoIntake $intake,
     private readonly PhotoStore $photos,
     private readonly Exports $exports,
+    private readonly PersonDetector $detector,
   ) {}
 
   /**
@@ -58,7 +60,13 @@ final class PhotoController extends ControllerBase {
       $session->uploader = $uploader;
       $session->players[$uploader] = $name;
       $session->photo = ['width' => $photo['width'], 'height' => $photo['height']];
+      if ($this->detector->available()) {
+        $session->detection = ['status' => 'pending', 'photo' => sha1($photo['jpeg']), 'boxes' => []];
+      }
     });
+    if ($session->detection !== NULL) {
+      $this->detector->launch();
+    }
 
     return new JsonResponse(['revision' => $session->revision], 201);
   }

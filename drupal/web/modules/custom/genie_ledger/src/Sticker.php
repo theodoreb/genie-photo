@@ -21,7 +21,7 @@ final readonly class Sticker {
   /**
    * Most runs of cells one sticker may send.
    */
-  private const MAX_SPANS = 1024;
+  public const MAX_SPANS = 1024;
 
   public const MAX_BLUR = 8;
 
@@ -68,16 +68,9 @@ final readonly class Sticker {
     if (!is_array($spans) || !array_is_list($spans) || count($spans) > self::MAX_SPANS) {
       throw new \InvalidArgumentException(sprintf('Spans is a list of at most %d runs.', self::MAX_SPANS));
     }
-    if (!is_array($palette) || !array_is_list($palette) || count($palette) > self::MAX_COLORS) {
-      throw new \InvalidArgumentException('A palette is a list of at most 16 colors.');
-    }
+    self::assertPalette($palette);
     if (!is_int($blur) || $blur < 0 || $blur > self::MAX_BLUR) {
       throw new \InvalidArgumentException('Blur goes from 0 to 8.');
-    }
-    foreach ($palette as $color) {
-      if (!is_string($color) || !preg_match('/^#[0-9a-f]{6}$/iD', $color)) {
-        throw new \InvalidArgumentException('Palette colors look like #ff8800.');
-      }
     }
     $grid = array_fill(0, self::SIZE, str_repeat(self::EMPTY, self::SIZE));
     foreach ($rows as $index => $row) {
@@ -92,13 +85,8 @@ final readonly class Sticker {
       }
     }
     foreach ($spans as $span) {
-      if (!is_array($span) || !array_is_list($span) || count($span) !== 4
-        || !is_int($span[0]) || !is_int($span[1]) || !is_int($span[2]) || !is_string($span[3])
-        || !preg_match('/^[.*0-9a-f]$/D', $span[3])) {
-        throw new \InvalidArgumentException('A span is [row, first column, last column, cell].');
-      }
+      self::assertSpan($span, $palette);
       [$row, $first, $last, $cell] = $span;
-      self::assertCell($cell, $palette);
       $first = max(0, $first);
       $last = min(self::SIZE - 1, $last);
       if ($row >= 0 && $row < self::SIZE && $first <= $last) {
@@ -106,6 +94,46 @@ final readonly class Sticker {
       }
     }
     return new self($grid, $palette, $blur);
+  }
+
+  /**
+   * Checks a palette.
+   *
+   * @param mixed $palette
+   *   The palette a client sent.
+   *
+   * @throws \InvalidArgumentException
+   *   When it breaks the format.
+   */
+  public static function assertPalette(mixed $palette): void {
+    if (!is_array($palette) || !array_is_list($palette) || count($palette) > self::MAX_COLORS) {
+      throw new \InvalidArgumentException('A palette is a list of at most 16 colors.');
+    }
+    foreach ($palette as $color) {
+      if (!is_string($color) || !preg_match('/^#[0-9a-f]{6}$/iD', $color)) {
+        throw new \InvalidArgumentException('Palette colors look like #ff8800.');
+      }
+    }
+  }
+
+  /**
+   * Checks one run of cells.
+   *
+   * @param mixed $span
+   *   The run a client sent.
+   * @param list<mixed> $palette
+   *   The checked palette.
+   *
+   * @throws \InvalidArgumentException
+   *   When it breaks the format.
+   */
+  public static function assertSpan(mixed $span, array $palette): void {
+    if (!is_array($span) || !array_is_list($span) || count($span) !== 4
+      || !is_int($span[0]) || !is_int($span[1]) || !is_int($span[2]) || !is_string($span[3])
+      || !preg_match('/^[.*0-9a-f]$/D', $span[3])) {
+      throw new \InvalidArgumentException('A span is [row, first column, last column, cell].');
+    }
+    self::assertCell($span[3], $palette);
   }
 
   /**

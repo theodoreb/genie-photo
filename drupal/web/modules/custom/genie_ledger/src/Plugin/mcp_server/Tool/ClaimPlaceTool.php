@@ -16,7 +16,7 @@ use Mcp\Server\ClientGateway;
 #[Tool(
   id: 'claim_place',
   label: new TranslatableMarkup('Claim my place'),
-  description: new TranslatableMarkup('Tells the genie which person in the photo is you. Ask your person which one they are, then pass the id of that box from photo_get. If your box is wrong or missing, pass head and body instead of an id.'),
+  description: new TranslatableMarkup('Tells the genie which person in the photo is you. Ask your person which one they are, then pass the id of that box from photo_get with a tight head box you see in the photo. To fix your head later, pass head alone. If your person is missing, pass head and body instead of an id.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [

@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+// Critical path of a whole person: the detector finds people, an assistant traces one, claims it and turns it into pixel art.
+
+declare(strict_types=1);
+
+use App\Tests\Smoke\SmokeSite;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$site = new SmokeSite();
+$web = $site->signIn('alice');
+$site->photos->put($web, (string) file_get_contents(dirname(__DIR__).'/demo/holiday-party.jpg'));
+$assistant = $site->signInAsAssistant('alice');
+
+$deadline = time() + 120;
+do {
+    $outline = $site->imageTool($assistant, 'photo_get', ['view' => 'outline']);
+    $status = $outline['info']['detector'];
+    if ('pending' === $status) {
+        usleep(500_000);
+    }
+} while ('pending' === $status && time() < $deadline);
+if ('ready' !== $status || [] === $outline['info']['detected']) {
+    SmokeSite::fail("The detector ended as $status.");
+}
+echo count($outline['info']['detected'])." people detected\n";
+
+$label = array_key_first($outline['info']['detected']);
+[$x, $y, $width, $height] = $outline['info']['detected'][$label];
+$cell = $outline['info']['cell_pixels'];
+$runs = [];
+for ($row = intdiv($y, $cell) + 1; $row < intdiv($y + $height, $cell); ++$row) {
+    $runs[] = [$row, intdiv($x, $cell) + 1, intdiv($x + $width, $cell) - 1];
+}
+$head = [$x + intdiv($width, 3), $y, intdiv($width, 3), intdiv($width, 3)];
+$site->tools->call($assistant, 'scan_photo', [
+    'people' => [['description' => 'first from the left', 'head' => $head, 'detected' => $label, 'outline' => $runs]],
+    'objects' => [],
+]);
+$person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
+$claim = $site->tools->call($assistant, 'claim_place', ['person' => $person, 'head' => $head]);
+$before = $site->photos->frame($web, $claim['revision']);
+
+$body = $site->imageTool($assistant, 'photo_get', ['view' => 'my_body']);
+if (null === $body['image'] || [] === $body['info']['editable']) {
+    SmokeSite::fail('The assistant did not see what it can paint.');
+}
+$painted = $site->imageTool($assistant, 'paint_me', ['pixelate' => true]);
+if (!$painted['info']['granted'] || null === $painted['image']) {
+    SmokeSite::fail('The paint result did not show the person.');
+}
+if (hash('sha256', $before) === hash('sha256', $site->photos->frame($web, $painted['info']['revision']))) {
+    SmokeSite::fail('The frame did not change.');
+}
+echo "revision {$painted['info']['revision']}\n";

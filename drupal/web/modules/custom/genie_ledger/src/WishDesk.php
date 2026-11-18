@@ -19,6 +19,8 @@ final class WishDesk {
 
   private const NO_PLACE = 'Claim your place first: call photo_get, then claim_place.';
 
+  private const TRACING = 'For each detected label, list the grid cells whose centre lies on that person: hair, hat, face, clothes, arms, hands and what they wear. Leave out the background, held objects, furniture and other people. Stay inside or close to the box. Where people overlap, give the cell to the one in front. Send them to scan_photo from front to back, each with its label as "detected", its cells as "outline" runs [row, first column, last column] and a head box in photo pixels. Leave out a box that holds no real person.';
+
   public function __construct(
     private readonly Ledger $ledger,
     private readonly Framer $framer,
@@ -72,6 +74,31 @@ final class WishDesk {
       ? sprintf('Noted, %s. Your cover hides the sticker until you ask to be shown.', $name)
       : sprintf('Granted, %s. Your sticker is on the photo.', $name);
     return ['granted' => TRUE, 'reply' => $reply, 'revision' => $session->revision];
+  }
+
+  /**
+   * Repaints the player's whole person.
+   *
+   * @return array{granted: bool, reply: string, revision: int}
+   *   The outcome.
+   */
+  public function paint(int $uid, string $name, BodyPaint $paint): array {
+    if (!isset($this->ledger->read()->regions["person-$uid"])) {
+      return $this->refusal(self::NO_PLACE);
+    }
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $paint): void {
+      if ($paint->isEmpty()) {
+        unset($session->paints[$uid]);
+      }
+      else {
+        $session->paints[$uid] = $paint;
+      }
+    });
+    return [
+      'granted' => TRUE,
+      'reply' => sprintf('Granted, %s. Your person is repainted.', $name),
+      'revision' => $session->revision,
+    ];
   }
 
   /**
@@ -158,14 +185,30 @@ final class WishDesk {
     $bytes = match ($view) {
       'photo' => $this->photos->read(),
       'picture' => $this->pictureJpeg($session),
+      'outline' => $this->darkroom->outlineView($this->photos->read(), $session),
       'my_head' => $this->headJpeg($session, $uid),
-      default => throw new \InvalidArgumentException('The view is photo, picture or my_head.'),
+      'my_body' => $this->bodyJpeg($session, $uid),
+      default => throw new \InvalidArgumentException('The view is photo, picture, outline, my_head or my_body.'),
     };
     if ($view === 'photo') {
       $info += $session->photo + [
         'people' => self::people($session),
         'objects' => array_values($this->objectNames($session)),
       ];
+    }
+    if ($view === 'outline') {
+      $info += [
+        'columns' => Outlines::columns($session->photo),
+        'rows' => Outlines::rows($session->photo),
+        'cell_pixels' => Outlines::cellSize($session->photo),
+        'detector' => $session->detection['status'] ?? 'off',
+        'detected' => array_map(self::boxList(...), Places::detected($session)),
+        'how_to' => self::TRACING,
+      ];
+    }
+    if ($view === 'my_body') {
+      $info['grid'] = 'Numbers name fine rows and columns of the whole photo. Dimmed cells belong to someone else or to the background.';
+      $info['editable'] = Outlines::editable(array_keys(Outlines::owners($session), "person-$uid", TRUE), $session->photo);
     }
     if ($view === 'my_head') {
       $info['grid'] = 'Numbers name sticker columns and rows from 0 to 31. Yellow lines mark every fourth cell.';
@@ -195,13 +238,39 @@ final class WishDesk {
   }
 
   /**
+   * Renders a player's whole person under the fine grid.
+   */
+  private function bodyJpeg(Session $session, int $uid): string {
+    if (!isset($session->regions["person-$uid"])) {
+      throw new \InvalidArgumentException(self::NO_PLACE);
+    }
+    if (!in_array("person-$uid", Outlines::owners($session), TRUE)) {
+      throw new \InvalidArgumentException('People in front of you cover your whole person.');
+    }
+    return $this->darkroom->bodyView($this->photos->read(), $session, $uid);
+  }
+
+  /**
+   * Writes a box as an assistant reads it.
+   *
+   * @param array{x: int, y: int, width: int, height: int} $box
+   *   The box.
+   *
+   * @return array{int, int, int, int}
+   *   The box as [x, y, width, height].
+   */
+  private static function boxList(array $box): array {
+    return [$box['x'], $box['y'], $box['width'], $box['height']];
+  }
+
+  /**
    * Lists everyone found in the photo, claimed or not.
    *
    * @return list<array<string, mixed>>
    *   The people, with their boxes as [x, y, width, height].
    */
   private static function people(Session $session): array {
-    $list = fn (array $box): array => [$box['x'], $box['y'], $box['width'], $box['height']];
+    $list = self::boxList(...);
     $people = [];
     foreach ($session->proposals as $id => $proposal) {
       $people[] = [
@@ -229,11 +298,16 @@ final class WishDesk {
    */
   private static function next(Session $session, int $uid): string {
     if (isset($session->regions["person-$uid"])) {
-      return 'Your place is claimed. Make a wish, or call photo_get with view my_head before drawing a sticker.';
+      return 'Your place is claimed. Make a wish, call photo_get with view my_head before drawing a sticker, or with view my_body before paint_me.';
     }
-    return $session->proposals === []
-      ? 'Nobody has been found yet. Look at the photo with view photo, then call scan_photo.'
-      : 'Ask your person which one they are, then call claim_place with that id.';
+    if ($session->proposals !== []) {
+      return 'Ask your person which one they are. Look at the photo with view photo, then call claim_place with that id and a tight head box.';
+    }
+    return match ($session->detection['status'] ?? NULL) {
+      'pending' => 'The person detector is still running. Call wait_for_update, then photo_get with view outline.',
+      'ready' => 'Call photo_get with view outline, trace each numbered person, then call scan_photo.',
+      default => 'Nobody has been found yet. Look at the photo with view photo, then call scan_photo.',
+    };
   }
 
   /**
@@ -293,6 +367,7 @@ final class WishDesk {
     $export = $session->photo === NULL ? NULL : $this->exports->current($session);
     $regions = [];
     foreach ($session->regions as $id => $region) {
+      unset($region['cells'], $region['rank']);
       $regions[] = $region + [
         'id' => $id,
         'protected' => isset($session->protected[$id]),
@@ -307,7 +382,7 @@ final class WishDesk {
       'is_uploader' => $session->uploader === $uid,
       'regions' => $regions,
       'proposals' => array_map(
-        static fn (string $id, array $box): array => $box + ['id' => $id],
+        static fn (string $id, array $box): array => array_diff_key($box, ['cells' => TRUE, 'rank' => TRUE]) + ['id' => $id],
         array_keys($session->proposals),
         $session->proposals,
       ),
