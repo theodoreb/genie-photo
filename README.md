@@ -23,9 +23,9 @@ On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [b
 ## Play
 
 1. The first player uploads a photo. `demo/holiday-party.jpg` is ready to use.
-2. One player asks their assistant to find everyone in the photo.
+2. A local detector boxes the people in the photo. One player asks their assistant to trace them.
 3. Each player tells their assistant which person they are, or clicks their face on the web view.
-4. Players make wishes and ask for stickers.
+4. Players make wishes, ask for stickers and repaint their whole person, as pixel art if they like.
 5. If two wishes cannot both hold, the page names the players in the way.
 6. Each player approves the picture. Any later change cancels the approvals.
 7. When everyone has approved, the page offers the download.
@@ -55,11 +55,12 @@ Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local 
 |---|---|
 | `my_status` | Names the signed-in player |
 | `session_get` | Describes the session, without image data |
-| `photo_get` | Returns the photo, the shared picture or your head under the sticker grid |
-| `scan_photo` | Reports the people and objects found in the photo |
-| `claim_place` | Takes a found person as yours, or corrects your box |
+| `photo_get` | Returns the photo, the shared picture, the tracing grid, or your head or whole person under a grid |
+| `scan_photo` | Reports the people, their outlines and the objects found in the photo |
+| `claim_place` | Takes a found person as yours, or corrects your head or box |
 | `make_wish` | Sends a wish to the genie |
 | `set_sticker` | Paints your 32 by 32 pixel sticker and returns the result |
+| `paint_me` | Repaints the cells of your whole person, with optional pixel art, and returns the result |
 | `wait_for_update` | Waits up to 25 seconds for a change, approvals included |
 | `approve_export` | Asks you to approve, through MCP elicitation |
 
@@ -76,6 +77,8 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 - Symfony 8 at the repository root is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `src/Drupal/McpDrupalTools.php`.
 - Drupal in `drupal/` holds the rules, in the module `genie_ledger`. Drupal's `mcp_server` module serves assistants directly.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
+- Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs the FFI build of Drupack and a 42 MB model from Hugging Face. Without them, assistants find the people.
+- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint never leaves a player's own cells.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes.
 - Assistants get images through MCP tools. The web view gets pixels over HTTP routes that accept only its token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
@@ -90,6 +93,7 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 | `bin/smoke-collision` | Two wishes that cannot both hold |
 | `bin/smoke-sticker` | A sticker changes the picture |
 | `bin/smoke-scan` | An assistant sees the photo, finds a person, claims it and paints |
+| `bin/smoke-outline` | The detector finds people, and an assistant traces, claims and pixelates one |
 | `bin/smoke-approve` | Approval, and what an assistant cannot reach |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
