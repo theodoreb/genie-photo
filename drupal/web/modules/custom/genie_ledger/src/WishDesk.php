@@ -10,32 +10,22 @@ namespace Drupal\genie_ledger;
 final class WishDesk {
 
   private const REPLIES = [
-    'cover' => 'Granted, %s. Your place in the photo is now covered.',
+    'cover' => 'Granted, %s. Your face is now covered.',
     'exclude' => 'Granted, %s. The frame now leaves you out.',
     'visible' => 'Granted, %s. You are back in the photo.',
     'center_on' => 'Granted, %s. The frame now keeps you in the middle.',
     'stop_center' => 'Granted, %s. You no longer need the middle.',
   ];
 
-  /**
-   * Largest share of the photo one person's region may take.
-   */
-  private const MAX_PERSON_SHARE = 0.25;
-
-  /**
-   * Largest share of another box a new box may overlap and leave it standing.
-   */
-  private const MAX_OVERLAP_SHARE = 0.5;
-
-  private const MAX_LABEL = 40;
+  private const NO_PLACE = 'Claim your place first: call photo_get, then claim_place.';
 
   public function __construct(
     private readonly Ledger $ledger,
     private readonly Framer $framer,
     private readonly WishInterpreter $interpreter,
     private readonly Exports $exports,
-    private readonly BoxProposer $proposer,
     private readonly PhotoStore $photos,
+    private readonly Darkroom $darkroom,
   ) {}
 
   /**
@@ -51,7 +41,7 @@ final class WishDesk {
       return $this->refusal('I did not understand. Try "hide me", "crop me out", "put me in the middle" or "protect the cake".');
     }
     if ($wish->operation !== Operation::Protect && !isset($current->regions["person-$uid"])) {
-      return $this->refusal('Mark your place in the photo first, on the web view.');
+      return $this->refusal(self::NO_PLACE);
     }
 
     $session = $this->ledger->write(static function (Session $session) use ($uid, $name, $wish): void {
@@ -73,7 +63,7 @@ final class WishDesk {
    */
   public function setSticker(int $uid, string $name, Sticker $sticker): array {
     if (!isset($this->ledger->read()->regions["person-$uid"])) {
-      return $this->refusal('Mark your place in the photo first, on the web view.');
+      return $this->refusal(self::NO_PLACE);
     }
     $session = $this->ledger->write(static function (Session $session) use ($uid, $sticker): void {
       $session->stickers[$uid] = $sticker;
@@ -110,161 +100,140 @@ final class WishDesk {
   }
 
   /**
-   * Asks the local model for boxes, which people then confirm.
+   * Records what an assistant found in the photo.
    *
-   * @return array{available: bool, count: int, revision: int}
-   *   The outcome. Without a local model nothing changes.
+   * @return array{revision: int, unclaimed_people: int, objects: int, next: string}
+   *   The outcome.
    *
    * @throws \InvalidArgumentException
-   *   When the caller is not the uploader.
+   *   When the scan breaks a rule.
    */
-  public function proposeBoxes(int $uid): array {
-    $current = $this->ledger->read();
-    if ($current->uploader !== $uid || $current->photo === NULL) {
-      throw new \InvalidArgumentException('Only the uploader asks for proposals, once the photo is in.');
-    }
-    $boxes = $this->proposer->propose($this->photos->read(), $current->photo['width'], $current->photo['height']);
-    if ($boxes === NULL) {
-      return ['available' => FALSE, 'count' => 0, 'revision' => $current->revision];
-    }
-    $session = $this->ledger->write(static function (Session $session) use ($boxes): void {
-      $session->proposals = [];
-      foreach ($boxes as $index => $box) {
-        $claimed = array_filter($session->regions, static fn (array $region): bool => self::claims($region, $box));
-        if ($claimed === []) {
-          $session->proposals["proposal-$index"] = $box;
-        }
-      }
+  public function scan(int $uid, mixed $people, mixed $objects): array {
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $people, $objects): void {
+      Places::scan($session, $uid, $people, $objects);
     });
-    return ['available' => TRUE, 'count' => count($session->proposals), 'revision' => $session->revision];
+    return [
+      'revision' => $session->revision,
+      'unclaimed_people' => count($session->proposals),
+      'objects' => count($this->objectNames($session)),
+      'next' => self::next($session, $uid),
+    ];
   }
 
   /**
-   * Marks the caller's place, or an object for the uploader.
+   * Gives the caller a place in the photo.
    *
-   * @param int $uid
-   *   The player.
-   * @param string $name
-   *   The player's name.
-   * @param array<string, mixed> $input
-   *   The region as a client sent it.
-   *
-   * @return array{revision: int}
-   *   The new revision.
+   * @return array{revision: int, reply: string, next: string}
+   *   The outcome.
    *
    * @throws \InvalidArgumentException
-   *   When the region breaks a rule.
+   *   When the place cannot be theirs.
    */
-  public function putRegion(int $uid, string $name, array $input): array {
-    $session = $this->ledger->write(static function (Session $session) use ($uid, $name, $input): void {
-      $box = self::box($input, $session);
-      if ($input['kind'] === 'person') {
-        self::assertOwnPlace($box, $uid, $session);
-        $session->players[$uid] = $name;
-        $id = "person-$uid";
-        $region = ['kind' => 'person', 'owner' => $uid, 'label' => $name] + $box;
-      }
-      else {
-        if ($session->uploader !== $uid) {
-          throw new \InvalidArgumentException('Only the uploader marks objects.');
-        }
-        $label = trim((string) ($input['label'] ?? ''));
-        if ($label === '' || mb_strlen($label) > self::MAX_LABEL) {
-          throw new \InvalidArgumentException(sprintf('An object needs a name of at most %d characters.', self::MAX_LABEL));
-        }
-        $id = 'object-' . md5($label);
-        $region = ['kind' => 'object', 'owner' => $uid, 'label' => $label] + $box;
-      }
-      $session->regions[$id] = $region;
-      $session->proposals = array_filter(
-        $session->proposals,
-        static fn (array $proposal): bool => !self::claims($region, $proposal),
-      );
+  public function claim(int $uid, string $name, mixed $person, mixed $head, mixed $body): array {
+    $session = $this->ledger->write(static function (Session $session) use ($uid, $name, $person, $head, $body): void {
+      Places::claim($session, $uid, $name, $person, $head, $body);
     });
-    return ['revision' => $session->revision];
+    return [
+      'revision' => $session->revision,
+      'reply' => sprintf('Granted, %s. This place in the photo is yours.', $name),
+      'next' => self::next($session, $uid),
+    ];
   }
 
   /**
-   * Validates a box sent by a client against the photo.
+   * Returns an image for an assistant, with what it needs to read it.
    *
-   * @param array<string, mixed> $input
-   *   The region as a client sent it.
-   * @param \Drupal\genie_ledger\Session $session
-   *   The session.
+   * @return array{bytes: string, mime: string, info: array<string, mixed>}
+   *   The JPEG and its description.
    *
-   * @return array{x: int, y: int, width: int, height: int}
-   *   The box.
+   * @throws \InvalidArgumentException
+   *   When that image does not exist yet.
    */
-  private static function box(array $input, Session $session): array {
+  public function image(int $uid, string $view): array {
+    $session = $this->ledger->read();
     if ($session->photo === NULL) {
-      throw new \InvalidArgumentException('The session has no photo yet.');
+      throw new \InvalidArgumentException('There is no photo yet. Someone uploads it on the web view.');
     }
-    if (!in_array($input['kind'] ?? NULL, ['person', 'object'], TRUE)) {
-      throw new \InvalidArgumentException('A region is a person or an object.');
+    $info = ['view' => $view, 'revision' => $session->revision, 'next' => self::next($session, $uid)];
+    $bytes = match ($view) {
+      'photo' => $this->photos->read(),
+      'picture' => $this->pictureJpeg($session),
+      'my_head' => $this->headJpeg($session, $uid),
+      default => throw new \InvalidArgumentException('The view is photo, picture or my_head.'),
+    };
+    if ($view === 'photo') {
+      $info += $session->photo + [
+        'people' => self::people($session),
+        'objects' => array_values($this->objectNames($session)),
+      ];
     }
-    $box = [];
-    foreach (['x', 'y', 'width', 'height'] as $field) {
-      if (!is_int($input[$field] ?? NULL)) {
-        throw new \InvalidArgumentException("The region needs an integer $field.");
-      }
-      $box[$field] = $input[$field];
+    if ($view === 'my_head') {
+      $info['grid'] = 'Numbers name sticker columns and rows from 0 to 31. Yellow lines mark every fourth cell.';
     }
-    if ($box['x'] < 0 || $box['y'] < 0 || $box['width'] < 1 || $box['height'] < 1
-      || $box['x'] + $box['width'] > $session->photo['width']
-      || $box['y'] + $box['height'] > $session->photo['height']) {
-      throw new \InvalidArgumentException('The region must lie inside the photo.');
-    }
-    return $box;
+    return ['bytes' => $bytes, 'mime' => 'image/jpeg', 'info' => $info];
   }
 
   /**
-   * Stops a player from claiming the photo or another player's place.
-   *
-   * Cover and exclude wishes act on this box.
-   *
-   * @param array{x: int, y: int, width: int, height: int} $box
-   *   The box.
-   * @param int $uid
-   *   The player marking it.
-   * @param \Drupal\genie_ledger\Session $session
-   *   The session.
+   * Renders the shared picture for an assistant.
    */
-  private static function assertOwnPlace(array $box, int $uid, Session $session): void {
-    if ($box['width'] * $box['height'] > $session->photo['width'] * $session->photo['height'] * self::MAX_PERSON_SHARE) {
-      throw new \InvalidArgumentException('Your place can take at most a quarter of the photo.');
+  private function pictureJpeg(Session $session): string {
+    $export = $this->exports->current($session);
+    if ($export === NULL) {
+      throw new \InvalidArgumentException('No frame fits every wish right now.');
+    }
+    return $this->darkroom->toJpeg($export->png);
+  }
+
+  /**
+   * Renders a player's head under the sticker grid.
+   */
+  private function headJpeg(Session $session, int $uid): string {
+    if (!isset($session->regions["person-$uid"])) {
+      throw new \InvalidArgumentException(self::NO_PLACE);
+    }
+    return $this->darkroom->headView($this->photos->read(), $session, $uid);
+  }
+
+  /**
+   * Lists everyone found in the photo, claimed or not.
+   *
+   * @return list<array<string, mixed>>
+   *   The people, with their boxes as [x, y, width, height].
+   */
+  private static function people(Session $session): array {
+    $list = fn (array $box): array => [$box['x'], $box['y'], $box['width'], $box['height']];
+    $people = [];
+    foreach ($session->proposals as $id => $proposal) {
+      $people[] = [
+        'id' => $id,
+        'description' => $proposal['label'],
+        'head' => $list($proposal['head']),
+        'body' => $list($proposal),
+      ];
     }
     foreach ($session->regions as $region) {
-      if ($region['kind'] === 'person' && $region['owner'] !== $uid && self::covers($box, $region)) {
-        throw new \InvalidArgumentException(sprintf('This box covers %s.', $region['label']));
+      if ($region['kind'] === 'person') {
+        $people[] = [
+          'player' => $region['label'],
+          'description' => $region['description'],
+          'head' => $list($region['head']),
+          'body' => $list($region),
+        ];
       }
     }
+    return $people;
   }
 
   /**
-   * Tells whether a marked region already stands for a proposed box.
-   *
-   * @param array<string, mixed> $region
-   *   The marked region.
-   * @param array<string, mixed> $proposal
-   *   The proposed box.
+   * Tells an assistant what to do next.
    */
-  private static function claims(array $region, array $proposal): bool {
-    return $region['kind'] === $proposal['kind'] && self::covers($region, $proposal);
-  }
-
-  /**
-   * Tells whether a box overlaps more than the allowed share of another.
-   *
-   * @param array{x: int, y: int, width: int, height: int} $box
-   *   The box.
-   * @param array{x: int, y: int, width: int, height: int} $other
-   *   The box it may cover.
-   */
-  private static function covers(array $box, array $other): bool {
-    $width = min($box['x'] + $box['width'], $other['x'] + $other['width']) - max($box['x'], $other['x']);
-    $height = min($box['y'] + $box['height'], $other['y'] + $other['height']) - max($box['y'], $other['y']);
-    return $width > 0 && $height > 0
-      && $width * $height > $other['width'] * $other['height'] * self::MAX_OVERLAP_SHARE;
+  private static function next(Session $session, int $uid): string {
+    if (isset($session->regions["person-$uid"])) {
+      return 'Your place is claimed. Make a wish, or call photo_get with view my_head before drawing a sticker.';
+    }
+    return $session->proposals === []
+      ? 'Nobody has been found yet. Look at the photo with view photo, then call scan_photo.'
+      : 'Ask your person which one they are, then call claim_place with that id.';
   }
 
   /**
@@ -298,7 +267,7 @@ final class WishDesk {
   public function approve(int $uid, string $hash): array {
     $seen = $this->ledger->read();
     if (!isset($seen->players[$uid])) {
-      throw new \InvalidArgumentException('Mark your place in the photo first.');
+      throw new \InvalidArgumentException(self::NO_PLACE);
     }
     $export = $this->exports->current($seen);
     if ($export === NULL || !hash_equals($export->hash, $hash)) {

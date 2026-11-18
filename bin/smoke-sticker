@@ -14,11 +14,11 @@ $token = $site->signIn($argv[1] ?? 'alice');
 $site->uploadPhoto($token);
 $before = $site->photos->frame($token, $site->markPlace($token));
 
-$outcome = $site->tools->call($token, 'set_sticker', [
+$outcome = $site->imageTool($token, 'set_sticker', [
     'rows' => array_fill(0, 32, str_repeat('0', 16).str_repeat('*', 8).str_repeat('.', 8)),
     'palette' => ['#ff00aa'],
     'blur' => 2,
-]);
+])['info'];
 echo $outcome['reply'], "\n";
 
 $after = $site->photos->frame($token, $outcome['revision']);

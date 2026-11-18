@@ -18,6 +18,11 @@ final readonly class Sticker {
    */
   private const MAX_INPUT = 64;
 
+  /**
+   * Most runs of cells one sticker may send.
+   */
+  private const MAX_SPANS = 1024;
+
   public const MAX_BLUR = 8;
 
   /**
@@ -40,21 +45,28 @@ final readonly class Sticker {
    * Validates what a client sent and fits it to the grid.
    *
    * Assistants miscount long rows, so short input is padded with empty cells
-   * and extra cells are cut.
+   * and extra cells are cut. Spans name cells directly and need no counting.
    *
    * @param mixed $rows
-   *   The rows.
+   *   The rows, or NULL when only spans are sent.
    * @param mixed $palette
    *   The palette.
    * @param mixed $blur
    *   The blur value.
+   * @param mixed $spans
+   *   Runs of cells as [row, first column, last column, cell], or NULL.
    *
    * @throws \InvalidArgumentException
    *   When a value breaks the sticker format.
    */
-  public static function fromInput(mixed $rows, mixed $palette, mixed $blur): self {
+  public static function fromInput(mixed $rows, mixed $palette, mixed $blur, mixed $spans = NULL): self {
+    $rows ??= [];
+    $spans ??= [];
     if (!is_array($rows) || !array_is_list($rows) || count($rows) > self::MAX_INPUT) {
       throw new \InvalidArgumentException('A sticker is a list of 32 rows.');
+    }
+    if (!is_array($spans) || !array_is_list($spans) || count($spans) > self::MAX_SPANS) {
+      throw new \InvalidArgumentException(sprintf('Spans is a list of at most %d runs.', self::MAX_SPANS));
     }
     if (!is_array($palette) || !array_is_list($palette) || count($palette) > self::MAX_COLORS) {
       throw new \InvalidArgumentException('A palette is a list of at most 16 colors.');
@@ -73,15 +85,41 @@ final readonly class Sticker {
         throw new \InvalidArgumentException('Rows hold ".", "*" or a palette digit from 0 to f.');
       }
       foreach (str_split($row) as $cell) {
-        if (ctype_xdigit($cell) && hexdec($cell) >= count($palette)) {
-          throw new \InvalidArgumentException("Cell $cell has no color in the palette.");
-        }
+        self::assertCell($cell, $palette);
       }
       if ($index < self::SIZE) {
         $grid[$index] = str_pad(substr($row, 0, self::SIZE), self::SIZE, self::EMPTY);
       }
     }
+    foreach ($spans as $span) {
+      if (!is_array($span) || !array_is_list($span) || count($span) !== 4
+        || !is_int($span[0]) || !is_int($span[1]) || !is_int($span[2]) || !is_string($span[3])
+        || !preg_match('/^[.*0-9a-f]$/D', $span[3])) {
+        throw new \InvalidArgumentException('A span is [row, first column, last column, cell].');
+      }
+      [$row, $first, $last, $cell] = $span;
+      self::assertCell($cell, $palette);
+      $first = max(0, $first);
+      $last = min(self::SIZE - 1, $last);
+      if ($row >= 0 && $row < self::SIZE && $first <= $last) {
+        $grid[$row] = substr_replace($grid[$row], str_repeat($cell, $last - $first + 1), $first, $last - $first + 1);
+      }
+    }
     return new self($grid, $palette, $blur);
+  }
+
+  /**
+   * Checks that a color cell has its palette entry.
+   *
+   * @param string $cell
+   *   The cell.
+   * @param list<mixed> $palette
+   *   The palette.
+   */
+  private static function assertCell(string $cell, array $palette): void {
+    if (ctype_xdigit($cell) && hexdec($cell) >= count($palette)) {
+      throw new \InvalidArgumentException("Cell $cell has no color in the palette.");
+    }
   }
 
 }

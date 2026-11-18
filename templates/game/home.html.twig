@@ -19,10 +19,9 @@
       data-hub-url="{{ hub_url }}"
       data-session-url="{{ path('app_session') }}"
       data-frame-url="{{ path('app_frame', {revision: 0})|replace({'/0': '/'}) }}"
-      data-region-url="{{ path('app_region') }}"
+      data-claim-url="{{ path('app_claim') }}"
       data-protect-url="{{ path('app_protect') }}"
       data-approve-url="{{ path('app_approve') }}"
-      data-propose-url="{{ path('app_proposals') }}"
       data-dismiss-url="{{ path('app_proposal_dismiss') }}"
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
@@ -33,7 +32,7 @@
                 <h2>The shared photo</h2>
                 <img id="frame" class="frame" alt="The photo as every wish leaves it">
                 <p id="blocked" class="hint" hidden></p>
-                <p class="hint">Ask your assistant to make a wish, such as "hide my face".</p>
+                <p class="hint">Ask your assistant for a wish, or for a sticker painted on your head.</p>
                 <div class="bar approval">
                     <button id="approve" type="button" hidden>I approve this picture</button>
                     <a id="download" download="genie-photo.png" hidden>Download the final photo</a>
@@ -41,23 +40,13 @@
                 </div>
             </section>
             <section>
-                <h2>Mark your place</h2>
+                <h2>Who is who</h2>
                 <div id="stage" class="stage">
-                    <img id="photo" src="{{ path('app_photo') }}" alt="The original group photo" draggable="false">
+                    <img id="photo" src="{{ path('app_photo') }}" alt="The original group photo">
                     <div id="regions"></div>
-                    <div id="draft" class="region draft" hidden></div>
                 </div>
-                <form id="mark" class="bar" hidden>
-                    {% if session.is_uploader %}
-                        <input name="label" maxlength="40" placeholder="Object name" aria-label="Object name">
-                        <button name="kind" value="object">Mark object</button>
-                    {% endif %}
-                    <button name="kind" value="person">This is me</button>
-                </form>
-                <p class="hint">Drag on the photo, or click a proposed box.</p>
-                {% if session.is_uploader %}
-                    <p><button id="propose" type="button">Find people with the local model</button></p>
-                {% endif %}
+                <p id="guide" class="hint">Ask your assistant to find everyone in the photo.</p>
+                <p class="hint">Tell your assistant which person you are, or click your face.</p>
                 <ul id="proposals" class="objects"></ul>
                 <ul id="objects" class="objects"></ul>
             </section>
@@ -65,7 +54,7 @@
     {% else %}
         <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>
-            <p>It stays on this machine. No AI assistant receives it.</p>
+            <p>Every player's AI assistant receives this photo, and may send it to its provider.</p>
             <input type="hidden" name="_token" value="{{ csrf_token('photo') }}">
             <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
             <button>Upload</button>

@@ -11,6 +11,8 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\WishDesk;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
+use Mcp\Schema\Content\ImageContent;
+use Mcp\Schema\Content\TextContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,6 +58,25 @@ abstract class LedgerToolBase extends ToolPluginBase {
   public function checkAccess(AccountInterface $account): AccessResultInterface {
     return AccessResult::allowedIf($account->isAuthenticated() && $account->hasPermission('play genie'))
       ->cachePerPermissions();
+  }
+
+  /**
+   * Builds a result holding a description and an image.
+   *
+   * It carries no structured content, because some clients show only that and
+   * would drop the image.
+   *
+   * @param array{bytes: string, mime: string, info: array<string, mixed>} $image
+   *   The image and what to say about it.
+   *
+   * @return list<\Mcp\Schema\Content\Content>
+   *   The content of the result.
+   */
+  protected function imageResult(array $image): array {
+    return [
+      new TextContent(json_encode($image['info'], JSON_THROW_ON_ERROR)),
+      new ImageContent(base64_encode($image['bytes']), $image['mime']),
+    ];
   }
 
 }

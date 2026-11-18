@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final readonly class McpDrupalTools
 {
-    // A local vision model can take minutes on a CPU.
+    // A local text model can take minutes on a CPU.
     private const REQUEST_TIMEOUT_SECONDS = 300;
 
     public function __construct(

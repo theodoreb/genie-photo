@@ -2,7 +2,7 @@
 <?php
 
 // Critical path of approval: all four players approve the same picture, a new wish
-// voids the approvals, and an assistant reaches neither the photo nor the web view's tools.
+// voids the approvals, and an assistant reaches neither the pixel routes nor the web view's tools.
 
 declare(strict_types=1);
 
@@ -34,13 +34,13 @@ $approveAll = static function () use ($site, $tokens): array {
 $assistant = $site->signInAsAssistant('alice');
 try {
     $site->photos->get($assistant);
-    SmokeSite::fail('An assistant read the photo.');
+    SmokeSite::fail('An assistant used the pixel routes.');
 } catch (HttpException $e) {
     if (403 !== $e->getStatusCode()) {
         throw $e;
     }
 }
-foreach (['export_approve', 'region_put', 'protect_set', 'propose_boxes', 'proposal_dismiss'] as $tool) {
+foreach (['export_approve', 'protect_set', 'proposal_dismiss'] as $tool) {
     try {
         $site->tools->call($assistant, $tool, ['hash' => 'x']);
         SmokeSite::fail("An assistant reached $tool.");

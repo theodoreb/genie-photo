@@ -86,13 +86,6 @@ final class GameController extends AbstractController
         return $this->redirectToRoute('app_home');
     }
 
-    #[Route('/proposals', name: 'app_proposals', methods: ['POST'])]
-    #[IsCsrfTokenValid('regions', tokenKey: '_token')]
-    public function propose(): JsonResponse
-    {
-        return $this->callTool('propose_boxes');
-    }
-
     #[Route('/proposals/dismiss', name: 'app_proposal_dismiss', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function dismissProposal(Request $request): JsonResponse
@@ -117,20 +110,11 @@ final class GameController extends AbstractController
         ]);
     }
 
-    #[Route('/regions', name: 'app_region', methods: ['POST'])]
+    #[Route('/claim', name: 'app_claim', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
-    public function region(Request $request): JsonResponse
+    public function claim(Request $request): JsonResponse
     {
-        $form = $request->request;
-
-        return $this->callTool('region_put', [
-            'kind' => $form->getString('kind'),
-            'label' => $form->getString('label'),
-            'x' => $form->getInt('x'),
-            'y' => $form->getInt('y'),
-            'width' => $form->getInt('width'),
-            'height' => $form->getInt('height'),
-        ]);
+        return $this->callTool('claim_place', ['person' => $request->request->getString('person')]);
     }
 
     /**

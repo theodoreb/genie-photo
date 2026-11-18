@@ -28,4 +28,13 @@ final class StickerTest extends UnitTestCase {
     $this->assertSame(str_repeat('.', 32), $sticker->rows[2]);
   }
 
+  /**
+   * A span paints a run of cells and stops at the edge of the grid.
+   */
+  public function testSpansPaintRuns(): void {
+    $sticker = Sticker::fromInput(NULL, ['#ff0000'], 0, [[3, 30, 40, '0']]);
+
+    $this->assertSame(str_repeat('.', 30) . '00', $sticker->rows[3]);
+  }
+
 }

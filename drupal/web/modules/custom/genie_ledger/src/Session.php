@@ -27,9 +27,12 @@ final class Session {
   public ?array $photo = NULL;
 
   /**
-   * Marked regions in photo pixels, by region id.
+   * Claimed people and found objects in photo pixels, by region id.
    *
-   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int}>
+   * A person's box is the body. The head box inside it takes covers and
+   * stickers.
+   *
+   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}}>
    */
   public array $regions = [];
 
@@ -81,9 +84,9 @@ final class Session {
   public int $update = 0;
 
   /**
-   * Boxes proposed by the local model and not yet confirmed, by id.
+   * People a scan found and nobody claimed yet, by id.
    *
-   * @var array<string, array{kind: string, x: int, y: int, width: int, height: int}>
+   * @var array<string, array{label: string, x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}}>
    */
   public array $proposals = [];
 

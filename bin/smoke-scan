@@ -1,0 +1,47 @@
+#!/usr/bin/env php
+<?php
+
+// Critical path of detection: an assistant sees the photo, reports who is in it, claims
+// a person and paints on the head it was shown.
+
+declare(strict_types=1);
+
+use App\Tests\Smoke\SmokeSite;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$site = new SmokeSite();
+$web = $site->signIn('alice');
+$site->uploadPhoto($web);
+$assistant = $site->signInAsAssistant('alice');
+
+$photo = $site->imageTool($assistant, 'photo_get', ['view' => 'photo']);
+if (null === $photo['image'] || false === imagecreatefromstring($photo['image'])) {
+    SmokeSite::fail('The assistant received no image.');
+}
+
+$site->tools->call($assistant, 'scan_photo', [
+    'people' => [['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]]],
+    'objects' => [['label' => 'cake', 'box' => [700, 500, 200, 200]]],
+]);
+$person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
+$claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
+$before = $site->photos->frame($web, $claim['revision']);
+
+$grid = $site->imageTool($assistant, 'photo_get', ['view' => 'my_head']);
+if (null === $grid['image']) {
+    SmokeSite::fail('The assistant did not see its head.');
+}
+
+$sticker = $site->imageTool($assistant, 'set_sticker', [
+    'rows' => array_fill(0, 32, str_repeat('0', 32)),
+    'palette' => ['#ff00aa'],
+    'blur' => 0,
+]);
+if (null === $sticker['image'] || !$sticker['info']['granted']) {
+    SmokeSite::fail('The sticker result did not show the head.');
+}
+if (hash('sha256', $before) === hash('sha256', $site->photos->frame($web, $sticker['info']['revision']))) {
+    SmokeSite::fail('The frame did not change.');
+}
+echo $sticker['info']['reply'], "\n";

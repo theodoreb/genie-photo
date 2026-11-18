@@ -7,6 +7,10 @@ namespace App\Tests\Smoke;
 use App\Drupal\DrupalPhotos;
 use App\Drupal\McpDrupalTools;
 use App\Security\DrupalOAuth;
+use Mcp\Client;
+use Mcp\Client\Transport\HttpTransport;
+use Mcp\Schema\Content\ImageContent;
+use Mcp\Schema\Content\TextContent;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
@@ -75,6 +79,33 @@ final readonly class SmokeSite
 
     public function markPlace(string $token, int $x = 10): int
     {
-        return $this->tools->call($token, 'region_put', ['kind' => 'person', 'x' => $x, 'y' => 350, 'width' => 100, 'height' => 100])['revision'];
+        return $this->tools->call($token, 'claim_place', ['head' => [$x, 350, 100, 100], 'body' => [$x, 350, 100, 100]])['revision'];
+    }
+
+    /**
+     * Calls a tool as an assistant would, reading the text and the image it returns.
+     *
+     * @param array<string, mixed> $arguments
+     *
+     * @return array{info: array<string, mixed>, image: ?string}
+     */
+    public function imageTool(string $token, string $tool, array $arguments): array
+    {
+        $client = Client::builder()->build();
+        $client->connect(new HttpTransport($this->drupalUrl.'/mcp', headers: ['Authorization' => 'Bearer '.$token]));
+        $result = $client->callTool($tool, $arguments);
+        $client->disconnect();
+
+        $info = [];
+        $image = null;
+        foreach ($result->content as $content) {
+            if ($content instanceof TextContent) {
+                $info = json_decode($content->text, true, flags: \JSON_THROW_ON_ERROR);
+            } elseif ($content instanceof ImageContent) {
+                $image = base64_decode($content->data, true) ?: null;
+            }
+        }
+
+        return ['info' => $info, 'image' => $image];
     }
 }

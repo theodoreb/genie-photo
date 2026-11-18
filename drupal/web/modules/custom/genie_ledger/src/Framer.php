@@ -71,7 +71,7 @@ final class Framer {
       if (isset($session->centered[$region['owner']])) {
         $constraints[] = [
           'player' => $region['label'],
-          'accepts' => static fn (Frame $frame): bool => self::isCentered($frame, $region),
+          'accepts' => static fn (Frame $frame): bool => self::isCentered($frame, $region['head']),
         ];
       }
     }

@@ -7,7 +7,6 @@ services:
     autowire: false
     tags:
       - { name: event_subscriber }
-  Drupal\genie_ledger\BoxProposer: ~
   Drupal\genie_ledger\Darkroom: ~
   Drupal\genie_ledger\Exports: ~
   Drupal\genie_ledger\Framer: ~

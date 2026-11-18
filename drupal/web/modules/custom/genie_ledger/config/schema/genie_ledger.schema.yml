@@ -5,6 +5,3 @@ genie_ledger.settings:
     text_model:
       type: string
       label: 'Local model that reads wishes'
-    vision_model:
-      type: string
-      label: 'Local model that proposes boxes'

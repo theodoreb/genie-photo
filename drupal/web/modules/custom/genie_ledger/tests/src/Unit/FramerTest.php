@@ -33,6 +33,7 @@ final class FramerTest extends UnitTestCase {
       'y' => 100,
       'width' => 200,
       'height' => 200,
+      'head' => ['x' => 50, 'y' => 100, 'width' => 100, 'height' => 100],
     ];
     $this->assertEquals(new Frame(0, 0, 1000, 500), (new Framer())->frame($session));
 
@@ -59,6 +60,7 @@ final class FramerTest extends UnitTestCase {
         'y' => 350,
         'width' => 100,
         'height' => 100,
+        'head' => ['x' => $x, 'y' => 350, 'width' => 100, 'height' => 100],
       ];
       $session->centered[$uid] = TRUE;
     }
