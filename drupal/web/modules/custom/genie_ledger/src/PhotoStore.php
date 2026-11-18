@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
+use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 
@@ -45,13 +46,23 @@ final class PhotoStore {
    * Stores a picture in place of the pictures of older revisions.
    */
   public function saveExport(int $revision, Export $export): void {
-    $this->fileSystem->deleteRecursive(self::FRAMES);
     $directory = self::FRAMES;
     $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
     $base = self::FRAMES . "/$revision";
     $this->fileSystem->saveData($export->png, "$base.png", FileExists::Replace);
     // The hash goes last, because its presence marks a complete pair.
     $this->fileSystem->saveData($export->hash, "$base.sha256", FileExists::Replace);
+
+    foreach ($this->fileSystem->scanDirectory(self::FRAMES, '/^\d+\./') as $file) {
+      if ((int) $file->name < $revision) {
+        try {
+          $this->fileSystem->delete($file->uri);
+        }
+        catch (FileException) {
+          // Every open browser renders at once, and another one removed it.
+        }
+      }
+    }
   }
 
   /**

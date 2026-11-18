@@ -2,19 +2,20 @@
 <?php
 
 // Critical path of approval: all four players approve the same picture, a new wish
-// voids the approvals, and an assistant cannot use the web view's approval tool.
+// voids the approvals, and an assistant reaches neither the photo nor the web view's approval tool.
 
 declare(strict_types=1);
 
 use App\Drupal\DrupalToolFailed;
 use App\Tests\Smoke\SmokeSite;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
 $site = new SmokeSite();
 $tokens = [];
 foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
-    $tokens[$player] = $site->signInToWebView($player);
+    $tokens[$player] = $site->signIn($player);
     if (0 === $index) {
         $site->uploadPhoto($tokens[$player]);
     }
@@ -30,23 +31,31 @@ $approveAll = static function () use ($site, $tokens): array {
     return $state;
 };
 
-$assistant = $site->signIn('alice');
+$assistant = $site->signInAsAssistant('alice');
+try {
+    $site->photos->get($assistant);
+    SmokeSite::fail('An assistant read the photo.');
+} catch (HttpException $e) {
+    if (403 !== $e->getStatusCode()) {
+        throw $e;
+    }
+}
 try {
     $site->tools->call($assistant, 'export_approve', ['hash' => 'x']);
-    exit("An assistant reached the web view's approval tool.\n");
+    SmokeSite::fail("An assistant reached the web view's approval tool.");
 } catch (DrupalToolFailed) {
 }
 
 if (!$approveAll()['final']) {
-    exit("Four approvals did not make the picture final.\n");
+    SmokeSite::fail('Four approvals did not make the picture final.');
 }
 $site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'hide my face']);
 if ($site->tools->call($tokens['alice'], 'session_get')['export']['final']) {
-    exit("A new wish did not void the approvals.\n");
+    SmokeSite::fail('A new wish did not void the approvals.');
 }
 
 $state = $approveAll();
 if (!$state['final']) {
-    exit("The new picture did not become final.\n");
+    SmokeSite::fail('The new picture did not become final.');
 }
 echo $state['hash'], "\n";

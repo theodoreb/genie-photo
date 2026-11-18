@@ -28,12 +28,18 @@ final class GameController extends AbstractController
     }
 
     #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function home(#[Autowire('%env(DRUPAL_URL)%/.well-known/mercure?match=genie/session')] string $hubUrl): Response
+    public function home(Request $request, #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure?match=genie/session')] string $hubUrl): Response
     {
-        return $this->render('game/home.html.twig', [
-            'session' => $this->tools->call($this->tokens->accessToken(), 'session_get'),
-            'hub_url' => $hubUrl,
-        ]);
+        try {
+            $session = $this->tools->call($this->tokens->accessToken(), 'session_get');
+        } catch (DrupalToolFailed) {
+            // Drupal no longer knows this sign-in, for instance after a reinstall.
+            $request->getSession()->invalidate();
+
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $hubUrl]);
     }
 
     #[Route('/session', name: 'app_session', methods: ['GET'])]

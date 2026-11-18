@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
     color-scheme: light dark;
     --ink: light-dark(#1d1b26, #f2f0f7);

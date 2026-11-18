@@ -25,6 +25,6 @@ $frame = $site->tools->call($alice, 'session_get')['frame'];
 $players = $frame['players'] ?? [];
 sort($players);
 if (['alice', 'bob'] !== $players) {
-    exit("Expected a collision naming alice and bob.\n");
+    SmokeSite::fail('Expected a collision naming alice and bob.');
 }
 echo implode(', ', $players), "\n";

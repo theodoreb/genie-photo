@@ -48,11 +48,11 @@
                     <div id="draft" class="region draft" hidden></div>
                 </div>
                 <form id="mark" class="bar" hidden>
-                    <button name="kind" value="person">This is me</button>
                     {% if session.is_uploader %}
                         <input name="label" maxlength="40" placeholder="Object name" aria-label="Object name">
                         <button name="kind" value="object">Mark object</button>
                     {% endif %}
+                    <button name="kind" value="person">This is me</button>
                 </form>
                 <p class="hint">Drag on the photo, or click a proposed box.</p>
                 {% if session.is_uploader %}

@@ -23,6 +23,6 @@ echo $outcome['reply'], "\n";
 
 $after = $site->photos->frame($token, $outcome['revision']);
 if (hash('sha256', $before) === hash('sha256', $after)) {
-    exit("The frame did not change.\n");
+    SmokeSite::fail('The frame did not change.');
 }
 echo "revision {$outcome['revision']}\n";

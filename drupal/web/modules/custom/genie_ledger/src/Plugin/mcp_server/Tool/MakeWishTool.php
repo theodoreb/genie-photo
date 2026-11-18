@@ -28,12 +28,17 @@ use Mcp\Server\ClientGateway;
 )]
 final class MakeWishTool extends LedgerToolBase {
 
+  private const MAX_LENGTH = 300;
+
   /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     if (!is_string($arguments['wish'] ?? NULL)) {
       throw new ToolCallException('A wish is a text.');
+    }
+    if (mb_strlen($arguments['wish']) > self::MAX_LENGTH) {
+      throw new ToolCallException(sprintf('Keep a wish under %d characters.', self::MAX_LENGTH));
     }
     return $this->desk->grant((int) $this->currentUser->id(), $this->currentUser->getAccountName(), $arguments['wish']);
   }

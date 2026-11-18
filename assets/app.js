@@ -104,11 +104,12 @@ function proposalAt(point) {
 async function findPeople() {
     propose.disabled = true;
     status.textContent = 'The local model is looking at the photo.';
-    const body = new FormData();
-    body.set('_token', game.dataset.regionToken);
-    const response = await fetch(game.dataset.proposeUrl, { method: 'POST', body });
-    const result = await response.json();
+    const response = await send(game.dataset.proposeUrl, new FormData());
     propose.disabled = false;
+    if (response.type === 'opaqueredirect') {
+        return;
+    }
+    const result = await response.json();
     if (!response.ok) {
         status.textContent = result.error;
     } else if (!result.available) {
@@ -131,10 +132,19 @@ function objectRow(region) {
     return row;
 }
 
-async function post(url, body) {
+async function send(url, body) {
     body.set('_token', game.dataset.regionToken);
-    const response = await fetch(url, { method: 'POST', body });
-    if (!response.ok) {
+    const response = await fetch(url, { method: 'POST', body, redirect: 'manual' });
+    // Only the sign-in page redirects here: the session or its token ended.
+    if (response.type === 'opaqueredirect') {
+        location.reload();
+    }
+    return response;
+}
+
+async function post(url, body) {
+    const response = await send(url, body);
+    if (response.status === 422) {
         status.textContent = (await response.json()).error;
     }
     return response.ok;
@@ -148,13 +158,18 @@ function setProtected(region) {
 }
 
 async function refresh() {
-    const response = await fetch(game.dataset.sessionUrl);
-    session = await response.json();
-    // The page without a photo has no stage to update.
-    if (session.photo && !stage) {
+    const response = await fetch(game.dataset.sessionUrl, { redirect: 'manual' });
+    if (!response.ok) {
         location.reload();
         return;
     }
+    const next = await response.json();
+    // The page without a photo has no stage, and a lower revision is a new session.
+    if ((next.photo && !stage) || next.revision < session.revision) {
+        location.reload();
+        return;
+    }
+    session = next;
     render();
 }
 

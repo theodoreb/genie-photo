@@ -17,7 +17,7 @@ $site->uploadPhoto($alice);
 
 $photo = $site->tools->call($alice, 'session_get')['photo'];
 if (1600 !== $photo['width'] || 800 !== $photo['height']) {
-    exit("Photo was not scaled: {$photo['width']}x{$photo['height']}\n");
+    SmokeSite::fail("Photo was not scaled: {$photo['width']}x{$photo['height']}");
 }
 
 $stream = $site->http->request('GET', $site->drupalUrl.'/.well-known/mercure', [
@@ -31,7 +31,7 @@ $revision = $site->markPlace($bob);
 
 foreach ($site->http->stream($stream, 10) as $chunk) {
     if ($chunk->isTimeout() || $chunk->isLast()) {
-        exit("No update reached the subscriber.\n");
+        SmokeSite::fail('No update reached the subscriber.');
     }
     if (str_contains($chunk->getContent(), '"revision":'.$revision)) {
         echo "alice received revision {$revision}\n";

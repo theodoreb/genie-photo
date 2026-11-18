@@ -34,17 +34,23 @@ final readonly class SmokeSite
         (new Process(['./drupack', 'drush', 'genie:reset'], $root.'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
     }
 
+    /**
+     * Signs in the way the web view does, the only client that reaches the pixels.
+     */
     public function signIn(string $player): string
+    {
+        return (new PlayerSession($this->drupalUrl.'/mcp', $_ENV['PUBLIC_URL'].'/oauth/callback'))->signIn($player);
+    }
+
+    public function signInAsAssistant(string $player): string
     {
         return $this->players->signIn($player);
     }
 
-    /**
-     * Signs in the way the web view does, which unlocks its approval tool.
-     */
-    public function signInToWebView(string $player): string
+    public static function fail(string $reason): never
     {
-        return (new PlayerSession($this->drupalUrl.'/mcp', $_ENV['PUBLIC_URL'].'/oauth/callback'))->signIn($player);
+        fwrite(\STDERR, $reason."\n");
+        exit(1);
     }
 
     public function uploadPhoto(string $token): void

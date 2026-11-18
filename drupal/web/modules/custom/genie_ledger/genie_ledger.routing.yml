@@ -5,6 +5,7 @@ genie_ledger.photo_put:
     _controller: Drupal\genie_ledger\Controller\PhotoController::put
   requirements:
     _permission: 'play genie'
+    _custom_access: '\Drupal\genie_ledger\Access\WebViewAccess::access'
   options:
     _auth: ['oauth2']
     no_cache: TRUE
@@ -16,6 +17,7 @@ genie_ledger.photo_get:
     _controller: Drupal\genie_ledger\Controller\PhotoController::get
   requirements:
     _permission: 'play genie'
+    _custom_access: '\Drupal\genie_ledger\Access\WebViewAccess::access'
   options:
     _auth: ['oauth2']
     no_cache: TRUE
@@ -27,6 +29,7 @@ genie_ledger.frame:
     _controller: Drupal\genie_ledger\Controller\PhotoController::frame
   requirements:
     _permission: 'play genie'
+    _custom_access: '\Drupal\genie_ledger\Access\WebViewAccess::access'
     revision: '\d+'
   options:
     _auth: ['oauth2']

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Drupal;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpKernel\Exception\HttpException as HttpStatusException;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -38,11 +40,23 @@ final readonly class DrupalPhotos
 
     public function get(string $bearerToken): string
     {
-        return $this->http->request('GET', $this->endpoint.'/photo', ['auth_bearer' => $bearerToken])->getContent();
+        return $this->image($bearerToken, '/photo');
     }
 
     public function frame(string $bearerToken, int $revision): string
     {
-        return $this->http->request('GET', $this->endpoint.'/frame/'.$revision, ['auth_bearer' => $bearerToken])->getContent();
+        return $this->image($bearerToken, '/frame/'.$revision);
+    }
+
+    /**
+     * @throws HttpStatusException with Drupal's status when it refuses
+     */
+    private function image(string $bearerToken, string $path): string
+    {
+        try {
+            return $this->http->request('GET', $this->endpoint.$path, ['auth_bearer' => $bearerToken])->getContent();
+        } catch (ClientExceptionInterface $e) {
+            throw new HttpStatusException($e->getResponse()->getStatusCode(), 'Drupal refused the image.', $e);
+        }
     }
 }
