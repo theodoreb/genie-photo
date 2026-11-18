@@ -40,4 +40,25 @@ final class Session {
    */
   public array $wishes = [];
 
+  /**
+   * Players who asked for the middle of the frame, by account id.
+   *
+   * @var array<int, true>
+   */
+  public array $centered = [];
+
+  /**
+   * Who protected each object, by region id.
+   *
+   * @var array<string, string>
+   */
+  public array $protected = [];
+
+  /**
+   * Who suggested protecting each object, by region id.
+   *
+   * @var array<string, list<string>>
+   */
+  public array $suggestions = [];
+
 }

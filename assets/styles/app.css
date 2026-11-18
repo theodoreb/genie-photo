@@ -39,3 +39,4 @@ header.bar { border-bottom: 1px solid var(--line); }
 .region.object { border-color: var(--object); }
 .region[data-mine="true"] { border-width: 3px; }
 .region.draft { border-style: dashed; }
+.objects { margin: 0; padding: 0; list-style: none; display: grid; gap: .4rem; }

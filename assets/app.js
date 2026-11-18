@@ -9,6 +9,7 @@ const mark = document.querySelector('#mark');
 const status = document.querySelector('#status');
 const frame = document.querySelector('#frame');
 const blocked = document.querySelector('#blocked');
+const objects = document.querySelector('#objects');
 
 let session = JSON.parse(game.dataset.session);
 let box = null;
@@ -37,6 +38,7 @@ function render() {
     } else {
         blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
+    objects.replaceChildren(...session.regions.filter((region) => region.kind === 'object').map(objectRow));
     regions.replaceChildren(...session.regions.map((region) => {
         const element = document.createElement('div');
         element.className = `region ${region.kind}`;
@@ -45,6 +47,35 @@ function render() {
         place(element, region);
         return element;
     }));
+}
+
+function objectRow(region) {
+    const row = document.createElement('li');
+    const suggested = region.suggested_by.length ? `, suggested by ${region.suggested_by.join(', ')}` : '';
+    row.textContent = `${region.label}: ${region.protected ? 'stays in the frame' : 'free'}${suggested} `;
+    if (session.is_uploader) {
+        const button = document.createElement('button');
+        button.textContent = region.protected ? 'Release' : 'Protect';
+        button.addEventListener('click', () => setProtected(region));
+        row.append(button);
+    }
+    return row;
+}
+
+async function post(url, body) {
+    body.set('_token', game.dataset.regionToken);
+    const response = await fetch(url, { method: 'POST', body });
+    if (!response.ok) {
+        status.textContent = (await response.json()).error;
+    }
+    return response.ok;
+}
+
+function setProtected(region) {
+    const body = new FormData();
+    body.set('object', region.id);
+    body.set('protected', region.protected ? '0' : '1');
+    post(game.dataset.protectUrl, body);
 }
 
 async function refresh() {
@@ -100,14 +131,11 @@ function trackDrag() {
 async function sendRegion(event) {
     event.preventDefault();
     const body = new FormData();
-    body.set('_token', game.dataset.regionToken);
     body.set('kind', event.submitter.value);
     body.set('label', mark.elements.label?.value ?? '');
     Object.entries(box).forEach(([field, value]) => body.set(field, value));
 
-    const response = await fetch(game.dataset.regionUrl, { method: 'POST', body });
-    if (!response.ok) {
-        status.textContent = (await response.json()).error;
+    if (!await post(game.dataset.regionUrl, body)) {
         return;
     }
     box = null;

@@ -49,6 +49,6 @@ final readonly class SmokeSite
 
     public function markPlace(string $token, int $x = 10): int
     {
-        return $this->tools->call($token, 'region_put', ['kind' => 'person', 'x' => $x, 'y' => 10, 'width' => 100, 'height' => 100])['revision'];
+        return $this->tools->call($token, 'region_put', ['kind' => 'person', 'x' => $x, 'y' => 350, 'width' => 100, 'height' => 100])['revision'];
     }
 }

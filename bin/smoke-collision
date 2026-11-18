@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+// Critical path of a collision: two players far apart both ask for the middle,
+// and the genie names them instead of offering a frame.
+
+declare(strict_types=1);
+
+use App\Tests\Smoke\SmokeSite;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$site = new SmokeSite();
+$alice = $site->signIn('alice');
+$bob = $site->signIn('bob');
+$site->uploadPhoto($alice);
+$site->markPlace($alice, 300);
+$site->markPlace($bob, 1200);
+
+$site->tools->call($alice, 'make_wish', ['wish' => 'put me in the middle']);
+$outcome = $site->tools->call($bob, 'make_wish', ['wish' => 'put me in the middle']);
+echo $outcome['reply'], "\n";
+
+$frame = $site->tools->call($alice, 'session_get')['frame'];
+$players = $frame['players'] ?? [];
+sort($players);
+if (['alice', 'bob'] !== $players) {
+    exit("Expected a collision naming alice and bob.\n");
+}
+echo implode(', ', $players), "\n";
