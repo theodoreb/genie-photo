@@ -105,7 +105,7 @@ final class ApproveExportTool extends LedgerToolBase {
     try {
       $answer = $gateway->elicitUrl(self::ASK, $request['review_url'], self::ELICITATION_TIMEOUT, 'approve-' . $request['hash']);
     }
-    catch (ClientException) {
+    catch (ClientException | \InvalidArgumentException) {
       return $request;
     }
     return $answer->isAccepted() ? $this->desk->awaitApproval($uid, $request) : $request;
@@ -145,7 +145,13 @@ final class ApproveExportTool extends LedgerToolBase {
    */
   private function pageOpened(ClientGateway $gateway, string $url, string $id): bool {
     $response = $gateway->request(new UrlElicitationRequest(self::ASK, $url, $id), self::ELICITATION_TIMEOUT);
-    return $response instanceof Response && ElicitResult::fromArray($response->result, ElicitationMode::Url)->isAccepted();
+    try {
+      return $response instanceof Response && ElicitResult::fromArray($response->result, ElicitationMode::Url)->isAccepted();
+    }
+    catch (\InvalidArgumentException) {
+      // The client wrote this answer, and it may not fit the protocol.
+      return FALSE;
+    }
   }
 
   /**

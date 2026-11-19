@@ -19,9 +19,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
+use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 final class GameController extends AbstractController
 {
+    use TargetPathTrait;
+
     public function __construct(
         private readonly McpDrupalTools $tools,
         private readonly DrupalPhotos $photos,
@@ -149,7 +152,10 @@ final class GameController extends AbstractController
      */
     private function signInAgain(Request $request): RedirectResponse
     {
-        $request->getSession()->invalidate();
+        $session = $request->getSession();
+        $session->invalidate();
+        // The new sign-in returns here, so an approval link keeps working.
+        $this->saveTargetPath($session, 'main', $request->getUri());
 
         return $this->redirectToRoute('app_login');
     }

@@ -420,7 +420,7 @@ final class WishDesk {
       }
       $session->approvals[$uid] = $hash;
     }, FALSE);
-    return $this->exportState($session, $uid, $export);
+    return $this->receipt($session, $uid, $export->hash);
   }
 
   /**
@@ -441,9 +441,9 @@ final class WishDesk {
     if ($export === NULL) {
       throw new \InvalidArgumentException('There is no photo to approve right now.');
     }
-    $state = $this->exportState($session, $uid, $export);
+    $state = $this->receipt($session, $uid, $export->hash);
     if ($state['approved_by_you']) {
-      return ['status' => 'approved', 'reply' => self::APPROVED, 'review_url' => NULL] + $state;
+      return $this->approved($state);
     }
     return [
       'status' => 'waiting_on_web',
@@ -476,11 +476,24 @@ final class WishDesk {
         ] + $receipt;
       }
       if ($receipt['approved_by_you']) {
-        return ['status' => 'approved', 'reply' => self::APPROVED, 'review_url' => NULL] + $receipt;
+        return $this->approved($receipt);
       }
       usleep(self::POLL_MICROSECONDS);
     } while (microtime(TRUE) < $deadline);
     return $request;
+  }
+
+  /**
+   * Adds the outcome of an approval that landed to its state.
+   *
+   * @param array<string, mixed> $state
+   *   The approval state.
+   *
+   * @return array<string, mixed>
+   *   The result of approve_export.
+   */
+  private function approved(array $state): array {
+    return ['status' => 'approved', 'reply' => self::APPROVED, 'review_url' => NULL] + $state;
   }
 
   /**
@@ -489,16 +502,9 @@ final class WishDesk {
   private function reviewUrl(int $revision, string $hash, string $name): string {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $client */
     [$client] = array_values($this->entityTypeManager->getStorage('consumer')->loadByProperties(['client_id' => WebViewAccess::CLIENT_ID]));
-    $callback = parse_url($client->get('redirect')->value);
-    return sprintf(
-      '%s://%s:%d/review/%d/%s?for=%s',
-      $callback['scheme'],
-      $callback['host'],
-      $callback['port'],
-      $revision,
-      $hash,
-      rawurlencode($name),
-    );
+    // Scheme, the empty part between the slashes, and host with any port.
+    $origin = implode('/', array_slice(explode('/', $client->get('redirect')->value), 0, 3));
+    return sprintf('%s/review/%d/%s?for=%s', $origin, $revision, $hash, rawurlencode($name));
   }
 
   /**
@@ -532,7 +538,7 @@ final class WishDesk {
       'wish' => $session->wishes[$uid] ?? Operation::Show->value,
       'centered' => isset($session->centered[$uid]),
       'frame' => $session->photo === NULL ? NULL : $this->describe($this->framer->frame($session)),
-      'export' => $export === NULL ? NULL : $this->exportState($session, $uid, $export),
+      'export' => $export === NULL ? NULL : $this->receipt($session, $uid, $export->hash),
     ];
   }
 
@@ -547,16 +553,6 @@ final class WishDesk {
    */
   private static function place(array $place): array {
     return array_intersect_key($place, array_flip(self::PLACE_KEYS));
-  }
-
-  /**
-   * Describes who has approved the picture.
-   *
-   * @return array<string, mixed>
-   *   The hash, the names still awaited, and whether the picture is final.
-   */
-  private function exportState(Session $session, int $uid, Export $export): array {
-    return $this->receipt($session, $uid, $export->hash);
   }
 
   /**
