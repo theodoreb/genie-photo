@@ -10,7 +10,7 @@ use Symfony\Component\Process\Process;
  * The players of one game started for a smoke script or the replay.
  *
  * `genie:seats` gives each player a random password. The last game started is
- * saved in var/seats.json, so later runs of bin/replay-site sign in to it.
+ * saved in var/seats.json, so later runs of bin/lib/replay-site sign in to it.
  */
 final readonly class Seats
 {

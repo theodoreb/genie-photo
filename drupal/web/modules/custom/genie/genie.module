@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Hooks of the genie ledger.
+ * Hooks of the genie module.
  */
 
 use Drupal\consumers\Entity\ConsumerInterface;

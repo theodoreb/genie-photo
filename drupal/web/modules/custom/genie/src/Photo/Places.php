@@ -183,7 +183,7 @@ final class Places {
    */
   public static function detected(Session $session): array {
     $detected = [];
-    foreach ($session->detection['boxes'] ?? [] as $index => $box) {
+    foreach ($session->detection['boxes'] as $index => $box) {
       $detected['P' . ($index + 1)] = $box;
     }
     return $detected;

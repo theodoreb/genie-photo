@@ -38,8 +38,7 @@ callback="$public_url/oauth/callback"
 secret="$(cd drupal && ./drupack drush genie:web-client "$callback")"
 umask 077
 {
-    # An older start also wrote DRUPAL_URL here, which .env now holds.
-    grep -vE '^(DRUPAL_URL|GENIE_WEB_SECRET)=' symfony/.env.local 2>/dev/null || true
+    grep -v '^GENIE_WEB_SECRET=' symfony/.env.local 2>/dev/null || true
     echo "GENIE_WEB_SECRET=$secret"
 } >symfony/.env.new.local
 mv symfony/.env.new.local symfony/.env.local

@@ -55,7 +55,7 @@ final class Pictures {
         'columns' => Outlines::columns($session->photo),
         'rows' => Outlines::rows($session->photo),
         'cell_pixels' => Outlines::CELL,
-        'detector' => $session->detection['status'] ?? 'off',
+        'detector' => $session->detection['status'],
         'detected' => array_map(self::boxList(...), Places::detected($session)),
         'how_to' => self::TRACING,
       ];
