@@ -50,8 +50,17 @@ final class Ledger {
    *   The counters.
    */
   public function counters(): array {
-    $session = $this->store->get(self::KEY) ?? new Session();
+    $session = $this->stored();
     return ['update' => $session->update, 'revision' => $session->revision];
+  }
+
+  /**
+   * Returns the stored session, without the photo's media item.
+   *
+   * Its survey and everything derived from it stay empty.
+   */
+  public function stored(): Session {
+    return $this->store->get(self::KEY) ?? new Session();
   }
 
   /**

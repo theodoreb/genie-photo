@@ -2,12 +2,22 @@
 <?php
 
 // Critical path of approval: all four players approve the same picture, a new wish
-// voids the approvals, and an assistant does not reach the web view's tools.
+// voids the approvals, an assistant does not reach the web view's tools, and a request
+// for approval leads to the page, which alone records it.
 
 declare(strict_types=1);
 
 use App\Drupal\DrupalToolFailed;
 use App\Tests\Smoke\SmokeSite;
+use Mcp\Client;
+use Mcp\Client\Handler\Request\ElicitationCallbackInterface;
+use Mcp\Client\Handler\Request\ElicitationRequestHandler;
+use Mcp\Client\Transport\HttpTransport;
+use Mcp\Schema\ClientCapabilities;
+use Mcp\Schema\Enum\ElicitAction;
+use Mcp\Schema\Enum\ProtocolVersion;
+use Mcp\Schema\Request\ElicitRequest;
+use Mcp\Schema\Result\ElicitResult;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
@@ -50,5 +60,68 @@ if ($site->tools->call($tokens['alice'], 'session_get')['export']['final']) {
 $state = $approveAll();
 if (!$state['final']) {
     SmokeSite::fail('The new picture did not become final.');
+}
+
+// A client that cannot open pages gets the link.
+$site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'show me']);
+$asked = $site->tools->call($assistant, 'approve_export');
+if ('waiting_on_web' !== $asked['status'] || $asked['approved_by_you'] || !str_contains((string) $asked['review_url'], '/review/')) {
+    SmokeSite::fail('A plain client did not get the approval link.');
+}
+$page = static fn (string $url): string => parse_url($url, \PHP_URL_PATH).'?'.parse_url($url, \PHP_URL_QUERY);
+$approveOnPage = static function (string $player, string $url) use ($site, $page): void {
+    $browser = $site->openWebPage($player, $page($url));
+    $browser->submit($browser->getCrawler()->filter('#approve')->form());
+};
+$approveOnPage('alice', $asked['review_url']);
+if ('approved' !== $site->tools->call($assistant, 'approve_export')['status']) {
+    SmokeSite::fail('The approval on the page did not reach the assistant.');
+}
+
+// A client that opens pages waits for the click, and its "accept" records nothing.
+$askWithUrlClient = static function (string $player, callable $onPage, ProtocolVersion $version = ProtocolVersion::V2025_11_25) use ($site): array {
+    $handler = new class($onPage) implements ElicitationCallbackInterface {
+        public function __construct(private readonly mixed $onPage)
+        {
+        }
+
+        public function __invoke(ElicitRequest $request): ElicitResult
+        {
+            ($this->onPage)((string) $request->url);
+
+            return new ElicitResult(ElicitAction::Accept);
+        }
+    };
+    $client = Client::builder()
+        ->setProtocolVersion($version)
+        ->setCapabilities(new ClientCapabilities(elicitation: true, elicitationUrl: true))
+        ->addRequestHandler(new ElicitationRequestHandler($handler))
+        ->setRequestTimeout(60)
+        ->build();
+    $client->connect(new HttpTransport($site->drupalUrl.'/mcp', headers: ['Authorization' => 'Bearer '.$site->signInAsAssistant($player)]));
+    $result = $client->callTool('approve_export');
+    $client->disconnect();
+
+    return (array) $result->structuredContent;
+};
+$opened = $askWithUrlClient('bob', static fn (string $url) => $approveOnPage('bob', $url));
+if ('approved' !== $opened['status'] || !$opened['approved_by_you']) {
+    SmokeSite::fail('The opened page did not finish the request.');
+}
+$modern = $askWithUrlClient('dan', static fn () => SmokeSite::fail('A client on the newest revision got a page request.'), ProtocolVersion::V2026_07_28);
+if ('waiting_on_web' !== $modern['status']) {
+    SmokeSite::fail('A client on the newest revision did not get the link.');
+}
+$accepted = $askWithUrlClient('carol', static fn () => $site->tools->call($tokens['dan'], 'make_wish', ['wish' => 'hide my face']));
+if ('picture_changed' !== $accepted['status'] || $accepted['approved_by_you']) {
+    SmokeSite::fail('An accepted prompt alone counted as an approval.');
+}
+
+$client = Client::builder()->build();
+$client->connect(new HttpTransport($site->drupalUrl.'/mcp', headers: ['Authorization' => 'Bearer '.$tokens['alice']]));
+$schemas = array_column($client->listTools()->tools, 'outputSchema', 'name');
+$client->disconnect();
+if (!isset($schemas['approve_export'], $schemas['export_approve'])) {
+    SmokeSite::fail('An approval tool declares no output schema.');
 }
 echo $state['hash'], "\n";

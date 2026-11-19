@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\WishDesk;
 use Drupal\mcp_server\Attribute\Tool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
@@ -24,6 +25,7 @@ use Mcp\Server\ClientGateway;
     'properties' => ['hash' => ['type' => 'string']],
     'required' => ['hash'],
   ],
+  outputSchema: WishDesk::RECEIPT_SCHEMA,
   readOnly: FALSE,
   destructive: FALSE,
   idempotent: TRUE,

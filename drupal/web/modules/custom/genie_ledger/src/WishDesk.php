@@ -4,10 +4,55 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\genie_ledger\Access\WebViewAccess;
+
 /**
  * The single entry point for what players ask of the genie.
  */
 final class WishDesk {
+
+  private const RECEIPT_PROPERTIES = [
+    'hash' => ['type' => 'string'],
+    'revision' => ['type' => 'integer'],
+    'update' => ['type' => 'integer'],
+    'approved_by_you' => ['type' => 'boolean'],
+    'waiting_for' => ['type' => 'array', 'items' => ['type' => 'string']],
+    'final' => ['type' => 'boolean'],
+  ];
+
+  private const RECEIPT_REQUIRED = ['hash', 'revision', 'update', 'approved_by_you', 'waiting_for', 'final'];
+
+  /**
+   * What an approval on the web view returns.
+   */
+  public const RECEIPT_SCHEMA = [
+    'type' => 'object',
+    'properties' => self::RECEIPT_PROPERTIES,
+    'required' => self::RECEIPT_REQUIRED,
+  ];
+
+  /**
+   * What a request for approval returns.
+   */
+  public const APPROVAL_REQUEST_SCHEMA = [
+    'type' => 'object',
+    'properties' => self::RECEIPT_PROPERTIES + [
+      'status' => ['type' => 'string', 'enum' => ['approved', 'waiting_on_web', 'picture_changed']],
+      'reply' => ['type' => 'string'],
+      'review_url' => ['type' => ['string', 'null']],
+    ],
+    'required' => [...self::RECEIPT_REQUIRED, 'status', 'reply', 'review_url'],
+  ];
+
+  private const APPROVED = 'Your person approved this picture.';
+
+  private const POLL_MICROSECONDS = 500_000;
+
+  /**
+   * How long a request waits for the person, inside the client's own timeout.
+   */
+  private const APPROVAL_WAIT_SECONDS = 110;
 
   private const REPLIES = [
     'cover' => 'Granted, %s. Your face is now covered.',
@@ -35,6 +80,7 @@ final class WishDesk {
     private readonly Exports $exports,
     private readonly PhotoStore $photos,
     private readonly Darkroom $darkroom,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -376,6 +422,84 @@ final class WishDesk {
   }
 
   /**
+   * Describes what a player has to approve and where.
+   *
+   * @return array<string, mixed>
+   *   The export state, a status, a reply and the page's address.
+   *
+   * @throws \InvalidArgumentException
+   *   When the caller is no player or no picture exists.
+   */
+  public function approvalRequest(int $uid, string $name): array {
+    $session = $this->ledger->read();
+    if (!isset($session->players[$uid])) {
+      throw new \InvalidArgumentException(self::NO_PLACE);
+    }
+    $export = $session->photo === NULL ? NULL : $this->exports->current($session);
+    if ($export === NULL) {
+      throw new \InvalidArgumentException('There is no photo to approve right now.');
+    }
+    $state = $this->exportState($session, $uid, $export);
+    if ($state['approved_by_you']) {
+      return ['status' => 'approved', 'reply' => self::APPROVED, 'review_url' => NULL] + $state;
+    }
+    return [
+      'status' => 'waiting_on_web',
+      'reply' => 'Nothing is approved yet. Your person approves on the page at review_url.',
+      'review_url' => $this->reviewUrl($session->revision, $export->hash, $name),
+    ] + $state;
+  }
+
+  /**
+   * Waits for the person to approve on the page.
+   *
+   * @param int $uid
+   *   The player.
+   * @param array<string, mixed> $request
+   *   What approvalRequest() returned.
+   *
+   * @return array<string, mixed>
+   *   The same shape, updated when the approval landed or the picture changed.
+   */
+  public function awaitApproval(int $uid, array $request): array {
+    $deadline = microtime(TRUE) + self::APPROVAL_WAIT_SECONDS;
+    do {
+      $stored = $this->ledger->stored();
+      $receipt = $this->receipt($stored, $uid, $request['hash']);
+      if ($stored->revision !== $request['revision']) {
+        return [
+          'status' => 'picture_changed',
+          'reply' => 'The picture changed before your person approved it. Call approve_export again.',
+          'review_url' => NULL,
+        ] + $receipt;
+      }
+      if ($receipt['approved_by_you']) {
+        return ['status' => 'approved', 'reply' => self::APPROVED, 'review_url' => NULL] + $receipt;
+      }
+      usleep(self::POLL_MICROSECONDS);
+    } while (microtime(TRUE) < $deadline);
+    return $request;
+  }
+
+  /**
+   * Builds the address of the page that shows one picture for one player.
+   */
+  private function reviewUrl(int $revision, string $hash, string $name): string {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $client */
+    [$client] = array_values($this->entityTypeManager->getStorage('consumer')->loadByProperties(['client_id' => WebViewAccess::CLIENT_ID]));
+    $callback = parse_url($client->get('redirect')->value);
+    return sprintf(
+      '%s://%s:%d/review/%d/%s?for=%s',
+      $callback['scheme'],
+      $callback['host'],
+      $callback['port'],
+      $revision,
+      $hash,
+      rawurlencode($name),
+    );
+  }
+
+  /**
    * Describes the session for one player, without image data.
    *
    * @return array<string, mixed>
@@ -430,14 +554,26 @@ final class WishDesk {
    *   The hash, the names still awaited, and whether the picture is final.
    */
   private function exportState(Session $session, int $uid, Export $export): array {
+    return $this->receipt($session, $uid, $export->hash);
+  }
+
+  /**
+   * Describes who approved one picture, from the stored session alone.
+   *
+   * @return array{hash: string, revision: int, update: int, approved_by_you: bool, waiting_for: list<string>, final: bool}
+   *   The approval state.
+   */
+  private function receipt(Session $session, int $uid, string $hash): array {
     $waiting = array_filter(
       $session->players,
-      static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $export->hash,
+      static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $hash,
       ARRAY_FILTER_USE_KEY,
     );
     return [
-      'hash' => $export->hash,
-      'approved_by_you' => ($session->approvals[$uid] ?? NULL) === $export->hash,
+      'hash' => $hash,
+      'revision' => $session->revision,
+      'update' => $session->update,
+      'approved_by_you' => ($session->approvals[$uid] ?? NULL) === $hash,
       'waiting_for' => array_values($waiting),
       'final' => $session->players !== [] && $waiting === [],
     ];
