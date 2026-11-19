@@ -11,7 +11,7 @@ bin/replay codex
 bin/replay claude
 ```
 
-The script plays all four players with the assistant you name. It resets the game, signs the assistant in as `genie-alice`, `genie-bob`, `genie-carol` and `genie-dan`, then sends each step below. Open http://127.0.0.1:8000 as any player to watch the picture change.
+The script plays all four players with the assistant you name. It starts a new game, signs the assistant in as `genie-alice`, `genie-bob`, `genie-carol` and `genie-dan`, then sends each step below. To watch the picture change, open the invite link the script prints and join under any other name.
 
 - Codex 0.170 and Claude Code 2.1.328 were tested. The run takes about ten minutes and uses your assistant's own account.
 - The sign-ins go to a separate folder, `var/replay`. Your usual assistant configuration does not change.

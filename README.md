@@ -14,15 +14,16 @@ cd genie-photo
 bin/start
 ```
 
-Open http://127.0.0.1:8000 and sign in as `alice`, `bob`, `carol` or `dan`. The password is `genie`.
+`bin/start` prints a host code. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
 
 `bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
-The build is Drupack 1.0.0-rc6 with three patches in `fork/drupack/`:
+The build is Drupack 1.0.0-rc6 with four patches in `fork/drupack/`:
 
 - Drupack serves and runs Composer for a PHP project without Drupal, here the Symfony web view.
 - Composer's `@php` scripts run on Drupack's PHP.
 - PHP has the FFI extension, which the person detector needs.
+- FrankenPHP adds threads under load, because MCP listen streams and `wait_for_update` each hold one.
 
 `fork/drupack/build` rebuilds the same file from the drupal.org tag with Docker.
 
@@ -44,13 +45,16 @@ The ports are published on 127.0.0.1 only, so the addresses below stay the same.
 
 ## Play
 
-1. The first player uploads a photo. `demo/holiday-party.jpg` is ready to use.
-2. A local detector boxes the people in the photo. One player asks their assistant to trace them.
-3. Each player tells their assistant which person they are, or clicks their face on the web view.
-4. Players make wishes and repaint their whole person, as pixel art if they like.
-5. If two wishes cannot both hold, the page names the players in the way.
-6. Each player approves the picture on a page that shows it. Any later change cancels the approvals.
-7. When everyone has approved, the page offers the download.
+1. The host starts the game and uploads a photo. `demo/holiday-party.jpg` is ready to use. A photo where the detector finds nobody is refused.
+2. The others join from the invite link with a name only. A game takes 12 players.
+3. A local detector boxes the people in the photo. One player asks their assistant to trace them.
+4. Each player tells their assistant which person they are, or clicks their face on the web view.
+5. Players make wishes and repaint their whole person, as pixel art if they like.
+6. If two wishes cannot both hold, the page names the players in the way.
+7. Each player approves the picture on a page that shows it. Any later change cancels the approvals.
+8. When everyone has approved, the game closes for good and the page offers the download.
+
+A game with no change for a day is abandoned and turns read-only. Nothing is deleted.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
 
@@ -99,7 +103,7 @@ Sign-in, the tools and the approval flow were tested with Claude Code and Codex.
 
 ## Optional local model
 
-The site works without one. Wishes then go through a keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people. Symfony AI turns its answer into a validated PHP object. An invalid answer changes nothing, and the genie asks again.
+The site works without one. Wishes then go through a keyword reader. `GENIE_MODEL_URL` in Drupal's environment names another model server to try first, such as a GPU box. Ollama on this machine answers when it fails, then the keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people. Symfony AI turns its answer into a validated PHP object. An invalid answer changes nothing, and the genie asks again.
 
 ## How it fits together
 
@@ -109,7 +113,9 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 - Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
 - Every photo is scaled to a 1600-pixel long side, so blocks look the same on every photo.
 - Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A player with no outline can paint everything except other people.
-- A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game session points to one revision.
+- Each game is a node. A `state_machine` field moves it from start to open, then closed or abandoned. A JSON field holds the play state.
+- Each player is an account named `NAME@NID` that references its game, so two games can each have an Alice.
+- A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game points to one revision.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
@@ -125,6 +131,8 @@ Each line names a library feature and links to the code that uses it.
 - The `#[Schema]` attribute limits the generated JSON schema to the allowed operations: [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/WishReading.php).
 - `ValidatorSubscriber` checks the object with Symfony Validator constraints. A `ValidationException` makes the genie ask again: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
 - The TransformersPhp bridge runs DETR object detection in PHP through FFI: [`PersonDetector.php`](drupal/web/modules/custom/genie_ledger/src/PersonDetector.php).
+- `FailoverPlatform` tries the next model server when one fails, wrapped as a Drupal AI platform middleware: [`Failover.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/ai/PlatformMiddleware/Failover.php), [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
+- `CachePlatform` answers a repeated wish without the model, under a `prompt_cache_key`: [`Cache.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/ai/PlatformMiddleware/Cache.php), [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
 - `MockPlatformFactory` replaces the model in a unit test: [`WishInterpreterTest.php`](drupal/web/modules/custom/genie_ledger/tests/src/Unit/WishInterpreterTest.php).
 
 ### PHP MCP SDK
@@ -137,12 +145,18 @@ Each line names a library feature and links to the code that uses it.
 - A custom request and notification on the SDK's JSON-RPC classes: [`UrlElicitationRequest.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/UrlElicitationRequest.php), [`ElicitationCompleteNotification.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/ElicitationCompleteNotification.php).
 - `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php).
 - `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/MakeWishTool.php) and the other tools.
+- Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie_ledger/src/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
+- Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
 - The smoke scripts call the server as an MCP client: [`SmokeSite.php`](tests/Smoke/SmokeSite.php).
 
 ### Drupal and Drupack
 
 - `mcp_server` serves the tools at `/mcp`. `mcp_server_oauth`, `simple_oauth` and `simple_oauth_21` sign each assistant in as its player: [`McpRouteSubscriber.php`](drupal/web/modules/custom/genie_ledger/src/Routing/McpRouteSubscriber.php).
 - A patch lets native clients use `http://localhost` redirect URIs: [`simple_oauth_21-localhost-redirect.patch`](drupal/patches/simple_oauth_21-localhost-redirect.patch).
+- Each game is a `genie_game` node with a `state_machine` workflow: [`genie_ledger.workflows.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.workflows.yml), [`Games.php`](drupal/web/modules/custom/genie_ledger/src/Games.php).
+- The host code is a Key entity read from a file. Core's flood service limits wrong host codes and invite links: [`HostForm.php`](drupal/web/modules/custom/genie_ledger/src/Form/HostForm.php), [`JoinForm.php`](drupal/web/modules/custom/genie_ledger/src/Form/JoinForm.php).
+- Cron abandons idle games, and `hook_user_format_name_alter` shows players without their game id: [`GenieHooks.php`](drupal/web/modules/custom/genie_ledger/src/Hook/GenieHooks.php).
+- The site runs on the `main` branches of Symfony AI and the MCP SDK, with patches for what broke: [`docs/upstream-breaks.md`](docs/upstream-breaks.md).
 - Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
 - A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie_ledger/src/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie_ledger/src/Session.php).
 - FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie_ledger/src/RevisionPublisher.php).
@@ -159,18 +173,20 @@ Each line names a library feature and links to the code that uses it.
 | Command | What it checks |
 |---|---|
 | `bin/qa` | Coding standards, PHPStan level 3 on Drupal code, linters, unit tests |
-| `bin/smoke-oauth alice` | Sign-in and one MCP call |
+| `bin/smoke-oauth alice` | A new game, sign-in and one MCP call |
+| `bin/smoke-host` | The host code, the upload on the web view, and a guest joining from the invite link |
+| `bin/smoke-subscribe` | A resource update reaches a `subscriptions/listen` stream |
 | `bin/smoke-live` | Upload, a live update and the picture over MCP |
 | `bin/smoke-wish alice` | A wish changes the picture |
 | `bin/smoke-collision` | Two wishes that cannot both hold |
 | `bin/smoke-scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
 | `bin/smoke-outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke-review` | The approval page: return after sign-in, wrong player, changed picture |
-| `bin/smoke-approve` | Approval, URL elicitation, output schemas, and what an assistant cannot reach |
+| `bin/smoke-approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
 
-Run a smoke script with Drupack's PHP, such as `drupal/drupack php bin/smoke-wish alice`. `bin/qa` uses the machine's PHP 8.4 or later. Smoke scripts reset the session. To reset it by hand, run `cd drupal && ./drupack drush genie:reset`.
+Run a smoke script with Drupack's PHP, such as `drupal/drupack php bin/smoke-wish alice`. `bin/qa` uses the machine's PHP 8.4 or later. Each smoke script starts its own game. `drush genie:seats alice bob` does the same by hand and prints the accounts and passwords.
 
 ## License
 

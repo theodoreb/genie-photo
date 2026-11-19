@@ -48,3 +48,52 @@ Versions in use:
 - Reproduce: a new project requiring both packages at `dev-main`.
 - Work-around here: `"symfony/ai-platform": "dev-main as 1.0.0"`, and the same for the generic platform.
 - Proposed fix: `"extra": {"branch-alias": {"dev-main": "1.0.x-dev"}}` in each package.
+
+## 5. symfony/ai: FailoverPlatform never fails over for HTTP platforms
+
+- Target: `symfony/ai-failover-platform`.
+- Symptom: with a dead first platform, `asText()` throws the first platform's `TransportException`. The second platform is never tried.
+- Cause: `invoke()` returns the first platform's `DeferredResult`. Its HTTP request runs only when the result is read, outside the failover's `try`.
+- Reproduce: a `FailoverPlatform` over a Generic platform on `http://127.0.0.1:9` and a working one, then `invoke()` and `asText()`.
+- Fix: `drupal/patches/symfony-ai-failover-platform-deferred.patch` reads the result inside the `try`.
+
+## 6. symfony/ai: FailoverPlatform retries a failed platform on every call
+
+- Target: `symfony/ai-failover-platform`.
+- `do()` records failed platforms but never skips one, so every call tries the dead platform first.
+- Rate limiters are keyed by `$platform::class`. Two platforms of one class, such as two Drupal AI platforms, share one limiter.
+- No patch here. A connection refused costs no time on this site.
+
+## 7. symfony/ai: CachePlatform cannot store an object that holds an enum
+
+- Target: `symfony/ai-cache-platform`.
+- Symptom: a structured output call with `prompt_cache_key` fails with "Cannot normalize attribute "target" because the injected serializer is not a normalizer".
+- Cause: the `ObjectNormalizer` inside `ResultNormalizer` never gets a serializer, and the default serializer lists no normalizer for enums, dates or nested objects.
+- Fix: `drupal/patches/symfony-ai-cache-platform-nested-objects.patch` hands the serializer to the inner normalizer and adds those three normalizers.
+
+## 8. drupal/ai: config entities cannot be duplicated
+
+- Target: `drupal/ai`.
+- Symptom: `createDuplicate()` on an `ai_inference_provider` throws "Cannot assign null to property AiInferenceProviderConfig::$id of type string".
+- Cause: core sets the id to NULL on a duplicate, and the entity types `$id` as a non-nullable string.
+- No patch here. This site creates the entities from arrays.
+
+## 9. mcp_server: no notification reaches a client
+
+- Target: `drupal/mcp_server`.
+- The `NotificationProvider` plugin type ships the contract only. The module never gives the SDK a notification bus, so `subscriptions/listen` acknowledges an empty filter and `resources.subscribe` is never usable.
+- Fix: `drupal/patches/mcp_server-notification-bus.patch` builds the SDK's `Psr16NotificationBus` on Drupal's expirable key-value store and passes it to `setNotificationBus()`.
+- `bin/smoke-subscribe` checks that an update reaches a listen stream.
+
+## 10. mcp/sdk: a listen stream subscribes to any resource URI
+
+- Target: `mcp/sdk`.
+- `NotificationFilter` agrees to every URI in `resourceSubscriptions` without asking whether the client may read that resource.
+- A player who learns another game's URI learns when that game changes, though not what changed.
+- Proposal: let the server check each URI against resource access before it acknowledges the filter.
+
+## 11. mcp/sdk: handshake-era subscriptions have no delivery path
+
+- Target: `mcp/sdk`.
+- `resources/subscribe` stores the URI in the session. `SessionSubscriptionManager::notifyResourceChanged()` needs the `Protocol` and that session, and nothing finds the sessions that subscribed to a URI.
+- The notification bus serves `subscriptions/listen` on the 2026-07-28 revision only. This site therefore keeps `wait_for_update`, now 10 seconds long.

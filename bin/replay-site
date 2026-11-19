@@ -36,6 +36,8 @@ switch ($command) {
 
     case 'reset':
         Seats::start('alice', 'bob', 'carol', 'dan');
+        // A watcher who joins from the link takes no place, so the approvals do not wait for them.
+        echo 'Watch the game: join at ', $tools->call($web('alice'), 'session_get')['invite'], "\n";
         break;
 
     case 'grant':
