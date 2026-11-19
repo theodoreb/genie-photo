@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\Pictures;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Gives the web view the images it shows.
@@ -37,11 +39,25 @@ final class PictureGetTool extends WebViewToolBase {
   protected const STATES = ['open', 'closed', 'abandoned'];
 
   /**
+   * Renders the images.
+   */
+  private Pictures $pictures;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->pictures = $container->get(Pictures::class);
+    return $tool;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     try {
-      return $this->imageResult($this->desk->webPicture((string) ($arguments['view'] ?? ''), $arguments['revision'] ?? NULL));
+      return $this->imageResult($this->pictures->webPicture((string) ($arguments['view'] ?? ''), $arguments['revision'] ?? NULL));
     }
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);

@@ -17,7 +17,6 @@ use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\Plugin\mcp_server\Tool\MyStatusTool;
 use Drupal\genie_ledger\RevisionPublisher;
-use Drupal\genie_ledger\WishDesk;
 use Drupal\Tests\UnitTestCase;
 use Drupal\node\NodeInterface;
 use Mcp\Server\ClientGateway;
@@ -63,8 +62,7 @@ final class MyStatusToolTest extends UnitTestCase {
     }
     $photos = (new \ReflectionClass(PhotoStore::class))->newInstanceWithoutConstructor();
     $ledger = new Ledger($entityTypeManager, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos, $game, $this->createStub(NotificationBusInterface::class));
-    $desk = (new \ReflectionClass(WishDesk::class))->newInstanceWithoutConstructor();
-    return new MyStatusTool([], 'my_status', NULL, $currentUser, $ledger, $desk);
+    return new MyStatusTool([], 'my_status', NULL, $currentUser, $ledger);
   }
 
   /**

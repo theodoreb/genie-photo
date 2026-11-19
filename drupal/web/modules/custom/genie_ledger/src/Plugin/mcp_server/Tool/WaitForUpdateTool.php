@@ -6,8 +6,8 @@ namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
 
 /**
  * Waits until the session changes.

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\genie_ledger\WishDesk;
+use Drupal\genie_ledger\Approvals;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Records an approval the person gave on the web view.
@@ -25,13 +26,27 @@ use Mcp\Server\ClientGateway;
     'properties' => ['hash' => ['type' => 'string']],
     'required' => ['hash'],
   ],
-  outputSchema: WishDesk::RECEIPT_SCHEMA,
+  outputSchema: Approvals::RECEIPT_SCHEMA,
   readOnly: FALSE,
   destructive: FALSE,
   idempotent: TRUE,
   openWorld: FALSE,
 )]
 final class ExportApproveTool extends WebViewToolBase {
+
+  /**
+   * Records the approvals.
+   */
+  private Approvals $approvals;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->approvals = $container->get(Approvals::class);
+    return $tool;
+  }
 
   /**
    * {@inheritdoc}
@@ -41,7 +56,7 @@ final class ExportApproveTool extends WebViewToolBase {
       throw new ToolCallException('Give the hash of the picture you approve.');
     }
     try {
-      return $this->desk->approve((int) $this->currentUser->id(), $arguments['hash']);
+      return $this->approvals->approve((int) $this->currentUser->id(), $arguments['hash']);
     }
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);

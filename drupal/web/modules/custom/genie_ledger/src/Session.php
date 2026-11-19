@@ -233,6 +233,74 @@ final class Session {
   }
 
   /**
+   * Tells an assistant what to do next.
+   */
+  public function next(int $uid): string {
+    if (isset($this->regions["person-$uid"])) {
+      return 'Your place is claimed. Make a wish, or call photo_get with view my_body before paint_me.';
+    }
+    if ($this->proposals !== []) {
+      return 'Ask your person which one they are. Look at the photo with view photo, then call claim_place with that id and a tight head box.';
+    }
+    return match ($this->detection['status'] ?? NULL) {
+      'pending' => 'The person detector is still running. Call wait_for_update, then photo_get with view outline.',
+      'ready' => 'Call photo_get with view outline, trace each numbered person, then call scan_photo.',
+      default => 'Nobody has been found yet. Look at the photo with view photo, then call scan_photo.',
+    };
+  }
+
+  /**
+   * Lists object names by region id.
+   *
+   * @return array<string, string>
+   *   The names.
+   */
+  public function objectNames(): array {
+    $names = [];
+    foreach ($this->regions as $id => $region) {
+      if ($region['kind'] === 'object') {
+        $names[$id] = $region['label'];
+      }
+    }
+    return $names;
+  }
+
+  /**
+   * Describes who approved one picture.
+   *
+   * @return array{hash: string, revision: int, update: int, approved_by_you: bool, waiting_for: list<string>, final: bool}
+   *   The approval state.
+   */
+  public function receipt(int $uid, string $hash): array {
+    $waiting = $this->waiting($hash);
+    return [
+      'hash' => $hash,
+      'revision' => $this->revision,
+      'update' => $this->update,
+      'approved_by_you' => ($this->approvals[$uid] ?? NULL) === $hash,
+      'waiting_for' => array_values($waiting),
+      'final' => $this->seated !== [] && $waiting === [],
+    ];
+  }
+
+  /**
+   * Lists who has not approved a picture, by account id.
+   *
+   * Every seated account counts, so a guest who has no place yet still holds
+   * the game open.
+   *
+   * @return array<int, string>
+   *   Their names.
+   */
+  public function waiting(string $hash): array {
+    return array_filter(
+      $this->seated,
+      fn (int $player): bool => ($this->approvals[$player] ?? NULL) !== $hash,
+      ARRAY_FILTER_USE_KEY,
+    );
+  }
+
+  /**
    * Writes the stored properties as JSON, for the game node.
    */
   public function toJson(): string {

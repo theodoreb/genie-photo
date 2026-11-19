@@ -9,7 +9,6 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\genie_ledger\Ledger;
-use Drupal\genie_ledger\WishDesk;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
@@ -31,7 +30,6 @@ abstract class LedgerToolBase extends ToolPluginBase {
     mixed $plugin_definition,
     AccountProxyInterface $currentUser,
     protected readonly Ledger $ledger,
-    protected readonly WishDesk $desk,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $currentUser);
   }
@@ -46,7 +44,6 @@ abstract class LedgerToolBase extends ToolPluginBase {
       $plugin_definition,
       $container->get('current_user'),
       $container->get(Ledger::class),
-      $container->get(WishDesk::class),
     );
   }
 

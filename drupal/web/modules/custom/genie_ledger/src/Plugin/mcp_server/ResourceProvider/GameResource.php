@@ -11,8 +11,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\GameView;
 use Drupal\genie_ledger\Ledger;
-use Drupal\genie_ledger\WishDesk;
 use Drupal\mcp_server\Attribute\ResourceProvider;
 use Drupal\mcp_server\Plugin\ResourceProviderBase;
 use Drupal\mcp_server\Resource\CacheableResourceContent;
@@ -37,7 +37,7 @@ final class GameResource extends ResourceProviderBase {
     EntityTypeManagerInterface $entityTypeManager,
     AccountProxyInterface $currentUser,
     private readonly Ledger $ledger,
-    private readonly WishDesk $desk,
+    private readonly GameView $gameView,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entityTypeManager, $currentUser);
   }
@@ -53,7 +53,7 @@ final class GameResource extends ResourceProviderBase {
       $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get(Ledger::class),
-      $container->get(WishDesk::class),
+      $container->get(GameView::class),
     );
   }
 
@@ -92,7 +92,7 @@ final class GameResource extends ResourceProviderBase {
    * {@inheritdoc}
    */
   public function getResourceContent(string $uri): ?CacheableResourceContent {
-    $view = $this->desk->view((int) $this->currentUser->id());
+    $view = $this->gameView->view((int) $this->currentUser->id());
     return CacheableResourceContent::fromArray(
       ['uri' => $uri, 'mimeType' => 'application/json', 'text' => json_encode($view, JSON_THROW_ON_ERROR)],
       (new CacheableMetadata())->setCacheMaxAge(0),

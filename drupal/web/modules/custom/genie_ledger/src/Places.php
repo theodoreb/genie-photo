@@ -24,6 +24,16 @@ final class Places {
     'description' => '[x, y, width, height] in photo pixels.',
   ];
 
+  /**
+   * The refusal for a player who has no place yet.
+   */
+  public const NO_PLACE = 'Claim your place first: call photo_get, then claim_place.';
+
+  /**
+   * The refusal for a player whom people in front cover entirely.
+   */
+  public const NO_REACH = 'People in front of you cover your whole person.';
+
   private const MAX_PEOPLE = 30;
   private const MAX_OBJECTS = 20;
   private const MAX_LABEL = 40;

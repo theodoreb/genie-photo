@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\People;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Lets the uploader remove a wrong proposal.
@@ -29,6 +31,20 @@ use Mcp\Server\ClientGateway;
 final class ProposalDismissTool extends WebViewToolBase {
 
   /**
+   * Records who is in the photo.
+   */
+  private People $people;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->people = $container->get(People::class);
+    return $tool;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
@@ -36,7 +52,7 @@ final class ProposalDismissTool extends WebViewToolBase {
       throw new ToolCallException('Name the proposal.');
     }
     try {
-      return $this->desk->dismissProposal((int) $this->currentUser->id(), $arguments['proposal']);
+      return $this->people->dismissProposal((int) $this->currentUser->id(), $arguments['proposal']);
     }
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);

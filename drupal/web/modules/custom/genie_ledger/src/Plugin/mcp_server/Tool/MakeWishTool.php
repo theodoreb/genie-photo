@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\Wishes;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Passes a player's wish to the genie.
@@ -31,6 +33,20 @@ final class MakeWishTool extends LedgerToolBase {
   private const MAX_LENGTH = 300;
 
   /**
+   * Grants the player's wishes.
+   */
+  private Wishes $wishes;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->wishes = $container->get(Wishes::class);
+    return $tool;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
@@ -40,7 +56,7 @@ final class MakeWishTool extends LedgerToolBase {
     if (mb_strlen($arguments['wish']) > self::MAX_LENGTH) {
       throw new ToolCallException(sprintf('Keep a wish under %d characters.', self::MAX_LENGTH));
     }
-    return $this->desk->grant((int) $this->currentUser->id(), $this->currentUser->getDisplayName(), $arguments['wish']);
+    return $this->wishes->grant((int) $this->currentUser->id(), $this->currentUser->getDisplayName(), $arguments['wish']);
   }
 
 }

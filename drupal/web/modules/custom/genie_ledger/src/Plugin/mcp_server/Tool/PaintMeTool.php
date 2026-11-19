@@ -6,9 +6,12 @@ namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie_ledger\BodyPaint;
+use Drupal\genie_ledger\Pictures;
+use Drupal\genie_ledger\Wishes;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Paints the caller's whole person.
@@ -41,6 +44,26 @@ use Mcp\Server\ClientGateway;
 final class PaintMeTool extends LedgerToolBase {
 
   /**
+   * Grants the player's wishes.
+   */
+  private Wishes $wishes;
+
+  /**
+   * Renders the images.
+   */
+  private Pictures $pictures;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->wishes = $container->get(Wishes::class);
+    $tool->pictures = $container->get(Pictures::class);
+    return $tool;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
@@ -51,11 +74,11 @@ final class PaintMeTool extends LedgerToolBase {
       throw new ToolCallException($e->getMessage(), previous: $e);
     }
     $uid = (int) $this->currentUser->id();
-    $outcome = $this->desk->paint($uid, $this->currentUser->getDisplayName(), $paint);
+    $outcome = $this->wishes->paint($uid, $this->currentUser->getDisplayName(), $paint);
     if (!$outcome['granted']) {
       return $outcome;
     }
-    return $this->imageResult(['info' => $outcome] + $this->desk->image($uid, 'my_body'));
+    return $this->imageResult(['info' => $outcome] + $this->pictures->image($uid, 'my_body'));
   }
 
 }

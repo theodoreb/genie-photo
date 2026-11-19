@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\genie_ledger\People;
 use Drupal\genie_ledger\Places;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\ToolCallException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Gives the caller the place of one person in the photo.
@@ -33,11 +35,25 @@ use Mcp\Server\ClientGateway;
 final class ClaimPlaceTool extends LedgerToolBase {
 
   /**
+   * Records who is in the photo.
+   */
+  private People $people;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $tool->people = $container->get(People::class);
+    return $tool;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     try {
-      return $this->desk->claim(
+      return $this->people->claim(
         (int) $this->currentUser->id(),
         $this->currentUser->getDisplayName(),
         $arguments['person'] ?? NULL,
