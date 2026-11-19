@@ -127,6 +127,16 @@ final class Session {
   public array $players = [];
 
   /**
+   * Everyone seated in the game, with or without a place, by account id.
+   *
+   * Read from the accounts, never stored here. Each of them approves the
+   * picture before the game closes.
+   *
+   * @var array<int, string>
+   */
+  public array $seated = [];
+
+  /**
    * Counts every change, including approvals, which keep the revision.
    */
   public int $update = 0;

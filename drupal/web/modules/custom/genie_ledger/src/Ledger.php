@@ -56,7 +56,7 @@ final class Ledger {
    * Returns the current session, with the media revision it points to.
    */
   public function read(): Session {
-    return $this->pinned(Session::fromGame($this->game()));
+    return $this->pinned($this->session($this->game()));
   }
 
   /**
@@ -76,7 +76,7 @@ final class Ledger {
    * Its survey and everything derived from it stay empty.
    */
   public function stored(): Session {
-    return Session::fromGame($this->game());
+    return $this->session($this->game());
   }
 
   /**
@@ -98,7 +98,7 @@ final class Ledger {
       if (in_array($game->get('field_genie_state')->value, self::OVER, TRUE)) {
         throw new \InvalidArgumentException('This game is over. Its picture stays as it is.');
       }
-      $session = $this->pinned(Session::fromGame($game));
+      $session = $this->pinned($this->session($game));
       $before = $session->survey === NULL ? NULL : clone $session->survey;
       $change($session);
       if ($before !== NULL && $session->survey != $before) {
@@ -155,6 +155,19 @@ final class Ledger {
     finally {
       $this->lock->release($lock);
     }
+  }
+
+  /**
+   * Reads a game's session and the accounts seated in it.
+   */
+  private function session(NodeInterface $game): Session {
+    $session = Session::fromGame($game);
+    $users = $this->entityTypeManager->getStorage('user');
+    $seated = $users->getQuery()->accessCheck(FALSE)->condition('field_genie_game', $game->id())->execute();
+    foreach ($users->loadMultiple($seated) as $uid => $account) {
+      $session->seated[(int) $uid] = $account->getDisplayName();
+    }
+    return $session;
   }
 
   /**

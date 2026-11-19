@@ -27,7 +27,7 @@ final readonly class SmokeSite
     public DrupalPhotos $photos;
     public Seats $seats;
 
-    public function __construct()
+    public function __construct(string ...$players)
     {
         $root = \dirname(__DIR__, 2);
         (new Dotenv())->bootEnv($root.'/.env');
@@ -35,7 +35,7 @@ final readonly class SmokeSite
         $this->http = HttpClient::create();
         $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
         $this->photos = new DrupalPhotos($this->http, $this->drupalUrl.'/genie');
-        $this->seats = Seats::start('alice', 'bob', 'carol', 'dan');
+        $this->seats = Seats::start(...$players ?: ['alice', 'bob', 'carol', 'dan']);
     }
 
     /**

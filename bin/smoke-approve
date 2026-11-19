@@ -21,7 +21,7 @@ use Mcp\Schema\Result\ElicitResult;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
-$site = new SmokeSite();
+$site = new SmokeSite('alice', 'bob', 'carol', 'dan', 'erin');
 $tokens = [];
 foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
     $tokens[$player] = $site->signIn($player);
@@ -31,7 +31,7 @@ foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
     $site->markPlace($tokens[$player], 100 + 350 * $index);
 }
 
-$approve = static function (string ...$players) use ($site, $tokens): array {
+$approve = static function (string ...$players) use ($site, &$tokens): array {
     $hash = $site->tools->call($tokens['alice'], 'session_get')['export']['hash'];
     foreach ($players as $player) {
         $state = $site->tools->call($tokens[$player], 'export_approve', ['hash' => $hash]);
@@ -49,8 +49,8 @@ foreach (['picture_get', 'export_approve', 'protect_set', 'proposal_dismiss'] as
     }
 }
 
-if (['dan'] !== $approve('alice', 'bob', 'carol')['waiting_for']) {
-    SmokeSite::fail('Three approvals did not leave dan to approve.');
+if (['dan', 'erin'] !== $approve('alice', 'bob', 'carol')['waiting_for']) {
+    SmokeSite::fail('Three approvals did not leave dan and erin to approve.');
 }
 $site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'hide my face']);
 if ($site->tools->call($tokens['alice'], 'session_get')['export']['approved_by_you']) {
@@ -119,8 +119,15 @@ $client->disconnect();
 if (!isset($schemas['approve_export'], $schemas['export_approve'])) {
     SmokeSite::fail('An approval tool declares no output schema.');
 }
+// erin joined without a place, so four approvals leave the game open.
+if (['erin'] !== $approve('alice', 'bob', 'carol', 'dan')['waiting_for']) {
+    SmokeSite::fail('A seated guest without a place did not hold the game open.');
+}
+$tokens['erin'] = $site->signIn('erin');
+$site->markPlace($tokens['erin'], 1500);
+
 // The last approval closes the game for good.
-$state = $approve('alice', 'bob', 'carol', 'dan');
+$state = $approve('alice', 'bob', 'carol', 'dan', 'erin');
 if (!$state['final'] || 'closed' !== $site->tools->call($tokens['alice'], 'session_get')['state']) {
     SmokeSite::fail('Four approvals did not close the game.');
 }

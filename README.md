@@ -51,7 +51,7 @@ The ports are published on 127.0.0.1 only, so the addresses below stay the same.
 4. Each player tells their assistant which person they are, or clicks their face on the web view.
 5. Players make wishes and repaint their whole person, as pixel art if they like.
 6. If two wishes cannot both hold, the page names the players in the way.
-7. Each player approves the picture on a page that shows it. Any later change cancels the approvals.
+7. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
 8. When everyone has approved, the game closes for good and the page offers the download.
 
 A game with no change for a day is abandoned and turns read-only. Nothing is deleted.

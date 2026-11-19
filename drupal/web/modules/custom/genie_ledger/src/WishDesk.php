@@ -571,19 +571,22 @@ final class WishDesk {
       'update' => $session->update,
       'approved_by_you' => ($session->approvals[$uid] ?? NULL) === $hash,
       'waiting_for' => array_values($waiting),
-      'final' => $session->players !== [] && $waiting === [],
+      'final' => $session->seated !== [] && $waiting === [],
     ];
   }
 
   /**
-   * Lists the players who have not approved a picture, by account id.
+   * Lists who has not approved a picture, by account id.
+   *
+   * Every seated account counts, so a guest who has no place yet still holds
+   * the game open.
    *
    * @return array<int, string>
    *   Their names.
    */
   private static function waiting(Session $session, string $hash): array {
     return array_filter(
-      $session->players,
+      $session->seated,
       static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $hash,
       ARRAY_FILTER_USE_KEY,
     );
