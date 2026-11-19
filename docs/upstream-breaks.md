@@ -97,3 +97,36 @@ Versions in use:
 - Target: `mcp/sdk`.
 - `resources/subscribe` stores the URI in the session. `SessionSubscriptionManager::notifyResourceChanged()` needs the `Protocol` and that session, and nothing finds the sessions that subscribed to a URI.
 - The notification bus serves `subscriptions/listen` on the 2026-07-28 revision only. This site therefore keeps `wait_for_update`, now 10 seconds long.
+
+## 12. mcp_server: every result says "do not cache"
+
+- Target: `drupal/mcp_server`.
+- Symptom: on the 2026-07-28 revision, every cacheable result carries `ttlMs: 0` and `cacheScope: private`.
+- Cause: `McpServerFactory::create()` never calls `Builder::setCachePolicy()`, so the SDK's `CachePolicy::none()` applies (SEP-2549).
+- Fix: `drupal/patches/mcp_server-cache-policy.patch` does four things:
+  - adds a `cache` map to `mcp_server.settings`: a default `ttl_ms` and `scope`, and overrides keyed by method name
+  - adds its schema with `Range` and `AllowedValues` constraints, plus a post-update for existing sites
+  - builds the SDK policy from that map
+  - lowers a resource read's `ttlMs` to the resource's remaining Drupal max-age, on a miss and on a hit
+- Resource reads now run the SDK's `ResourceResultFormatter` inside `ResourceContentCache::generate()`, which returns a `ReadResourceResult`.
+- Tests: `ResourceContentCacheTest` is updated, with one new case for max-age 60, 0 and permanent. It did not run here: the local SQLite is 3.37, and Drupal needs 3.45.
+- Check: `bin/smoke cache` reads the hints on `server/discover`, `tools/list` and `resources/read`.
+
+## 13. mcp/sdk: a client per request probes `server/discover` every time
+
+- Target: `mcp/sdk`.
+- Symptom: a PHP web app that opens one client per HTTP request sends `server/discover` before each call. Each action costs two requests.
+- Cause: the client reads no `ttlMs`, and it keeps nothing between connections.
+- Fix: `symfony/patches/mcp-sdk-discovery-cache.patch` adds three things:
+  - `Builder::setCache()`, which takes a PSR-16 store and is the only new public API
+  - a check in `Protocol::negotiate()`: a stored discover result goes through `adopt()`, and a result it refuses is probed again live
+  - `HttpTransport::cacheIdentity()`, marked `@internal`: public entries are keyed by the endpoint, private ones by the endpoint and every header
+- A transport with an `auth:` authenticator never caches, because its credential is not in the headers.
+- `psr/simple-cache` moves from `require-dev` to `require`.
+- Tests upstream would want:
+  - a hit and a miss
+  - a private entry that another credential cannot read
+  - a refused entry that triggers a live probe
+  - a TTL under one second, which is not stored
+  - the authenticator case
+- Check: `bin/smoke cache` counts HTTP requests. A second connect with a warm store sends none.

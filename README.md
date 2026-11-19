@@ -162,6 +162,7 @@ Each line names a library feature and links to the code that uses it.
 - `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php).
 - `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/MakeWishTool.php) and the other tools.
 - Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie/src/Game/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
+- Caching hints (SEP-2549): Drupal stamps `ttlMs` and `cacheScope` from its settings, and the web view keeps `server/discover` for its `ttlMs`, so a web action costs one request: [`mcp_server-cache-policy.patch`](drupal/patches/mcp_server-cache-policy.patch), [`mcp-sdk-discovery-cache.patch`](symfony/patches/mcp-sdk-discovery-cache.patch), [`McpDrupalTools.php`](symfony/src/Drupal/McpDrupalTools.php).
 - Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
 - The smoke scripts call the server as an MCP client: [`SmokeSite.php`](symfony/tests/smoke/lib/SmokeSite.php).
 
@@ -199,6 +200,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
+| `bin/smoke cache` | The caching hints on discover, tool lists and resource reads, and a second connect that sends no request |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
 
