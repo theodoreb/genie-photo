@@ -6,6 +6,7 @@ namespace Drupal\genie\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie\Game\Games;
 
 /**
@@ -21,6 +22,19 @@ final class GenieHooks {
   #[Hook('user_format_name_alter')]
   public function formatName(string &$name, AccountInterface $account): void {
     $name = Games::displayName($name);
+  }
+
+  /**
+   * Tells a player how to sign in, since players never get a password.
+   */
+  #[Hook('form_user_login_form_alter')]
+  public function loginHint(array &$form): void {
+    $form['genie_player'] = [
+      '#markup' => new TranslatableMarkup('Joined a genie game from an invite link? Players have no password. Connect your assistant from the browser where you joined, where you are still signed in.'),
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#weight' => -100,
+    ];
   }
 
   /**
