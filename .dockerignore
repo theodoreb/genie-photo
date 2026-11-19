@@ -12,5 +12,4 @@ drupal/web
 !drupal/web/modules/custom
 !drupal/web/themes/custom
 drupal/private
-drupal/drupack
 drupal/drush

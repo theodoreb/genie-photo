@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "03c7f2d562befee93d5c3214f0a6d8e6",
+    "content-hash": "1b6dd37b67a2c5838979e4d95bbd8a7f",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1898,49 +1898,6 @@
                 "source": "https://github.com/drupal/core-recommended/tree/11.4.13"
             },
             "time": "2026-11-18T14:44:34+00:00"
-        },
-        {
-            "name": "drupal/drupack",
-            "version": "1.0.0-rc6",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/drupack.git",
-                "reference": "37804a11d5c1d5c2be3d6f46a1160dd5784149c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://git.drupalcode.org/api/v4/projects/project%2Fdrupack/repository/archive.zip?sha=37804a11d5c1d5c2be3d6f46a1160dd5784149c0",
-                "reference": "37804a11d5c1d5c2be3d6f46a1160dd5784149c0",
-                "shasum": ""
-            },
-            "require": {
-                "composer-plugin-api": "^2",
-                "composer-runtime-api": "^2.2",
-                "composer/semver": "^3",
-                "php": ">=8.1"
-            },
-            "bin": [
-                "composer/drupack-install"
-            ],
-            "type": "composer-plugin",
-            "extra": {
-                "class": "Drupal\\Drupack\\Composer\\Plugin"
-            },
-            "autoload": {
-                "psr-4": {
-                    "Drupal\\Drupack\\Composer\\": "composer/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "description": "Installs drupack, which serves a Drupal project with its own PHP and web server, into the project root.",
-            "homepage": "https://github.com/tresbientech/drupack",
-            "support": {
-                "source": "https://git.drupalcode.org/project/drupack/-/tree/1.0.0-rc6"
-            },
-            "time": "2026-11-19T04:24:15+00:00"
         },
         {
             "name": "drupal/json_field",
@@ -16952,7 +16909,6 @@
     "stability-flags": {
         "drupal/ai": 20,
         "drupal/compound_field": 15,
-        "drupal/drupack": 5,
         "drupal/mcp_server": 10,
         "drupal/mcp_server_oauth": 15
     },
@@ -16963,5 +16919,5 @@
         "ext-pdo_sqlite": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

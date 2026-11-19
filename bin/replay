@@ -18,7 +18,7 @@ fi
 if command -v docker >/dev/null && [ -n "$(docker compose ps -q --status running genie 2>/dev/null)" ]; then
     site() { docker compose exec -T -e DRUPACK_NO_UPDATE_CHECK=1 genie drupal/drupack php bin/replay-site "$@" </dev/null; }
 else
-    site() { php bin/replay-site "$@" </dev/null; }
+    site() { DRUPACK_NO_UPDATE_CHECK=1 drupal/drupack php bin/replay-site "$@" </dev/null; }
 fi
 
 work="$PWD/var/replay"

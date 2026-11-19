@@ -1,0 +1,25 @@
+From 8970c0406164a89846aaacff708b9bff3a6c1ae9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Th=C3=A9odore=20BIADALA?= <theodore@biadala.net>
+Date: Thu, 19 Nov 2026 08:45:48 +0100
+Subject: [PATCH 2/3] Accept the php.ini Composer names
+
+---
+ application/bin/php | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/application/bin/php b/application/bin/php
+index b0490f3..0196d42 100755
+--- a/application/bin/php
++++ b/application/bin/php
+@@ -1,3 +1,11 @@
+ #!/bin/sh
+ # Drush runs its child processes with the php on PATH, which the launcher puts here.
++# Composer's @php scripts name the php.ini PHP already loaded, which php refuses as an option.
++for word; do
++    shift
++    case "$word" in
++        --php-ini=*) ;;
++        *) set -- "$@" "$word" ;;
++    esac
++done
+ exec "$DRUPACK_RUNTIME_BINARY" php "$@"

@@ -1,23 +1,24 @@
 #!/bin/sh
-# Installs what is missing, starts Drupal and serves the web view. Ctrl-C stops the web view.
+# Installs what is missing, starts Drupal and serves the web view, all on Drupack. Ctrl-C stops the web view.
 set -eu
 cd "$(dirname "$0")/.."
 
-for tool in php composer curl; do
+# Composer fetches drupal/ai from git and applies patches with it.
+for tool in curl git; do
     command -v "$tool" >/dev/null || { echo "This project needs $tool." >&2; exit 1; }
 done
 
-composer install --no-interaction --no-progress
-# Drupal runs on the PHP inside Drupack, so this machine's PHP extensions do not matter to it.
-# Composer's Drupack plugin puts the official file back on every install, so a current vendor folder skips it.
-if [ ! -x drupal/drupack ] || [ drupal/composer.lock -nt drupal/vendor/composer/installed.json ]; then
-    composer --working-dir=drupal install --no-interaction --no-progress --ignore-platform-reqs
-fi
-bin/drupack-ffi
-
+bin/get-drupack
+drupack="$PWD/drupal/drupack"
 export DRUPACK_NO_UPDATE_CHECK=1
+# Drupal serves plain HTTP, so the web view reaches it without a local root.
+export DRUPACK_TLS_DIR=
 # The container listens on every interface, and Docker publishes the ports on loopback only.
 export GENIE_LISTEN_IP="${GENIE_LISTEN_IP:-127.0.0.1}"
+
+"$drupack" composer install --no-interaction --no-progress
+(cd drupal && ./drupack composer install --no-interaction --no-progress)
+
 # The marker appears only after a complete install, so a failed one runs again.
 if [ -f drupal/private/.installed ]; then
     (cd drupal && { ./drupack stop . >/dev/null 2>&1 || true; } && ./drupack start . --listen "$GENIE_LISTEN_IP:7225" --yes </dev/null)
@@ -28,18 +29,12 @@ fi
 # The model comes once from Hugging Face. Without it the assistants find the people.
 (cd drupal && ./drupack drush genie:detector-prepare) || echo 'The person detector is not ready. Assistants will find the people.' >&2
 
-# Drupack serves HTTPS only on a machine that trusts its local root.
-drupal_url=http://127.0.0.1:7225
-if curl -fs -o /dev/null https://127.0.0.1:7225/.well-known/oauth-authorization-server; then
-    drupal_url=https://127.0.0.1:7225
-fi
-
 callback="$(sed -n 's/^PUBLIC_URL=//p' .env)/oauth/callback"
 secret="$(cd drupal && ./drupack drush genie:web-client "$callback")"
 umask 077
 {
+    # An older start also wrote DRUPAL_URL here, which .env now holds.
     grep -vE '^(DRUPAL_URL|GENIE_WEB_SECRET)=' .env.local 2>/dev/null || true
-    echo "DRUPAL_URL=$drupal_url"
     echo "GENIE_WEB_SECRET=$secret"
 } >.env.new.local
 mv .env.new.local .env.local

@@ -1,0 +1,19 @@
+From ebbaed968d91d064cd0282d882f1fae8f9eb111c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Th=C3=A9odore=20BIADALA?= <theodore@biadala.net>
+Date: Thu, 19 Nov 2026 08:50:45 +0100
+Subject: [PATCH 3/3] Add PHP's FFI extension
+
+Symfony AI's TransformersPhp bridge runs the person detector through it.
+---
+ runtime/extensions/php-extensions.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/runtime/extensions/php-extensions.txt b/runtime/extensions/php-extensions.txt
+index c4516d3..56d10e6 100644
+--- a/runtime/extensions/php-extensions.txt
++++ b/runtime/extensions/php-extensions.txt
+@@ -51,3 +51,4 @@ xmlwriter        # simple_sitemap, which Drupal CMS site templates require
+ yaml             # core InfoParserDynamic parses .info.yml with it, Symfony otherwise
+ zip              # core Archiver; Composer unpacks dist archives in the build and drupack composer
+ zlib             # Drupal core
++ffi              # symfony/ai TransformersPhp bridge

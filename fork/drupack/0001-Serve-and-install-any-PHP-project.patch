@@ -1,0 +1,101 @@
+From 51990955f353815cbe4cc98685d1b43eae76bef7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Th=C3=A9odore=20BIADALA?= <theodore@biadala.net>
+Date: Thu, 19 Nov 2026 08:43:37 +0100
+Subject: [PATCH 1/3] Serve and install any PHP project
+
+drupack php-server reaches FrankenPHP's server, and drupack composer runs outside a Drupal project.
+---
+ launcher/composer.go      | 13 ++-----------
+ launcher/composer_test.go | 17 -----------------
+ launcher/parse.go         |  2 +-
+ launcher/start_test.go    |  2 --
+ 4 files changed, 3 insertions(+), 31 deletions(-)
+
+diff --git a/launcher/composer.go b/launcher/composer.go
+index 379a3db..9865ce2 100644
+--- a/launcher/composer.go
++++ b/launcher/composer.go
+@@ -6,7 +6,6 @@ import (
+ 	"strings"
+ 
+ 	"git.tresbien.tech/tresbientech/drupack/launcher/internal/cache"
+-	"git.tresbien.tech/tresbientech/drupack/launcher/internal/siteconfig"
+ )
+ 
+ // refusedComposerCommands are the Composer commands the engine refuses, with the
+@@ -20,19 +19,11 @@ var refusedComposerCommands = []struct {
+ }
+ 
+ // engineComposer plans the engine's composer command: the engine's phar on the
+-// runtime's php-cli, in the Drupal project at cwd. A create-project runs from any
+-// directory.
++// runtime's php-cli, in the project at cwd, Drupal or not.
+ func engineComposer(f Facts, c command, cwd string) (Command, error) {
+-	command, err := composerRefusal(f.Launch, c.words)
+-	if err != nil {
++	if _, err := composerRefusal(f.Launch, c.words); err != nil {
+ 		return Command{}, err
+ 	}
+-	// Composer runs create-project from any prefix of two letters or more; "c" is ambiguous.
+-	if len(command) < 2 || !strings.HasPrefix("create-project", command) {
+-		if err := siteconfig.CheckDrupal(cwd); err != nil {
+-			return Command{}, err
+-		}
+-	}
+ 	return runtimePHPCall(f, Reader, f.Application, append([]string{filepath.Join(f.Application, cache.ComposerPhar)}, c.words...)), nil
+ }
+ 
+diff --git a/launcher/composer_test.go b/launcher/composer_test.go
+index fb28ba8..9f01daa 100644
+--- a/launcher/composer_test.go
++++ b/launcher/composer_test.go
+@@ -114,23 +114,6 @@ func TestComposerRefusalFindsTheCommandComposerRuns(t *testing.T) {
+ 	}
+ }
+ 
+-func TestEngineComposerRefusesAProjectWithoutDrupal(t *testing.T) {
+-	f := newProject(t, `{"require": {"laravel/framework": "^12"}}`)
+-	put(t, filepath.Join(f.project, "composer.lock"), `{"packages": [{"name": "laravel/framework", "version": "12.0.0"}]}`)
+-	_, err := engineComposer(Facts{Launch: f.launch()}, parseLine(t, true, "composer", "install"), f.project)
+-	if err == nil || !strings.Contains(err.Error(), "holds no Drupal project") {
+-		t.Errorf("error = %v, want the Drupal refusal", err)
+-	}
+-	if _, err := engineComposer(Facts{Launch: f.launch()}, parseLine(t, true, "composer", "install"), f.cwd); err == nil || !strings.Contains(err.Error(), "holds no composer.json") {
+-		t.Errorf("from a subdirectory: error = %v, want the composer.json refusal", err)
+-	}
+-	// Drupal core's own package, which requires the scaffold.
+-	put(t, filepath.Join(f.cwd, "composer.json"), `{"name": "drupal/core", "type": "drupal-core", "require": {"drupal/core-composer-scaffold": "*"}, "extra": {"drupal-scaffold": {}}}`)
+-	if _, err := engineComposer(Facts{Launch: f.launch()}, parseLine(t, true, "composer", "require", "drupal/token"), f.cwd); err == nil || !strings.Contains(err.Error(), "names a drupal- type") {
+-		t.Errorf("from web/core: error = %v, want the drupal- type refusal", err)
+-	}
+-}
+-
+ func TestASiteExecutableHasNoComposerCommand(t *testing.T) {
+ 	_, err := parse(Launch{Args: []string{"SITE", "composer", "install"}, Name: "fixture-site", Invoked: "./fixture-site"})
+ 	if err == nil || !strings.HasPrefix(err.Error(), "Unknown command: composer") {
+diff --git a/launcher/parse.go b/launcher/parse.go
+index 3159ba7..fa3203f 100644
+--- a/launcher/parse.go
++++ b/launcher/parse.go
+@@ -238,7 +238,7 @@ func parse(l Launch) (command, error) {
+ 		return command{word: word, target: read.DataDir}, nil
+ 	case word == "drush" && engine:
+ 		return command{word: "drush", words: rest}, nil
+-	case word == "php" || versionLine(args):
++	case word == "php" || word == "php-server" || versionLine(args):
+ 		return command{}, nil
+ 	case engine && (word == "export" || word == "dr" || word == "composer"):
+ 		return command{word: word, words: rest}, nil
+diff --git a/launcher/start_test.go b/launcher/start_test.go
+index 1c44d99..f88c96b 100644
+--- a/launcher/start_test.go
++++ b/launcher/start_test.go
+@@ -295,8 +295,6 @@ func TestAStartOffersComposerInstallForAFreshClone(t *testing.T) {
+ 		{name: "a yes cut off before its newline declines", answer: "yes", terminal: true, asked: true},
+ 		{name: "no terminal asks nothing", answer: "y\n"},
+ 		{name: "an installed docroot asks nothing", answer: "y\n", terminal: true, files: installed},
+-		{name: "Composer's refusal comes before the question", answer: "y\n", terminal: true,
+-			files: map[string]string{"composer.lock": `{"packages": []}`}, err: "names no drupal/core release"},
+ 		{name: "a failed install returns its exit code", answer: "y\n", terminal: true, exit: 3, asked: true, ran: true},
+ 		{name: "--yes installs with no terminal and no question", yes: true, ran: true},
+ 		{name: "--yes installs on a terminal with no question", answer: "n\n", terminal: true, yes: true, ran: true},

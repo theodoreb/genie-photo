@@ -18,7 +18,6 @@
         "drupal/compound_field": "1.0.0-alpha4",
         "drupal/core-composer-scaffold": "^11.4",
         "drupal/core-recommended": "^11.4",
-        "drupal/drupack": "^1.0@RC",
         "drupal/json_field": "^1.7",
         "drupal/mcp_server": "^2.0@beta",
         "drupal/mcp_server_oauth": "^1.0@alpha",
@@ -44,7 +43,6 @@
             "tbachert/spi": true,
             "symfony/runtime": true,
             "cweagans/composer-patches": true,
-            "drupal/drupack": true,
             "codewithkyrian/platform-package-installer": true
         },
         "sort-packages": true,

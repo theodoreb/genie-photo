@@ -6,6 +6,8 @@ source_repo="$(cd "$(dirname "$0")/.." && pwd)"
 target="$(mktemp -d)/genie-photo"
 git clone --quiet --branch "$(git -C "$source_repo" branch --show-current)" "$source_repo" "$target"
 cd "$target"
+# The clone starts from this checkout's Drupack, which bin/get-drupack checks, so the check runs before a release exists.
+cp "$source_repo/drupal/drupack" drupal/drupack
 
 started=$(date +%s)
 bin/start >"$target.log" 2>&1 &
@@ -22,7 +24,7 @@ until curl -fs -o /dev/null http://127.0.0.1:8000/login; do
     sleep 2
 done
 
-bin/smoke-wish alice 'hide my face'
+DRUPACK_NO_UPDATE_CHECK=1 drupal/drupack php bin/smoke-wish alice 'hide my face'
 echo "ready and working after $(($(date +%s) - started)) seconds"
 
 stop

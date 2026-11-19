@@ -102,7 +102,7 @@ final class GameController extends AbstractController
     {
         $photo = $request->files->get('photo');
         if (!$photo instanceof UploadedFile || !$photo->isValid()) {
-            $this->addFlash('error', 'The photo did not arrive. It may be larger than 25 MB.');
+            $this->addFlash('error', 'The photo did not arrive. It may be larger than 64 MB.');
 
             return $this->redirectToRoute('app_home');
         }

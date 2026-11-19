@@ -1,6 +1,8 @@
 services:
   genie:
     build: .
+    # The Drupack build is x86-64 only. Docker Desktop emulates it on Apple silicon.
+    platform: linux/amd64
     init: true
     # The assistants and the browser reach both servers at the addresses bin/start prints.
     ports:

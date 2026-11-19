@@ -1,0 +1,44 @@
+#!/bin/sh
+# Builds this project's Drupack: release 1.0.0-rc6 with the patches beside this file, for Linux x86-64 glibc.
+# Needs git, curl and Docker. Usage: fork/drupack/build [OUTPUT_DIRECTORY], ./dist by default.
+set -eu
+here="$(cd "$(dirname "$0")" && pwd)"
+mkdir -p "${1:-dist}"
+out="$(cd "${1:-dist}" && pwd)"
+version=1.0.0-rc6
+work="$(mktemp -d)"
+trap 'chmod -R u+w "$work"; rm -rf "$work"' EXIT
+
+git clone --quiet --branch "$version" https://git.drupalcode.org/project/drupack.git "$work/src"
+git -C "$work/src" apply "$here"/*.patch
+cd "$work/src"
+
+# The builder image compiles PHP with the extension list, so the FFI line gives it its own tag.
+builder="drupack-builder-gnu:$(bash runtime/builder/builder-tag.sh gnu)"
+docker image inspect "$builder" >/dev/null 2>&1 || bash runtime/builder/build-builder.sh gnu "$builder" "$work/builder"
+docker build --target runtime-gnu-files --build-arg GNU_BUILDER="$builder" \
+    --build-arg EXTENSIONS=site-extensions --build-context site-extensions=runtime/extensions \
+    --output type=local,dest="$work/gnu" .
+mkdir -p "$work/runtimes"
+cp -r "$work/gnu/out" "$work/runtimes/linux-amd64-glibc"
+
+# The packer runs Composer on a musl runtime. The official release's serves, and ships nowhere.
+musl="drupack-$version-linux-amd64-musl"
+curl -fsSL -o "$work/$musl" "https://github.com/tresbientech/drupack/releases/download/$version/$musl"
+curl -fsSL -o "$work/checksums.txt" "https://github.com/tresbientech/drupack/releases/download/$version/checksums.txt"
+(cd "$work" && grep " $musl\$" checksums.txt | sha256sum --check --status)
+chmod 755 "$work/$musl"
+DRUPACK_CACHE_DIR="$work/musl-cache" DRUPACK_NO_UPDATE_CHECK=1 "$work/$musl" --version >/dev/null
+mkdir -p "$work/runtimes/linux-amd64-musl"
+cp "$work"/musl-cache/v"$version"-*/drupack "$work"/musl-cache/v"$version"-*/php.ini "$work"/musl-cache/v"$version"-*/cacert.pem "$work/runtimes/linux-amd64-musl/"
+chmod -R a+rX "$work/runtimes"
+
+docker build --target job --build-arg GNU_BUILDER="$builder" \
+    --build-arg EXTENSIONS=site-extensions --build-context site-extensions=runtime/extensions \
+    --build-arg RUNTIMES=custom-runtimes --build-context custom-runtimes="$work/runtimes" \
+    --build-arg DRUPACK_VERSION="$version-genie" -t drupack-genie-job .
+mkdir -p "$work/dist"
+docker run --rm --user "$(id -u):$(id -g)" -v "$work/dist:/out" drupack-genie-job \
+    drupack-build --engine-executable --platform linux-amd64 --libc glibc --output /out
+mv "$work/dist/drupack-linux-amd64" "$out/drupack-$version-genie-linux-amd64-glibc"
+echo "Built $out/drupack-$version-genie-linux-amd64-glibc"
