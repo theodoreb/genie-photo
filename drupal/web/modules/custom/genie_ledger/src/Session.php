@@ -141,7 +141,7 @@ final class Session {
     $owners = array_flip($this->claims);
     foreach ($this->survey->people as $rank => $person) {
       ['id' => $id, 'description' => $description] = $person;
-      $place = ['rank' => $rank] + array_diff_key($person, ['id' => TRUE, 'description' => TRUE]);
+      $place = ['rank' => $rank, 'head' => $person['head'], 'cells' => $person['cells']] + self::box($person);
       if (isset($owners[$id])) {
         $uid = $owners[$id];
         $this->regions["person-$uid"] = [
@@ -161,8 +161,21 @@ final class Session {
         'kind' => 'object',
         'owner' => $object['reporter'],
         'label' => $object['label'],
-      ] + array_diff_key($object, ['id' => TRUE, 'label' => TRUE, 'reporter' => TRUE]);
+      ] + self::box($object);
     }
+  }
+
+  /**
+   * Copies a box.
+   *
+   * @param array<string, mixed> $item
+   *   A person or an object.
+   *
+   * @return array{x: int, y: int, width: int, height: int}
+   *   Its box.
+   */
+  private static function box(array $item): array {
+    return ['x' => $item['x'], 'y' => $item['y'], 'width' => $item['width'], 'height' => $item['height']];
   }
 
   /**
@@ -172,13 +185,20 @@ final class Session {
    *   The stored properties.
    */
   public function __serialize(): array {
-    return array_diff_key(get_object_vars($this), [
-      'survey' => TRUE,
-      'photo' => TRUE,
-      'detection' => TRUE,
-      'regions' => TRUE,
-      'proposals' => TRUE,
-    ]);
+    return [
+      'revision' => $this->revision,
+      'surveyRevision' => $this->surveyRevision,
+      'uploader' => $this->uploader,
+      'paints' => $this->paints,
+      'claims' => $this->claims,
+      'wishes' => $this->wishes,
+      'centered' => $this->centered,
+      'protected' => $this->protected,
+      'suggestions' => $this->suggestions,
+      'players' => $this->players,
+      'update' => $this->update,
+      'approvals' => $this->approvals,
+    ];
   }
 
   /**

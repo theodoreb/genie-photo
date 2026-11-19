@@ -19,6 +19,13 @@ final class WishDesk {
 
   private const NO_PLACE = 'Claim your place first: call photo_get, then claim_place.';
 
+  private const NO_REACH = 'People in front of you cover your whole person.';
+
+  /**
+   * What the web view may read about a place.
+   */
+  private const PLACE_KEYS = ['kind', 'owner', 'label', 'description', 'head', 'x', 'y', 'width', 'height'];
+
   private const TRACING = 'For each detected label, list the grid cells whose centre lies on that person: hair, hat, face, clothes, arms, hands and what they wear. Leave out the background, held objects, furniture and other people. Stay inside or close to the box. Where people overlap, give the cell to the one in front. Send them to scan_photo from front to back, each with its label as "detected", its cells as "outline" runs [row, first column, last column] and a head box in photo pixels. Leave out a box that holds no real person.';
 
   public function __construct(
@@ -64,8 +71,12 @@ final class WishDesk {
    *   The outcome.
    */
   public function paint(int $uid, string $name, BodyPaint $paint): array {
-    if (!isset($this->ledger->read()->regions["person-$uid"])) {
+    $current = $this->ledger->read();
+    if (!isset($current->regions["person-$uid"])) {
       return $this->refusal(self::NO_PLACE);
+    }
+    if (Outlines::reach($current)["person-$uid"] === []) {
+      return $this->refusal(self::NO_REACH);
     }
     $session = $this->ledger->write(static function (Session $session) use ($uid, $paint): void {
       if ($paint->isEmpty()) {
@@ -252,7 +263,7 @@ final class WishDesk {
       throw new \InvalidArgumentException(self::NO_PLACE);
     }
     if (Outlines::reach($session)["person-$uid"] === []) {
-      throw new \InvalidArgumentException('People in front of you cover your whole person.');
+      throw new \InvalidArgumentException(self::NO_REACH);
     }
     return $this->darkroom->bodyView($this->photos->read(), $session, $uid);
   }
@@ -375,8 +386,7 @@ final class WishDesk {
     $export = $session->photo === NULL ? NULL : $this->exports->current($session);
     $regions = [];
     foreach ($session->regions as $id => $region) {
-      unset($region['cells'], $region['rank'], $region['person']);
-      $regions[] = $region + [
+      $regions[] = self::place($region) + [
         'id' => $id,
         'protected' => isset($session->protected[$id]),
         'suggested_by' => $session->suggestions[$id] ?? [],
@@ -389,7 +399,7 @@ final class WishDesk {
       'is_uploader' => $session->uploader === $uid,
       'regions' => $regions,
       'proposals' => array_map(
-        static fn (string $id, array $box): array => array_diff_key($box, ['cells' => TRUE, 'rank' => TRUE]) + ['id' => $id],
+        static fn (string $id, array $box): array => self::place($box) + ['id' => $id],
         array_keys($session->proposals),
         $session->proposals,
       ),
@@ -398,6 +408,19 @@ final class WishDesk {
       'frame' => $session->photo === NULL ? NULL : $this->describe($this->framer->frame($session)),
       'export' => $export === NULL ? NULL : $this->exportState($session, $uid, $export),
     ];
+  }
+
+  /**
+   * Keeps what the web view may read about a region or a proposal.
+   *
+   * @param array<string, mixed> $place
+   *   The region or proposal.
+   *
+   * @return array<string, mixed>
+   *   Its public values.
+   */
+  private static function place(array $place): array {
+    return array_intersect_key($place, array_flip(self::PLACE_KEYS));
   }
 
   /**
