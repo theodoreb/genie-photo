@@ -1,0 +1,19 @@
+id: genie_paint
+label: 'Paint me'
+title: 'Paint me'
+description: 'Paints a drawing over your own place in the photo.'
+status: true
+dependencies:
+  enforced:
+    module:
+      - genie
+arguments:
+  - label: 'Drawing'
+    machine_name: drawing
+    description: 'What to paint and where, such as "a curly moustache on my mask".'
+    required: true
+messages:
+  - role: user
+    content:
+      - type: text
+        text: 'Use my genie tools: paint {{ drawing }}. Look at my head with the grid first, and stay inside what I can paint. Make no wish.'

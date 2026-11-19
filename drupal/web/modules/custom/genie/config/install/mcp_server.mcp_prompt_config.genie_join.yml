@@ -1,0 +1,19 @@
+id: genie_join
+label: 'Join the photo'
+title: 'Join the photo'
+description: 'Finds you in the group photo and claims your place.'
+status: true
+dependencies:
+  enforced:
+    module:
+      - genie
+arguments:
+  - label: 'How to spot you'
+    machine_name: look
+    description: 'What sets you apart in the photo, such as "the yellow sweater".'
+    required: true
+messages:
+  - role: user
+    content:
+      - type: text
+        text: 'Use my genie tools: the group photo is up. If nobody is marked in it yet, find everyone first. Then claim my place. I am the one in {{ look }}.'

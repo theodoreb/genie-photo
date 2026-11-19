@@ -103,6 +103,8 @@ To play several players from one machine, add the server once per player under a
 | `wait_for_update` | Waits up to 10 seconds for a change, approvals included |
 | `approve_export` | Sends you to the page that shows the picture, and reports your approval |
 
+The server also offers three prompts, which clients such as claude.ai list in their prompt menu: `genie_join`, `genie_paint` and `genie_wish`. Each takes one line of text and asks the assistant to use the tools above. They are config entities of `mcp_server`, in the module's `config/install`.
+
 Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `web_picture_get`, which returns its images. Assistants cannot call it.
 
 Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.

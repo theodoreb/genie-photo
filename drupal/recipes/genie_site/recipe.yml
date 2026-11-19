@@ -29,6 +29,10 @@ config:
     simple_oauth.settings:
       simpleConfigUpdate:
         disable_openid_connect: true
+    mcp_server.settings:
+      simpleConfigUpdate:
+        server_name: genie
+        server_instructions: 'A game on one shared group photo. Each person plays through their own assistant. Call my_status and session_get first. Claim your place with photo_get and claim_place before painting or wishing. A wish or a paint changes only your own place. Everyone approves the final picture on the page approve_export gives. You cannot approve for your person.'
     simple_oauth_pkce.settings:
       simpleConfigUpdate:
         plain_enabled: false

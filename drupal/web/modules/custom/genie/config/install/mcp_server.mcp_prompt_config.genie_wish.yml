@@ -1,0 +1,19 @@
+id: genie_wish
+label: 'Make a wish'
+title: 'Make a wish'
+description: 'Asks the genie to change how you appear, then sends you to approve the picture.'
+status: true
+dependencies:
+  enforced:
+    module:
+      - genie
+arguments:
+  - label: 'Wish'
+    machine_name: wish
+    description: 'How you want to appear, such as "put me in the middle".'
+    required: true
+messages:
+  - role: user
+    content:
+      - type: text
+        text: 'Use my genie tools: make this wish for me: {{ wish }}. Show me the new picture, then give me the page where I approve it.'
