@@ -29,7 +29,10 @@ fi
 # The model comes once from Hugging Face. Without it the assistants find the people.
 (cd drupal && ./drupack drush genie:detector-prepare) || echo 'The person detector is not ready. Assistants will find the people.' >&2
 
-callback="$(sed -n 's/^PUBLIC_URL=//p' .env)/oauth/callback"
+# The environment names the public addresses on a server, .env on a workstation.
+public_url="${PUBLIC_URL:-$(sed -n 's/^PUBLIC_URL=//p' .env)}"
+drupal_url="${DRUPAL_URL:-$(sed -n 's/^DRUPAL_URL=//p' .env)}"
+callback="$public_url/oauth/callback"
 secret="$(cd drupal && ./drupack drush genie:web-client "$callback")"
 umask 077
 {
@@ -39,5 +42,5 @@ umask 077
 } >.env.new.local
 mv .env.new.local .env.local
 
-echo "Start a game at $(sed -n 's/^DRUPAL_URL=//p' .env)/genie/host with host code $(cat drupal/private/host-code)."
+echo "Start a game at $drupal_url/genie/host with host code $(cat drupal/private/host-code)."
 exec bin/dev-web

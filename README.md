@@ -39,6 +39,20 @@ docker compose up
 
 The ports are published on 127.0.0.1 only, so the addresses below stay the same. The image is x86-64, which Docker Desktop emulates on Apple silicon. The container has no Ollama, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie drupal/drupack php bin/smoke-wish alice`.
 
+### On a public server
+
+Put a TLS proxy in front of both ports, then set these in the environment of `bin/start`:
+
+| Variable | Value |
+|---|---|
+| `GENIE_LISTEN_IP` | `0.0.0.0`, so the proxy reaches both ports |
+| `PUBLIC_URL` | the web view's public address |
+| `DRUPAL_URL` | Drupal's public address. The web view calls it too, so the server must resolve it. |
+| `GENIE_WEB_ORIGIN` | the web view's public address again, for the live-update hub |
+| `GENIE_REVERSE_PROXY` | the proxy's IP address |
+| `APP_ENV`, `APP_DEBUG`, `APP_SECRET` | `prod`, `0` and a random string |
+| `SYMFONY_TRUSTED_PROXIES` | the proxy's IP address |
+
 ## Replay the demo
 
 `bin/replay codex` or `bin/replay claude` plays the video's story with one assistant for all four players. `demo/replay.md` lists its steps, and you can paste them into your own assistants instead.
