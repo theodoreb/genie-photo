@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Genie game'
+type: genie_game
+description: 'One group photo and the play around it.'
+help: null
+new_revision: false
+preview_mode: 0
+display_submitted: false

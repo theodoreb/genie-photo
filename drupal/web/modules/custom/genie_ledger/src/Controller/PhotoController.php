@@ -12,6 +12,7 @@ use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -21,7 +22,7 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
  */
 final class PhotoController extends ControllerBase {
 
-  private const MAX_BYTES = 25_000_000;
+  private const MAX_BYTES = 15_000_000;
 
   public function __construct(
     private readonly Ledger $ledger,
@@ -31,12 +32,20 @@ final class PhotoController extends ControllerBase {
   ) {}
 
   /**
-   * Stores the session photo. The first player to upload is the uploader.
+   * Stores the game's photo, sent by its host, when it shows someone.
    */
   public function put(Request $request): JsonResponse {
+    $uid = (int) $this->currentUser()->id();
+    $current = $this->ledger->stored();
+    if ($current->uploader !== $uid) {
+      throw new AccessDeniedHttpException('Only the player who started this game adds its photo.');
+    }
+    if ($current->surveyRevision !== NULL) {
+      throw new ConflictHttpException('This game already has its photo.');
+    }
     $bytes = stream_get_contents($request->getContent(TRUE), self::MAX_BYTES + 1);
     if (strlen($bytes) > self::MAX_BYTES) {
-      throw new HttpException(413, 'The image is too large.');
+      throw new HttpException(413, sprintf('The image is larger than %d MB.', self::MAX_BYTES / 1_000_000));
     }
     try {
       $photo = $this->intake->normalize($bytes);
@@ -45,20 +54,27 @@ final class PhotoController extends ControllerBase {
       throw new UnprocessableEntityHttpException($e->getMessage(), $e);
     }
 
-    $uploader = (int) $this->currentUser()->id();
-    $name = $this->currentUser()->getAccountName();
-    $session = $this->ledger->write(function (Session $session) use ($photo, $uploader, $name): void {
-      if ($session->surveyRevision !== NULL) {
-        throw new ConflictHttpException('This session already has its photo.');
+    // A photo nobody is in is refused before anything is stored. Without a
+    // detector, the assistants find the people.
+    $status = 'off';
+    $boxes = [];
+    if ($this->detector->available()) {
+      $boxes = $this->detector->detectInCommand($photo['jpeg']);
+      $status = $boxes === NULL ? 'failed' : 'ready';
+      if ($boxes === []) {
+        throw new UnprocessableEntityHttpException('Nobody is in this photo. Choose a photo with people in it.');
       }
-      $session->uploader = $uploader;
-      $session->players[$uploader] = $name;
-      $session->pin($this->photos->create($photo['jpeg'], $uploader, $this->detector->available() ? 'pending' : 'off'));
-    });
-    if ($session->survey->detector === 'pending') {
-      $this->detector->launch();
     }
 
+    $name = $this->currentUser()->getDisplayName();
+    $session = $this->ledger->write(function (Session $session) use ($photo, $uid, $name, $status, $boxes): void {
+      if ($session->surveyRevision !== NULL) {
+        throw new ConflictHttpException('This game already has its photo.');
+      }
+      $session->players[$uid] = $name;
+      $session->transition = 'open';
+      $session->pin($this->photos->create($photo['jpeg'], $uid, $status, $boxes ?? []));
+    });
     return new JsonResponse(['revision' => $session->revision], 201);
   }
 

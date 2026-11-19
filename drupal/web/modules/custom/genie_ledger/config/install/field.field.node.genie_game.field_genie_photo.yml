@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_genie_photo
+    - media.type.genie_photo
+    - node.type.genie_game
+id: node.genie_game.field_genie_photo
+field_name: field_genie_photo
+entity_type: node
+bundle: genie_game
+label: Photo
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      genie_photo: genie_photo
+field_type: entity_reference

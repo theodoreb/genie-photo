@@ -14,7 +14,6 @@ use Mcp\Schema\Content\TextContent;
 use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\Process\Process;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -26,6 +25,7 @@ final readonly class SmokeSite
     public HttpClientInterface $http;
     public McpDrupalTools $tools;
     public DrupalPhotos $photos;
+    public Seats $seats;
 
     public function __construct()
     {
@@ -35,7 +35,7 @@ final readonly class SmokeSite
         $this->http = HttpClient::create();
         $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
         $this->photos = new DrupalPhotos($this->http, $this->drupalUrl.'/genie');
-        $this->drush('genie:reset');
+        $this->seats = Seats::start('alice', 'bob', 'carol', 'dan');
     }
 
     /**
@@ -44,16 +44,6 @@ final readonly class SmokeSite
     public function frame(string $token, int $revision): string
     {
         return $this->tools->image($token, 'picture_get', ['view' => 'frame', 'revision' => $revision]);
-    }
-
-    /**
-     * Runs a Drush command on the site.
-     */
-    public function drush(string ...$arguments): string
-    {
-        $process = new Process(['./drupack', 'drush', ...$arguments], \dirname(__DIR__, 2).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']);
-
-        return $process->mustRun()->getOutput();
     }
 
     /**
@@ -66,7 +56,7 @@ final readonly class SmokeSite
             $this->webCallback(),
             DrupalOAuth::CLIENT_ID,
             $_ENV['GENIE_WEB_SECRET'],
-        ))->signIn($player);
+        ))->signIn($this->seats->account($player), $this->seats->password($player));
     }
 
     /**
@@ -74,7 +64,7 @@ final readonly class SmokeSite
      */
     public function signInAsAssistant(string $player): string
     {
-        return (new PlayerSession($this->drupalUrl.'/mcp', $this->webCallback()))->signIn($player);
+        return (new PlayerSession($this->drupalUrl.'/mcp', $this->webCallback()))->signIn($this->seats->account($player), $this->seats->password($player));
     }
 
     /**
@@ -88,7 +78,7 @@ final readonly class SmokeSite
             $page = $browser->getCrawler();
             $login = $page->filter('#user-login-form');
             $browser->submit($login->count() > 0
-                ? $login->form(['name' => $player, 'pass' => 'genie'])
+                ? $login->form(['name' => $this->seats->account($player), 'pass' => $this->seats->password($player)])
                 : $page->filter('form input[type=submit]')->first()->form());
         }
 
@@ -108,7 +98,10 @@ final readonly class SmokeSite
 
     public function uploadPhoto(string $token): void
     {
+        // The detector refuses a photo nobody is in, so the demo photo fills the left third.
         $image = imagecreatetruecolor(2000, 1000);
+        $people = imagecreatefromjpeg(\dirname(__DIR__, 2).'/demo/holiday-party.jpg');
+        imagecopyresampled($image, $people, 0, 0, 0, 0, 667, 1000, imagesx($people), imagesy($people));
         ob_start();
         imagejpeg($image);
         $this->photos->put($token, ob_get_clean());

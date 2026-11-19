@@ -7,23 +7,22 @@ namespace Drupal\genie_ledger\Drush\Commands;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\genie_ledger\Access\WebViewAccess;
-use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\Games;
 use Drupal\genie_ledger\PersonDetector;
-use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
 
 /**
- * Commands for the genie session.
+ * Commands for the genie games.
  */
 final class GenieCommands extends DrushCommands {
 
   use AutowireTrait;
 
   public function __construct(
-    private readonly Ledger $ledger,
+    private readonly Games $games,
     private readonly WishInterpreter $interpreter,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly PersonDetector $detector,
@@ -33,24 +32,35 @@ final class GenieCommands extends DrushCommands {
   }
 
   /**
-   * Finds the people in the session photo. The photo upload starts this.
+   * Prints the people in a JPEG as JSON boxes. The photo upload runs this.
    */
-  #[CLI\Command(name: 'genie:detect')]
-  public function detect(): void {
-    $survey = $this->ledger->read()->survey;
-    if ($survey?->detector !== 'pending') {
-      return;
+  #[CLI\Command(name: 'genie:detect-file')]
+  #[CLI\Argument(name: 'file', description: 'The path of a JPEG.')]
+  public function detectFile(string $file): void {
+    $this->output()->writeln(json_encode($this->detector->detect($file), JSON_THROW_ON_ERROR));
+  }
+
+  /**
+   * Starts a game with known passwords, for the smoke tests and the replay.
+   *
+   * Prints the game id and each seat's account name and password as JSON.
+   */
+  #[CLI\Command(name: 'genie:seats')]
+  #[CLI\Argument(name: 'names', description: 'The host first, then the other players.')]
+  public function seats(array $names): void {
+    $host = array_shift($names);
+    $accounts = [$host => $this->games->start($host)];
+    $game = (int) $accounts[$host]->get('field_genie_game')->target_id;
+    foreach ($names as $name) {
+      $accounts[$name] = $this->games->join($game, $name);
     }
-    $status = 'failed';
-    $boxes = [];
-    try {
-      $boxes = $this->detector->detect($this->fileSystem->realpath(PhotoStore::URI));
-      $status = 'ready';
+    $seats = [];
+    foreach ($accounts as $name => $account) {
+      $password = bin2hex(random_bytes(12));
+      $account->setPassword($password)->save();
+      $seats[$name] = ['account' => $account->getAccountName(), 'password' => $password];
     }
-    catch (\Throwable $e) {
-      $this->logger()->error($e->getMessage());
-    }
-    $this->ledger->recordDetection($survey->media, $status, $boxes);
+    $this->output()->writeln(json_encode(['game' => $game, 'seats' => $seats], JSON_THROW_ON_ERROR));
   }
 
   /**
@@ -66,15 +76,6 @@ final class GenieCommands extends DrushCommands {
     $this->detector->detect($this->fileSystem->realpath($file));
     $this->fileSystem->delete($file);
     $this->logger()->success('The person detector is ready.');
-  }
-
-  /**
-   * Starts over with no photo and no regions.
-   */
-  #[CLI\Command(name: 'genie:reset')]
-  public function reset(): void {
-    $this->ledger->reset();
-    $this->logger()->success('The genie session is empty.');
   }
 
   /**

@@ -25,10 +25,15 @@ final class MyStatusTool extends LedgerToolBase {
   /**
    * {@inheritdoc}
    */
+  protected const STATES = ['start', 'open', 'closed', 'abandoned'];
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     return [
       'uid' => (int) $this->currentUser->id(),
-      'name' => $this->currentUser->getAccountName(),
+      'name' => $this->currentUser->getDisplayName(),
     ];
   }
 

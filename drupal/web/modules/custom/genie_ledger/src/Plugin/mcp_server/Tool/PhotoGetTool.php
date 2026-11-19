@@ -33,6 +33,11 @@ final class PhotoGetTool extends LedgerToolBase {
   /**
    * {@inheritdoc}
    */
+  protected const STATES = ['open', 'closed', 'abandoned'];
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     try {
       return $this->imageResult($this->desk->image((int) $this->currentUser->id(), (string) ($arguments['view'] ?? '')));

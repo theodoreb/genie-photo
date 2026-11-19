@@ -1,5 +1,5 @@
 name: genie-drupal
-recipe: recipes/genie_demo
+recipe: recipes/genie_site
 site_name: Genie
 settings: genie.php
 port: 7225

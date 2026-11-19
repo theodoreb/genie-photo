@@ -40,7 +40,7 @@ final class MakeWishTool extends LedgerToolBase {
     if (mb_strlen($arguments['wish']) > self::MAX_LENGTH) {
       throw new ToolCallException(sprintf('Keep a wish under %d characters.', self::MAX_LENGTH));
     }
-    return $this->desk->grant((int) $this->currentUser->id(), $this->currentUser->getAccountName(), $arguments['wish']);
+    return $this->desk->grant((int) $this->currentUser->id(), $this->currentUser->getDisplayName(), $arguments['wish']);
   }
 
 }

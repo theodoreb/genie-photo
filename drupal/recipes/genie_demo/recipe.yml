@@ -1,7 +1,0 @@
-name: 'Genie demo accounts'
-type: Site
-description: 'Four demo players for a site that listens on loopback only.'
-recipes:
-  - genie_site
-install:
-  - genie_demo

@@ -28,6 +28,11 @@ use Mcp\Server\ClientGateway;
 )]
 final class WaitForUpdateTool extends LedgerToolBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected const STATES = ['start', 'open'];
+
   private const MAX_SECONDS = 25;
   private const POLL_MICROSECONDS = 500_000;
 

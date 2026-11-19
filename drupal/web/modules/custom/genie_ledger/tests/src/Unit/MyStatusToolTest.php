@@ -6,17 +6,20 @@ namespace Drupal\Tests\genie_ledger\Unit;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
-use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\genie_ledger\CurrentGame;
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\Plugin\mcp_server\Tool\MyStatusTool;
 use Drupal\genie_ledger\RevisionPublisher;
 use Drupal\genie_ledger\WishDesk;
 use Drupal\Tests\UnitTestCase;
+use Drupal\node\NodeInterface;
 use Mcp\Server\ClientGateway;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -41,15 +44,26 @@ final class MyStatusToolTest extends UnitTestCase {
   }
 
   /**
-   * Builds the tool for a current user.
+   * Builds the tool for a current user, in a game that is open or none.
    */
-  private function tool(?AccountProxyInterface $currentUser = NULL): MyStatusTool {
-    $keyValue = $this->createStub(KeyValueFactoryInterface::class);
-    $keyValue->method('get')->willReturn($this->createStub(KeyValueStoreInterface::class));
+  private function tool(?AccountProxyInterface $currentUser = NULL, ?string $state = 'open'): MyStatusTool {
+    $currentUser ??= $this->createStub(AccountProxyInterface::class);
+    $stateField = $this->createStub(FieldItemListInterface::class);
+    $stateField->method('__get')->willReturn($state);
+    $node = $this->createStub(NodeInterface::class);
+    $node->method('get')->willReturn($stateField);
+    $nodes = $this->createStub(EntityStorageInterface::class);
+    $nodes->method('loadUnchanged')->willReturn($node);
+    $entityTypeManager = $this->createStub(EntityTypeManagerInterface::class);
+    $entityTypeManager->method('getStorage')->willReturn($nodes);
+    $game = new CurrentGame($currentUser, $entityTypeManager);
+    if ($state !== NULL) {
+      $game->enter(1);
+    }
     $photos = (new \ReflectionClass(PhotoStore::class))->newInstanceWithoutConstructor();
-    $ledger = new Ledger($keyValue, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos);
+    $ledger = new Ledger($entityTypeManager, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos, $game);
     $desk = (new \ReflectionClass(WishDesk::class))->newInstanceWithoutConstructor();
-    return new MyStatusTool([], 'my_status', NULL, $currentUser ?? $this->createStub(AccountProxyInterface::class), $ledger, $desk);
+    return new MyStatusTool([], 'my_status', NULL, $currentUser, $ledger, $desk);
   }
 
   /**
@@ -68,7 +82,7 @@ final class MyStatusToolTest extends UnitTestCase {
   public function testReportsTheCurrentPlayer(): void {
     $currentUser = $this->createStub(AccountProxyInterface::class);
     $currentUser->method('id')->willReturn('7');
-    $currentUser->method('getAccountName')->willReturn('alice');
+    $currentUser->method('getDisplayName')->willReturn('alice');
 
     $result = $this->tool($currentUser)->execute([], $this->createStub(ClientGateway::class));
 
@@ -76,10 +90,11 @@ final class MyStatusToolTest extends UnitTestCase {
   }
 
   /**
-   * Only signed-in accounts with the permission reach the tool.
+   * Only signed-in players of a game reach the tool, in every game state.
    */
   public function testAccess(): void {
     $this->assertTrue($this->tool()->checkAccess($this->account(TRUE, TRUE))->isAllowed());
+    $this->assertTrue($this->tool(state: 'closed')->checkAccess($this->account(TRUE, TRUE))->isAllowed());
     $this->assertFalse($this->tool()->checkAccess($this->account(TRUE, FALSE))->isAllowed());
     $this->assertFalse($this->tool()->checkAccess($this->account(FALSE, TRUE))->isAllowed());
   }

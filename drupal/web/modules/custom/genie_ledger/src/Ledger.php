@@ -4,43 +4,53 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
-use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
-use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Reads and writes the session document.
+ * Reads and writes the play state of the current game node.
  */
 final class Ledger {
 
-  private const LOCK = 'genie_ledger';
-  private const KEY = 'session';
+  private const LOCK = 'genie_ledger:';
 
   /**
-   * The store holding the session document.
+   * States where nothing changes any more.
    */
-  private readonly KeyValueStoreInterface $store;
+  public const OVER = ['closed', 'abandoned'];
 
   public function __construct(
-    KeyValueFactoryInterface $keyValue,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
     #[Autowire(service: 'lock')]
     private readonly LockBackendInterface $lock,
     private readonly RevisionPublisher $publisher,
     private readonly PhotoStore $photos,
-  ) {
-    $this->store = $keyValue->get('genie');
+    private readonly CurrentGame $game,
+  ) {}
+
+  /**
+   * Returns the current game's node, as stored now.
+   */
+  public function game(): NodeInterface {
+    // A cached node would hide what other requests stored, as in a long wait.
+    /** @var \Drupal\node\NodeInterface */
+    return $this->entityTypeManager->getStorage('node')->loadUnchanged($this->game->id());
+  }
+
+  /**
+   * Returns the state of the current game, NULL for an account outside games.
+   */
+  public function state(): ?string {
+    return $this->game->find() === NULL ? NULL : $this->game()->get('field_genie_state')->value;
   }
 
   /**
    * Returns the current session, with the media revision it points to.
    */
   public function read(): Session {
-    $session = $this->store->get(self::KEY) ?? new Session();
-    if ($session->surveyRevision !== NULL) {
-      $session->pin($this->photos->survey($session->surveyRevision));
-    }
-    return $session;
+    return $this->pinned(Session::fromGame($this->game()));
   }
 
   /**
@@ -60,24 +70,29 @@ final class Ledger {
    * Its survey and everything derived from it stay empty.
    */
   public function stored(): Session {
-    return $this->store->get(self::KEY) ?? new Session();
+    return Session::fromGame($this->game());
   }
 
   /**
-   * Applies a change under the lock and announces it.
+   * Applies a change under the game's lock and announces it.
    *
-   * A changed survey becomes a new media revision first. Storing the session,
-   * which then points to that revision, commits the change.
+   * A changed survey becomes a new media revision first. Saving the node,
+   * which then points to that revision, commits the change and its transition.
    *
    * @param callable(\Drupal\genie_ledger\Session): void $change
    *   Changes the session. An exception leaves the stored session untouched.
    * @param bool $changesPicture
    *   TRUE raises the revision and voids every approval.
+   *
+   * @throws \InvalidArgumentException
+   *   The game is closed or abandoned.
    */
   public function write(callable $change, bool $changesPicture = TRUE): Session {
-    $this->acquire();
-    try {
-      $session = $this->read();
+    [$game, $session] = $this->locked(function (NodeInterface $game) use ($change, $changesPicture): array {
+      if (in_array($game->get('field_genie_state')->value, self::OVER, TRUE)) {
+        throw new \InvalidArgumentException('This game is over. Its picture stays as it is.');
+      }
+      $session = $this->pinned(Session::fromGame($game));
       $before = $session->survey === NULL ? NULL : clone $session->survey;
       $change($session);
       if ($before !== NULL && $session->survey != $before) {
@@ -91,58 +106,54 @@ final class Ledger {
         $session->revision++;
         $session->approvals = [];
       }
-      $this->store->set(self::KEY, $session);
-    }
-    finally {
-      $this->lock->release(self::LOCK);
-    }
-    $this->publisher->publish($session->revision);
+      if ($session->transition !== NULL) {
+        /** @var \Drupal\state_machine\Plugin\Field\FieldType\StateItemInterface $state */
+        $state = $game->get('field_genie_state')->first();
+        $state->applyTransitionById($session->transition);
+      }
+      if ($session->transition === 'open') {
+        $game->set('field_genie_photo', $session->survey->media);
+      }
+      $game->set('field_genie_session', $session->toJson())->save();
+      return [$game, $session];
+    });
+    $this->publisher->publish($game->uuid(), $session->revision);
     return $session;
   }
 
   /**
-   * Records what the detector found, unless the photo has changed meanwhile.
+   * Runs work on the current game under its lock.
    *
-   * @param int $media
-   *   The media item the detector read.
-   * @param string $status
-   *   The detector's new status.
-   * @param list<array{x: int, y: int, width: int, height: int}> $boxes
-   *   The boxes it found.
+   * @param callable(\Drupal\node\NodeInterface): T $work
+   *   Receives the game node as stored now.
+   *
+   * @return T
+   *   What the work returns.
+   *
+   * @template T
    */
-  public function recordDetection(int $media, string $status, array $boxes): void {
-    $this->write(static function (Session $session) use ($media, $status, $boxes): void {
-      if ($session->survey?->media === $media) {
-        $session->survey->detector = $status;
-        $session->survey->boxes = $boxes;
-      }
-    }, FALSE);
-  }
-
-  /**
-   * Forgets the session, then the photo it pointed to.
-   */
-  public function reset(): void {
-    $this->acquire();
+  public function locked(callable $work): mixed {
+    $game = $this->game->id();
+    $lock = self::LOCK . $game;
+    if (!$this->lock->acquire($lock) && ($this->lock->wait($lock, 5) || !$this->lock->acquire($lock))) {
+      throw new \RuntimeException('The genie game stayed locked.');
+    }
     try {
-      $this->store->delete(self::KEY);
-      $this->photos->delete();
+      return $work($this->game());
     }
     finally {
-      $this->lock->release(self::LOCK);
+      $this->lock->release($lock);
     }
   }
 
   /**
-   * Takes the lock, waiting once for a concurrent write to finish.
+   * Points a session at the media revision it names.
    */
-  private function acquire(): void {
-    if ($this->lock->acquire(self::LOCK)) {
-      return;
+  private function pinned(Session $session): Session {
+    if ($session->surveyRevision !== NULL) {
+      $session->pin($this->photos->survey($session->surveyRevision));
     }
-    if ($this->lock->wait(self::LOCK, 5) || !$this->lock->acquire(self::LOCK)) {
-      throw new \RuntimeException('The genie session stayed locked.');
-    }
+    return $session;
   }
 
 }

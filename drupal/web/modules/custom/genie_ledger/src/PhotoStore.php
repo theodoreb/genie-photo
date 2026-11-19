@@ -17,8 +17,7 @@ use Drupal\media\MediaInterface;
  */
 final class PhotoStore {
 
-  public const URI = 'private://genie/photo.jpg';
-  private const FRAMES = 'private://genie/frames';
+  private const FOLDER = 'private://genie/';
   private const BUNDLE = 'genie_photo';
   private const IMAGE = 'field_genie_image';
   private const DETECTOR = 'field_genie_detector';
@@ -35,6 +34,7 @@ final class PhotoStore {
     private readonly FileSystemInterface $fileSystem,
     private readonly FileRepositoryInterface $files,
     private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly CurrentGame $game,
   ) {}
 
   /**
@@ -45,12 +45,14 @@ final class PhotoStore {
    * @param int $uid
    *   The player who uploaded it.
    * @param string $detector
-   *   The detector's first status.
+   *   The detector's status: off, ready or failed.
+   * @param list<array{x: int, y: int, width: int, height: int}> $boxes
+   *   The people the detector found.
    */
-  public function create(string $jpeg, int $uid, string $detector): Survey {
-    $directory = dirname(self::URI);
+  public function create(string $jpeg, int $uid, string $detector, array $boxes): Survey {
+    $directory = $this->folder();
     $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
-    $file = $this->files->writeData($jpeg, self::URI, FileExists::Replace);
+    $file = $this->files->writeData($jpeg, $this->photoUri(), FileExists::Replace);
     // Unpublished, so only the game's own tools hand out the photo.
     $media = $this->media()->create([
       'bundle' => self::BUNDLE,
@@ -59,6 +61,7 @@ final class PhotoStore {
       'status' => 0,
       self::IMAGE => ['target_id' => $file->id()],
       self::DETECTOR => $detector,
+      self::BOXES => array_map(self::boxRow(...), $boxes),
     ]);
     $media->save();
     return $this->toSurvey($media);
@@ -92,14 +95,14 @@ final class PhotoStore {
    * Returns the stored photo.
    */
   public function read(): string {
-    return file_get_contents(self::URI);
+    return file_get_contents($this->photoUri());
   }
 
   /**
    * Returns the stored picture of a revision, when there is one.
    */
   public function export(int $revision): ?Export {
-    $base = self::FRAMES . "/$revision";
+    $base = $this->frames() . "/$revision";
     return file_exists("$base.sha256") ? new Export(file_get_contents("$base.png"), file_get_contents("$base.sha256")) : NULL;
   }
 
@@ -107,14 +110,14 @@ final class PhotoStore {
    * Stores a picture in place of the pictures of older revisions.
    */
   public function saveExport(int $revision, Export $export): void {
-    $directory = self::FRAMES;
+    $directory = $this->frames();
     $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
-    $base = self::FRAMES . "/$revision";
+    $base = "$directory/$revision";
     $this->fileSystem->saveData($export->png, "$base.png", FileExists::Replace);
     // The hash goes last, because its presence marks a complete pair.
     $this->fileSystem->saveData($export->hash, "$base.sha256", FileExists::Replace);
 
-    foreach ($this->fileSystem->scanDirectory(self::FRAMES, '/^\d+\./') as $file) {
+    foreach ($this->fileSystem->scanDirectory($directory, '/^\d+\./') as $file) {
       if ((int) $file->name < $revision) {
         try {
           $this->fileSystem->delete($file->uri);
@@ -127,17 +130,24 @@ final class PhotoStore {
   }
 
   /**
-   * Removes every photo item, its file and the rendered pictures.
+   * Returns the folder of the current game's files.
    */
-  public function delete(): void {
-    $storage = $this->media();
-    $ids = $storage->getQuery()->accessCheck(FALSE)->condition('bundle', self::BUNDLE)->execute();
-    foreach ($storage->loadMultiple($ids) as $media) {
-      $file = $media->get(self::IMAGE)->entity;
-      $media->delete();
-      $file?->delete();
-    }
-    $this->fileSystem->deleteRecursive(self::FRAMES);
+  private function folder(): string {
+    return self::FOLDER . $this->game->id();
+  }
+
+  /**
+   * Returns where the current game's photo is stored.
+   */
+  private function photoUri(): string {
+    return $this->folder() . '/photo.jpg';
+  }
+
+  /**
+   * Returns the folder of the current game's rendered pictures.
+   */
+  private function frames(): string {
+    return $this->folder() . '/frames';
   }
 
   /**

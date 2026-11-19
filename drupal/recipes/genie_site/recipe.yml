@@ -2,6 +2,7 @@ name: 'Genie site'
 type: Site
 description: 'Accounts, OAuth and the ledger behind the genie photo.'
 install:
+  - automated_cron
   - mcp_server
   - mcp_server_oauth
   - simple_oauth
@@ -22,6 +23,9 @@ config:
     key: '*'
     genie_ledger: '*'
   actions:
+    automated_cron.settings:
+      simpleConfigUpdate:
+        interval: 3600
     simple_oauth.settings:
       simpleConfigUpdate:
         disable_openid_connect: true

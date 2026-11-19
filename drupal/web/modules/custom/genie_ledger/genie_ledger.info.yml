@@ -7,6 +7,7 @@ dependencies:
   - drupal:file
   - drupal:image
   - drupal:media
+  - drupal:node
   - drupal:options
   - ai:ai
   - compound_field:compound_field
@@ -15,3 +16,4 @@ dependencies:
   - mcp_server_oauth:mcp_server_oauth
   - simple_oauth:simple_oauth
   - simple_oauth_21:simple_oauth_server_metadata
+  - state_machine:state_machine

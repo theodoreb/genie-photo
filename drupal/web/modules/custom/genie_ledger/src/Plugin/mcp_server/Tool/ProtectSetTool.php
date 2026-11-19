@@ -41,7 +41,7 @@ final class ProtectSetTool extends WebViewToolBase {
     try {
       return $this->desk->setProtected(
         (int) $this->currentUser->id(),
-        $this->currentUser->getAccountName(),
+        $this->currentUser->getDisplayName(),
         $arguments['object'],
         $arguments['protected'],
       );

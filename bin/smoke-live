@@ -15,13 +15,14 @@ $alice = $site->signIn('alice');
 $bob = $site->signIn('bob');
 $site->uploadPhoto($alice);
 
-$photo = $site->tools->call($alice, 'session_get')['photo'];
+$session = $site->tools->call($alice, 'session_get');
+$photo = $session['photo'];
 if (1600 !== $photo['width'] || 800 !== $photo['height']) {
     SmokeSite::fail("Photo was not scaled: {$photo['width']}x{$photo['height']}");
 }
 
 $stream = $site->http->request('GET', $site->drupalUrl.'/.well-known/mercure', [
-    'query' => ['match' => 'genie/session'],
+    'query' => ['match' => $session['topic']],
     'headers' => ['Accept' => 'text/event-stream'],
     'timeout' => 15,
 ]);

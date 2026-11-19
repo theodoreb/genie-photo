@@ -51,7 +51,7 @@ final class PaintMeTool extends LedgerToolBase {
       throw new ToolCallException($e->getMessage(), previous: $e);
     }
     $uid = (int) $this->currentUser->id();
-    $outcome = $this->desk->paint($uid, $this->currentUser->getAccountName(), $paint);
+    $outcome = $this->desk->paint($uid, $this->currentUser->getDisplayName(), $paint);
     if (!$outcome['granted']) {
       return $outcome;
     }

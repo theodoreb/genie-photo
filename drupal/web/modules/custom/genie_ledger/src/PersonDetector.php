@@ -8,13 +8,16 @@ use Codewithkyrian\Transformers\Pipelines\Task;
 use Codewithkyrian\Transformers\Transformers;
 use Codewithkyrian\Transformers\Utils\ImageDriver;
 use Drupal\Core\File\FileSystemInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\AI\Platform\Bridge\TransformersPhp\Factory;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Process\Process;
 
 /**
  * Finds people in the photo with a local model, through Symfony AI.
  *
  * The model runs through PHP's FFI extension, which PHP allows on the command
- * line alone, so the web request starts a Drush command.
+ * line alone, so the upload runs a Drush command and waits for it.
  */
 final class PersonDetector {
 
@@ -42,7 +45,11 @@ final class PersonDetector {
    */
   private const WRAPS = 0.85;
 
-  public function __construct(private readonly FileSystemInterface $fileSystem) {}
+  public function __construct(
+    private readonly FileSystemInterface $fileSystem,
+    #[Autowire(service: 'logger.channel.genie_ledger')]
+    private readonly LoggerInterface $logger,
+  ) {}
 
   /**
    * Tells whether this PHP can run the model.
@@ -52,14 +59,24 @@ final class PersonDetector {
   }
 
   /**
-   * Starts the detection in the background.
+   * Finds the people in a JPEG through `drush genie:detect-file`.
+   *
+   * @return list<array{x: int, y: int, width: int, height: int}>|null
+   *   One box per person, or NULL when the detection failed.
    */
-  public function launch(): void {
-    $project = dirname(DRUPAL_ROOT);
-    exec(sprintf(
-      'cd %s && DRUPACK_NO_UPDATE_CHECK=1 nohup ./drupack drush genie:detect >/dev/null 2>&1 &',
-      escapeshellarg($project),
-    ));
+  public function detectInCommand(string $jpeg): ?array {
+    $file = $this->fileSystem->tempnam('temporary://', 'genie');
+    $path = $this->fileSystem->realpath($file);
+    file_put_contents($path, $jpeg);
+    // The first run downloads the model.
+    $command = new Process(['./drupack', 'drush', 'genie:detect-file', $path], dirname(DRUPAL_ROOT), ['DRUPACK_NO_UPDATE_CHECK' => '1'], timeout: 300);
+    $command->run();
+    $this->fileSystem->delete($file);
+    if (!$command->isSuccessful()) {
+      $this->logger->error('The person detector failed: @error', ['@error' => $command->getErrorOutput()]);
+      return NULL;
+    }
+    return json_decode($command->getOutput(), TRUE, flags: JSON_THROW_ON_ERROR);
   }
 
   /**

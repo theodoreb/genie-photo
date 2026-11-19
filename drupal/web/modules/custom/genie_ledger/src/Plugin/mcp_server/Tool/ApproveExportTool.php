@@ -62,7 +62,7 @@ final class ApproveExportTool extends LedgerToolBase {
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $uid = (int) $this->currentUser->id();
     try {
-      $request = $this->desk->approvalRequest($uid, $this->currentUser->getAccountName());
+      $request = $this->desk->approvalRequest($uid, $this->currentUser->getDisplayName());
     }
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);

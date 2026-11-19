@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - json_field
+    - node
+id: node.field_genie_session
+field_name: field_genie_session
+entity_type: node
+type: json
+settings:
+  size: 4294967296
+module: json_field
+locked: true
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

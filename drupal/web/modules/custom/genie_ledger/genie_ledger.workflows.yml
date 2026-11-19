@@ -1,0 +1,28 @@
+# A game starts with its host alone, opens when its photo is stored, closes on
+# the last approval, and is abandoned after a day without a change.
+genie_game:
+  id: genie_game
+  group: genie_game
+  label: 'Genie game'
+  states:
+    start:
+      label: Start
+    open:
+      label: Open
+    closed:
+      label: Closed
+    abandoned:
+      label: Abandoned
+  transitions:
+    open:
+      label: Open
+      from: [start]
+      to: open
+    close:
+      label: Close
+      from: [open]
+      to: closed
+    abandon:
+      label: Abandon
+      from: [start, open]
+      to: abandoned

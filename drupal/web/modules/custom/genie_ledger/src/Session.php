@@ -4,10 +4,29 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
+use Drupal\node\NodeInterface;
+
 /**
- * The one photo session of this site.
+ * The photo session of one game.
  */
 final class Session {
+
+  /**
+   * The properties the game node keeps. The others come from the survey.
+   */
+  private const STORED = [
+    'revision',
+    'surveyRevision',
+    'paints',
+    'claims',
+    'wishes',
+    'centered',
+    'protected',
+    'suggestions',
+    'players',
+    'update',
+    'approvals',
+  ];
 
   /**
    * Raised by every committed write.
@@ -20,9 +39,14 @@ final class Session {
   public ?int $surveyRevision = NULL;
 
   /**
-   * The account that uploaded the photo.
+   * The account that started the game and uploads its photo: the node owner.
    */
   public ?int $uploader = NULL;
+
+  /**
+   * The workflow transition the change applies to the game, if any.
+   */
+  public ?string $transition = NULL;
 
   /**
    * What the pinned media revision holds. It is never stored here.
@@ -179,38 +203,34 @@ final class Session {
   }
 
   /**
-   * Lists what the key-value store keeps.
-   *
-   * @return array<string, mixed>
-   *   The stored properties.
+   * Reads the session stored on a game node.
    */
-  public function __serialize(): array {
-    return [
-      'revision' => $this->revision,
-      'surveyRevision' => $this->surveyRevision,
-      'uploader' => $this->uploader,
-      'paints' => $this->paints,
-      'claims' => $this->claims,
-      'wishes' => $this->wishes,
-      'centered' => $this->centered,
-      'protected' => $this->protected,
-      'suggestions' => $this->suggestions,
-      'players' => $this->players,
-      'update' => $this->update,
-      'approvals' => $this->approvals,
-    ];
+  public static function fromGame(NodeInterface $game): self {
+    $session = new self();
+    $stored = $game->get('field_genie_session')->value;
+    if ($stored !== NULL) {
+      $data = json_decode($stored, TRUE, flags: JSON_THROW_ON_ERROR);
+      foreach (self::STORED as $name) {
+        $session->$name = $data[$name];
+      }
+      $session->paints = array_map(
+        static fn (array $paint): BodyPaint => BodyPaint::fromInput($paint['pixelate'], $paint['palette'], $paint['spans']),
+        $session->paints,
+      );
+    }
+    $session->uploader = (int) $game->getOwnerId();
+    return $session;
   }
 
   /**
-   * Restores the stored properties.
-   *
-   * @param array<string, mixed> $data
-   *   The stored properties.
+   * Writes the stored properties as JSON, for the game node.
    */
-  public function __unserialize(array $data): void {
-    foreach ($data as $name => $value) {
-      $this->$name = $value;
+  public function toJson(): string {
+    $data = [];
+    foreach (self::STORED as $name) {
+      $data[$name] = $this->$name;
     }
+    return json_encode($data, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION);
   }
 
 }

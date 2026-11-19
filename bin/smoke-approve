@@ -31,10 +31,10 @@ foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
     $site->markPlace($tokens[$player], 100 + 350 * $index);
 }
 
-$approveAll = static function () use ($site, $tokens): array {
+$approve = static function (string ...$players) use ($site, $tokens): array {
     $hash = $site->tools->call($tokens['alice'], 'session_get')['export']['hash'];
-    foreach ($tokens as $token) {
-        $state = $site->tools->call($token, 'export_approve', ['hash' => $hash]);
+    foreach ($players as $player) {
+        $state = $site->tools->call($tokens[$player], 'export_approve', ['hash' => $hash]);
     }
 
     return $state;
@@ -49,17 +49,12 @@ foreach (['picture_get', 'export_approve', 'protect_set', 'proposal_dismiss'] as
     }
 }
 
-if (!$approveAll()['final']) {
-    SmokeSite::fail('Four approvals did not make the picture final.');
+if (['dan'] !== $approve('alice', 'bob', 'carol')['waiting_for']) {
+    SmokeSite::fail('Three approvals did not leave dan to approve.');
 }
 $site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'hide my face']);
-if ($site->tools->call($tokens['alice'], 'session_get')['export']['final']) {
+if ($site->tools->call($tokens['alice'], 'session_get')['export']['approved_by_you']) {
     SmokeSite::fail('A new wish did not void the approvals.');
-}
-
-$state = $approveAll();
-if (!$state['final']) {
-    SmokeSite::fail('The new picture did not become final.');
 }
 
 // A client that cannot open pages gets the link.
@@ -123,5 +118,15 @@ $schemas = array_column($client->listTools()->tools, 'outputSchema', 'name');
 $client->disconnect();
 if (!isset($schemas['approve_export'], $schemas['export_approve'])) {
     SmokeSite::fail('An approval tool declares no output schema.');
+}
+// The last approval closes the game for good.
+$state = $approve('alice', 'bob', 'carol', 'dan');
+if (!$state['final'] || 'closed' !== $site->tools->call($tokens['alice'], 'session_get')['state']) {
+    SmokeSite::fail('Four approvals did not close the game.');
+}
+try {
+    $site->tools->call($tokens['bob'], 'make_wish', ['wish' => 'show me']);
+    SmokeSite::fail('A closed game took a wish.');
+} catch (DrupalToolFailed) {
 }
 echo $state['hash'], "\n";

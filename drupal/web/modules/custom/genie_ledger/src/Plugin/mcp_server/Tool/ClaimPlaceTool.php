@@ -39,7 +39,7 @@ final class ClaimPlaceTool extends LedgerToolBase {
     try {
       return $this->desk->claim(
         (int) $this->currentUser->id(),
-        $this->currentUser->getAccountName(),
+        $this->currentUser->getDisplayName(),
         $arguments['person'] ?? NULL,
         $arguments['head'] ?? NULL,
         $arguments['body'] ?? NULL,

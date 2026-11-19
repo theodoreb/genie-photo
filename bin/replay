@@ -25,7 +25,7 @@ work="$PWD/var/replay"
 mkdir -p "$work"
 mcp="$(site mcp-url)"
 
-# The assistant prints Drupal's sign-in address. bin/replay-site fills in the demo account,
+# The assistant prints Drupal's sign-in address. bin/replay-site fills in the player's account,
 # and curl hands the code to the assistant's own callback on this machine.
 sign_in() {
     log="$work/$1-login.log"

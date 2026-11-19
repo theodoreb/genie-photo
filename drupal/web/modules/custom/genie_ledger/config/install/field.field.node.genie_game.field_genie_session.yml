@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_genie_session
+    - node.type.genie_game
+  module:
+    - json_field
+id: node.genie_game.field_genie_session
+field_name: field_genie_session
+entity_type: node
+bundle: genie_game
+label: 'Play state'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: json

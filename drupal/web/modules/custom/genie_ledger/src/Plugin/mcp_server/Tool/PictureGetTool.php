@@ -34,6 +34,11 @@ final class PictureGetTool extends WebViewToolBase {
   /**
    * {@inheritdoc}
    */
+  protected const STATES = ['open', 'closed', 'abandoned'];
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     try {
       return $this->imageResult($this->desk->webPicture((string) ($arguments['view'] ?? ''), $arguments['revision'] ?? NULL));

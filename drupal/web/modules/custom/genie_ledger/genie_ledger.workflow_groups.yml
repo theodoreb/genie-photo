@@ -1,0 +1,3 @@
+genie_game:
+  label: 'Genie game'
+  entity_type: node

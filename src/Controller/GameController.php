@@ -29,7 +29,7 @@ final class GameController extends AbstractController
         private readonly McpDrupalTools $tools,
         private readonly DrupalPhotos $photos,
         private readonly PlayerTokens $tokens,
-        #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure?match=genie/session')]
+        #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure')]
         private readonly string $hubUrl,
     ) {
     }
@@ -43,7 +43,7 @@ final class GameController extends AbstractController
             return $this->signInAgain($request);
         }
 
-        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl]);
+        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl($session)]);
     }
 
     /**
@@ -67,7 +67,7 @@ final class GameController extends AbstractController
             'hash' => $hash,
             'for' => $for,
             'export' => $export,
-            'hub_url' => $this->hubUrl,
+            'hub_url' => $this->hubUrl($session),
             'state' => match (true) {
                 $for !== $player->name => 'other_player',
                 !$current => 'changed',
@@ -184,5 +184,15 @@ final class GameController extends AbstractController
         } catch (DrupalToolFailed $e) {
             return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+    }
+
+    /**
+     * Subscribes to the player's own game, whose topic Drupal names.
+     *
+     * @param array{topic: string} $session
+     */
+    private function hubUrl(array $session): string
+    {
+        return $this->hubUrl.'?'.http_build_query(['match' => $session['topic']]);
     }
 }

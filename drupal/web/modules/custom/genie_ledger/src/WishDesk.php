@@ -419,6 +419,9 @@ final class WishDesk {
         throw new \InvalidArgumentException('The picture has changed. Look at it again.');
       }
       $session->approvals[$uid] = $hash;
+      if (self::waiting($session, $hash) === []) {
+        $session->transition = 'close';
+      }
     }, FALSE);
     return $this->receipt($session, $uid, $export->hash);
   }
@@ -524,7 +527,10 @@ final class WishDesk {
         'suggested_by' => $session->suggestions[$id] ?? [],
       ];
     }
+    $game = $this->ledger->game();
     return [
+      'state' => $game->get('field_genie_state')->value,
+      'topic' => RevisionPublisher::TOPIC . $game->uuid(),
       'revision' => $session->revision,
       'update' => $session->update,
       'photo' => $session->photo,
@@ -562,11 +568,7 @@ final class WishDesk {
    *   The approval state.
    */
   private function receipt(Session $session, int $uid, string $hash): array {
-    $waiting = array_filter(
-      $session->players,
-      static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $hash,
-      ARRAY_FILTER_USE_KEY,
-    );
+    $waiting = self::waiting($session, $hash);
     return [
       'hash' => $hash,
       'revision' => $session->revision,
@@ -575,6 +577,20 @@ final class WishDesk {
       'waiting_for' => array_values($waiting),
       'final' => $session->players !== [] && $waiting === [],
     ];
+  }
+
+  /**
+   * Lists the players who have not approved a picture, by account id.
+   *
+   * @return array<int, string>
+   *   Their names.
+   */
+  private static function waiting(Session $session, string $hash): array {
+    return array_filter(
+      $session->players,
+      static fn (int $player): bool => ($session->approvals[$player] ?? NULL) !== $hash,
+      ARRAY_FILTER_USE_KEY,
+    );
   }
 
   /**

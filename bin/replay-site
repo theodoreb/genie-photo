@@ -10,9 +10,9 @@ use App\Drupal\DrupalPhotos;
 use App\Drupal\McpDrupalTools;
 use App\Security\DrupalOAuth;
 use App\Tests\Smoke\PlayerSession;
+use App\Tests\Smoke\Seats;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\Process\Process;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
@@ -24,7 +24,7 @@ $web = static fn (string $player): string => (new PlayerSession(
     $_ENV['PUBLIC_URL'].'/oauth/callback',
     DrupalOAuth::CLIENT_ID,
     $_ENV['GENIE_WEB_SECRET'],
-))->signIn($player);
+))->signIn(Seats::saved()->account($player), Seats::saved()->password($player));
 // The export is empty while no frame holds every wish, and the page then names the players in the way.
 $collision = static fn (array $session): string => 'No frame holds every wish. In the way: '.implode(', ', $session['frame']['players']).'.';
 
@@ -35,11 +35,11 @@ switch ($command) {
         break;
 
     case 'reset':
-        (new Process(['./drupack', 'drush', 'genie:reset'], dirname(__DIR__).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
+        Seats::start('alice', 'bob', 'carol', 'dan');
         break;
 
     case 'grant':
-        echo (new PlayerSession($mcp))->grant($argument, $player), "\n";
+        echo (new PlayerSession($mcp))->grant($argument, Seats::saved()->account($player), Seats::saved()->password($player)), "\n";
         break;
 
     case 'upload':

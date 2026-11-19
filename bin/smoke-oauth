@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-// Signs in as a demo player like an MCP client and calls my_status on Drupal.
+// Starts a game, signs in as its host like an MCP client, and calls my_status on Drupal.
 // With --bad-token, checks that Drupal answers 401 with a Bearer challenge.
 
 declare(strict_types=1);
@@ -9,6 +9,7 @@ declare(strict_types=1);
 use App\Drupal\DrupalToolFailed;
 use App\Drupal\McpDrupalTools;
 use App\Tests\Smoke\PlayerSession;
+use App\Tests\Smoke\Seats;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 
@@ -26,7 +27,8 @@ if ('--bad-token' === ($argv[1] ?? '')) {
 }
 
 $player = $argv[1] ?? 'alice';
-$token = (new PlayerSession($endpoint))->signIn($player);
+$seats = Seats::start($player);
+$token = (new PlayerSession($endpoint))->signIn($seats->account($player), $seats->password($player));
 try {
     $name = (new McpDrupalTools($endpoint))->call($token, 'my_status')['name'];
     echo $name, "\n";

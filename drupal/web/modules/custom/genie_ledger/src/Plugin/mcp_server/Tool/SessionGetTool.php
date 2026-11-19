@@ -25,6 +25,11 @@ final class SessionGetTool extends LedgerToolBase {
   /**
    * {@inheritdoc}
    */
+  protected const STATES = ['start', 'open', 'closed', 'abandoned'];
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     return $this->desk->view((int) $this->currentUser->id());
   }

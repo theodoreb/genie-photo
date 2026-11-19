@@ -25,7 +25,7 @@ final class PlayerSession
         $this->http = HttpClient::create(['timeout' => 60]);
     }
 
-    public function signIn(string $name, string $password = 'genie'): string
+    public function signIn(string $name, string $password): string
     {
         $server = $this->discoverAuthorizationServer();
         $clientId = $this->clientId ?? $this->register($server['registration_endpoint']);
@@ -69,7 +69,7 @@ final class PlayerSession
      * Completes Drupal's sign-in and consent forms for an authorization URL,
      * and returns the URL Drupal redirects to, which carries the code.
      */
-    public function grant(string $authorizeUrl, string $name, string $password = 'genie'): string
+    public function grant(string $authorizeUrl, string $name, string $password): string
     {
         parse_str((string) parse_url($authorizeUrl, \PHP_URL_QUERY), $request);
         $browser = new HttpBrowser(HttpClient::create(['timeout' => 60]));

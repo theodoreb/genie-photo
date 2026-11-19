@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_genie_invite
+field_name: field_genie_invite
+entity_type: node
+type: string
+settings:
+  max_length: 10
+  case_sensitive: true
+  is_ascii: true
+module: core
+locked: true
+cardinality: 1
+translatable: false
+indexes:
+  value:
+    - value
+persist_with_no_fields: false
+custom_storage: false

@@ -20,6 +20,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class LedgerToolBase extends ToolPluginBase {
 
+  /**
+   * The game states in which the tool is listed.
+   */
+  protected const STATES = ['open'];
+
   final public function __construct(
     array $configuration,
     string $plugin_id,
@@ -56,8 +61,10 @@ abstract class LedgerToolBase extends ToolPluginBase {
    * {@inheritdoc}
    */
   public function checkAccess(AccountInterface $account): AccessResultInterface {
-    return AccessResult::allowedIf($account->isAuthenticated() && $account->hasPermission('play genie'))
-      ->cachePerPermissions();
+    // The server is built per request, so the state is read for each one.
+    return AccessResult::allowedIf($account->isAuthenticated()
+      && $account->hasPermission('play genie')
+      && in_array($this->ledger->state(), static::STATES, TRUE));
   }
 
   /**
