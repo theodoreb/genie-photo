@@ -1,4 +1,4 @@
-name: 'Genie ledger'
+name: Genie
 type: module
 description: 'Stores the genie photo session and exposes it to Symfony over MCP.'
 core_version_requirement: ^11.4
