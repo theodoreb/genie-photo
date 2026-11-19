@@ -283,6 +283,7 @@ final class WishDesk {
     foreach ($session->regions as $region) {
       if ($region['kind'] === 'person') {
         $people[] = [
+          'id' => $region['person'],
           'player' => $region['label'],
           'description' => $region['description'],
           'head' => $list($region['head']),
@@ -324,7 +325,7 @@ final class WishDesk {
       if ($session->uploader !== $uid) {
         throw new \InvalidArgumentException('Only the uploader dismisses proposals.');
       }
-      unset($session->proposals[$proposal]);
+      Places::dismiss($session, $proposal);
     });
     return ['revision' => $session->revision];
   }
@@ -367,7 +368,7 @@ final class WishDesk {
     $export = $session->photo === NULL ? NULL : $this->exports->current($session);
     $regions = [];
     foreach ($session->regions as $id => $region) {
-      unset($region['cells'], $region['rank']);
+      unset($region['cells'], $region['rank'], $region['person']);
       $regions[] = $region + [
         'id' => $id,
         'protected' => isset($session->protected[$id]),

@@ -10,6 +10,7 @@ use Drupal\genie_ledger\Frame;
 use Drupal\genie_ledger\Outlines;
 use Drupal\genie_ledger\Places;
 use Drupal\genie_ledger\Session;
+use Drupal\genie_ledger\Survey;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -26,15 +27,10 @@ final class OutlinesTest extends UnitTestCase {
    */
   public function testFrontPersonKeepsSharedCellsFromPaint(): void {
     $session = new Session();
-    $session->photo = ['width' => 1600, 'height' => 800];
-    $session->detection = [
-      'status' => 'ready',
-      'photo' => 'x',
-      'boxes' => [
-        ['x' => 0, 'y' => 0, 'width' => 800, 'height' => 800],
-        ['x' => 400, 'y' => 0, 'width' => 800, 'height' => 800],
-      ],
-    ];
+    $session->pin(new Survey(1, 1, 1600, 800, 'ready', [
+      ['x' => 0, 'y' => 0, 'width' => 800, 'height' => 800],
+      ['x' => 400, 'y' => 0, 'width' => 800, 'height' => 800],
+    ]));
     $this->assertSame(40, Outlines::columns($session->photo));
     Places::scan($session, 1, [
       [

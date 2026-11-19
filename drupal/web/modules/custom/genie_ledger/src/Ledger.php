@@ -44,6 +44,17 @@ final class Ledger {
   }
 
   /**
+   * Returns the change counters, without loading the photo's media item.
+   *
+   * @return array{update: int, revision: int}
+   *   The counters.
+   */
+  public function counters(): array {
+    $session = $this->store->get(self::KEY) ?? new Session();
+    return ['update' => $session->update, 'revision' => $session->revision];
+  }
+
+  /**
    * Applies a change under the lock and announces it.
    *
    * A changed survey becomes a new media revision first. Storing the session,
@@ -62,6 +73,8 @@ final class Ledger {
       $change($session);
       if ($before !== NULL && $session->survey != $before) {
         $session->survey->revision = $this->photos->saveSurvey($session->survey);
+      }
+      if ($session->survey !== NULL) {
         $session->pin($session->survey);
       }
       $session->update++;

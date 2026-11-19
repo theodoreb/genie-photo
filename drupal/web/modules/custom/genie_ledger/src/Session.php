@@ -51,12 +51,19 @@ final class Session {
   public array $paints = [];
 
   /**
-   * Claimed people and found objects in photo pixels, by region id.
+   * Who stands for whom: a person id from the survey, by account id.
+   *
+   * @var array<int, string>
+   */
+  public array $claims = [];
+
+  /**
+   * Claimed people and found objects in photo pixels, from the survey.
    *
    * A person's box is the body. The head box inside it takes covers and
    * stickers. Cells hold the traced outline, and rank counts from the front.
    *
-   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int}>
+   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int, person?: string}>
    */
   public array $regions = [];
 
@@ -108,7 +115,7 @@ final class Session {
   public int $update = 0;
 
   /**
-   * People a scan found and nobody claimed yet, by id.
+   * People nobody claims, by person id, from the survey.
    *
    * @var array<string, array{label: string, x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int}>
    */
@@ -136,6 +143,33 @@ final class Session {
   public function refresh(): void {
     $this->photo = ['width' => $this->survey->width, 'height' => $this->survey->height];
     $this->detection = ['status' => $this->survey->detector, 'boxes' => $this->survey->boxes];
+    $this->regions = [];
+    $this->proposals = [];
+    $owners = array_flip($this->claims);
+    foreach ($this->survey->people as $rank => $person) {
+      ['id' => $id, 'description' => $description] = $person;
+      $place = ['rank' => $rank] + array_diff_key($person, ['id' => TRUE, 'description' => TRUE]);
+      if (isset($owners[$id])) {
+        $uid = $owners[$id];
+        $this->regions["person-$uid"] = [
+          'kind' => 'person',
+          'owner' => $uid,
+          'label' => $this->players[$uid],
+          'description' => $description,
+          'person' => $id,
+        ] + $place;
+      }
+      else {
+        $this->proposals[$id] = ['label' => $description] + $place;
+      }
+    }
+    foreach ($this->survey->objects as $object) {
+      $this->regions[$object['id']] = [
+        'kind' => 'object',
+        'owner' => $object['reporter'],
+        'label' => $object['label'],
+      ] + array_diff_key($object, ['id' => TRUE, 'label' => TRUE, 'reporter' => TRUE]);
+    }
   }
 
   /**
@@ -145,7 +179,13 @@ final class Session {
    *   The stored properties.
    */
   public function __serialize(): array {
-    return array_diff_key(get_object_vars($this), ['survey' => TRUE, 'photo' => TRUE, 'detection' => TRUE]);
+    return array_diff_key(get_object_vars($this), [
+      'survey' => TRUE,
+      'photo' => TRUE,
+      'detection' => TRUE,
+      'regions' => TRUE,
+      'proposals' => TRUE,
+    ]);
   }
 
   /**

@@ -26,6 +26,25 @@ $site->tools->call($assistant, 'scan_photo', [
 ]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
+$site->tools->call($assistant, 'scan_photo', [
+    'people' => [
+        ['description' => 'yellow sweater again', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]],
+        ['description' => 'green coat', 'head' => [900, 100, 200, 200], 'body' => [850, 100, 300, 700]],
+    ],
+    'objects' => [],
+]);
+$people = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'];
+$ids = array_column($people, 'id');
+if (2 !== count($ids) || !in_array($person, $ids, true)) {
+    SmokeSite::fail('A claimed person lost their id after a scan.');
+}
+$other = array_values(array_diff($ids, [$person]))[0];
+$site->tools->call($assistant, 'claim_place', ['person' => $other]);
+$offered = $site->tools->call($web, 'session_get')['proposals'];
+if ([$person] !== array_column($offered, 'id')) {
+    SmokeSite::fail('The person given up did not return to the offers.');
+}
+$claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
 $before = $site->photos->frame($web, $claim['revision']);
 
 $grid = $site->imageTool($assistant, 'photo_get', ['view' => 'my_head']);

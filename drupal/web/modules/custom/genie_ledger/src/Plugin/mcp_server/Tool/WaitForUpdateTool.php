@@ -40,13 +40,13 @@ final class WaitForUpdateTool extends LedgerToolBase {
     }
     $deadline = microtime(TRUE) + self::MAX_SECONDS;
     do {
-      $session = $this->ledger->read();
-      if ($session->update > $arguments['after_update']) {
-        return ['changed' => TRUE, 'update' => $session->update, 'revision' => $session->revision];
+      $counters = $this->ledger->counters();
+      if ($counters['update'] > $arguments['after_update']) {
+        return ['changed' => TRUE] + $counters;
       }
       usleep(self::POLL_MICROSECONDS);
     } while (microtime(TRUE) < $deadline);
-    return ['changed' => FALSE, 'update' => $session->update, 'revision' => $session->revision];
+    return ['changed' => FALSE] + $counters;
   }
 
 }

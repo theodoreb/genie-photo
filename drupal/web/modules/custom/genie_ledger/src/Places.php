@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
+use Drupal\Component\Uuid\Php;
+
 /**
  * Records who and what an assistant found in the photo, and who claims whom.
  *
@@ -64,32 +66,30 @@ final class Places {
     if (!is_array($objects) || !array_is_list($objects) || count($objects) > self::MAX_OBJECTS) {
       throw new \InvalidArgumentException(sprintf('Objects is a list of at most %d entries.', self::MAX_OBJECTS));
     }
-    $rank = self::nextRank($session);
+    $survey = $session->survey;
     foreach ($people as $person) {
       $head = self::head($person['head'] ?? NULL, $session);
       $body = self::bodyOf($person, $session);
       $cells = Outlines::parse($person['outline'] ?? [], $body, $session->photo);
       $label = self::label($person['description'] ?? NULL);
       if (self::claimedHead($session, $head) === NULL) {
-        self::dropProposalsOn($session, $head);
-        $session->proposals['proposal-' . substr(md5(serialize($head)), 0, 8)] = [
-          'label' => $label,
-          'head' => $head,
-          'cells' => $cells,
-          'rank' => $rank,
-        ] + $body;
+        self::dropUnclaimedOn($session, $head);
+        $survey->people[] = self::person($label, $head, $body, $cells);
       }
-      $rank++;
     }
     foreach ($objects as $object) {
       $label = self::label($object['label'] ?? NULL);
-      $id = 'object-' . md5($label);
+      $box = self::box($object['box'] ?? NULL, $session);
+      $known = array_search($label, array_column($survey->objects, 'label'), TRUE);
+      if ($known === FALSE) {
+        $survey->objects[] = ['id' => self::newId(), 'label' => $label, 'reporter' => $uid] + $box;
+      }
       // Protection depends on this box, so only the uploader moves a known one.
-      if (!isset($session->regions[$id]) || $session->uploader === $uid) {
-        $session->regions[$id] = ['kind' => 'object', 'owner' => $uid, 'label' => $label]
-          + self::box($object['box'] ?? NULL, $session);
+      elseif ($session->uploader === $uid) {
+        $survey->objects[$known] = ['reporter' => $uid] + $box + $survey->objects[$known];
       }
     }
+    $session->refresh();
   }
 
   /**
@@ -113,60 +113,52 @@ final class Places {
    */
   public static function claim(Session $session, int $uid, string $name, mixed $person, mixed $head, mixed $body): void {
     self::assertPhoto($session);
-    $id = "person-$uid";
-    $previous = $session->regions[$id] ?? NULL;
-    $samePerson = FALSE;
+    $survey = $session->survey;
+    $previous = $session->regions["person-$uid"] ?? NULL;
     if ($person !== NULL) {
       if (!is_string($person) || !isset($session->proposals[$person])) {
         throw new \InvalidArgumentException('This box is gone. Look at the photo again.');
       }
-      $proposal = $session->proposals[$person];
-      unset($session->proposals[$person]);
-      $description = $proposal['label'];
-      unset($proposal['label']);
-      $place = $proposal;
+      $place = $person;
       if ($head !== NULL) {
-        $place['head'] = self::headOn($head, $place, $session);
+        self::moveHead($survey, $place, self::headOn($head, $session->proposals[$person], $session));
       }
     }
     elseif ($body === NULL && $previous !== NULL) {
-      $samePerson = TRUE;
-      $description = $previous['description'];
-      $place = [
-        'head' => self::headOn($head, $previous, $session),
-        'cells' => $previous['cells'] ?? [],
-        'rank' => $previous['rank'] ?? self::nextRank($session),
-        'x' => $previous['x'],
-        'y' => $previous['y'],
-        'width' => $previous['width'],
-        'height' => $previous['height'],
-      ];
+      $place = $previous['person'];
+      self::moveHead($survey, $place, self::headOn($head, $previous, $session));
     }
     else {
-      $place = ['head' => self::head($head, $session), 'cells' => [], 'rank' => self::nextRank($session)] + self::box($body, $session);
-      $description = $previous['description'] ?? $name;
+      $added = self::person($previous['description'] ?? $name, self::head($head, $session), self::box($body, $session), []);
+      $survey->people[] = $added;
+      $place = $added['id'];
+    }
+    $placeHead = $survey->people[self::indexOf($survey, $place)]['head'];
+    foreach ($session->regions as $region) {
+      if ($region['kind'] === 'person' && $region['owner'] !== $uid && self::sameHead($placeHead, $region['head'])) {
+        throw new \InvalidArgumentException(sprintf('%s already holds this place.', $region['label']));
+      }
     }
     // The person this player gave up goes back on offer, covered.
-    if ($previous !== NULL && !$samePerson && !self::sameHead($previous['head'], $place['head'])) {
-      $session->proposals['proposal-' . substr(md5(serialize($previous['head'])), 0, 8)] = [
-        'label' => $previous['description'],
-        'head' => $previous['head'],
-        'cells' => $previous['cells'] ?? [],
-        'rank' => $previous['rank'] ?? self::nextRank($session),
-        'x' => $previous['x'],
-        'y' => $previous['y'],
-        'width' => $previous['width'],
-        'height' => $previous['height'],
-      ];
-    }
-    unset($session->regions[$id]);
-    $holder = self::claimedHead($session, $place['head']);
-    if ($holder !== NULL) {
-      throw new \InvalidArgumentException(sprintf('%s already holds this place.', $holder));
-    }
-    self::dropProposalsOn($session, $place['head']);
+    $session->claims[$uid] = $place;
     $session->players[$uid] = $name;
-    $session->regions[$id] = ['kind' => 'person', 'owner' => $uid, 'label' => $name, 'description' => $description] + $place;
+    self::dropUnclaimedOn($session, $placeHead);
+    $session->refresh();
+  }
+
+  /**
+   * Removes a person nobody claims.
+   *
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session.
+   * @param string $id
+   *   The person's id.
+   */
+  public static function dismiss(Session $session, string $id): void {
+    if (isset($session->proposals[$id])) {
+      array_splice($session->survey->people, self::indexOf($session->survey, $id), 1);
+      $session->refresh();
+    }
   }
 
   /**
@@ -236,18 +228,57 @@ final class Places {
   }
 
   /**
-   * Returns the rank behind everyone known so far.
+   * Builds a person with a new id, who stands behind everyone known so far.
+   *
+   * @param string $description
+   *   Who this is.
+   * @param array{x: int, y: int, width: int, height: int} $head
+   *   The head box.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The body box.
+   * @param list<array{int, int, int}> $cells
+   *   The outline.
+   *
+   * @return array<string, mixed>
+   *   The person.
    */
-  private static function nextRank(Session $session): int {
-    $ranks = array_column([...$session->proposals, ...array_values($session->regions)], 'rank');
-    return $ranks === [] ? 0 : max($ranks) + 1;
+  private static function person(string $description, array $head, array $body, array $cells): array {
+    return ['id' => self::newId(), 'description' => $description, 'head' => $head, 'cells' => $cells] + $body;
+  }
+
+  /**
+   * Returns a new row id.
+   */
+  private static function newId(): string {
+    return (new Php())->generate();
+  }
+
+  /**
+   * Finds a person's row.
+   */
+  private static function indexOf(Survey $survey, string $id): int {
+    return array_search($id, array_column($survey->people, 'id'), TRUE);
+  }
+
+  /**
+   * Changes a person's head box.
+   *
+   * @param \Drupal\genie_ledger\Survey $survey
+   *   The survey.
+   * @param string $id
+   *   The person's id.
+   * @param array{x: int, y: int, width: int, height: int} $head
+   *   The head box.
+   */
+  private static function moveHead(Survey $survey, string $id, array $head): void {
+    $survey->people[self::indexOf($survey, $id)]['head'] = $head;
   }
 
   /**
    * Stops a scan or a claim that comes before the photo.
    */
   private static function assertPhoto(Session $session): void {
-    if ($session->photo === NULL) {
+    if ($session->survey === NULL) {
       throw new \InvalidArgumentException('The session has no photo yet.');
     }
   }
@@ -270,18 +301,19 @@ final class Places {
   }
 
   /**
-   * Removes proposals for the head this box stands for.
+   * Removes the unclaimed people this head box stands for.
    *
    * @param \Drupal\genie_ledger\Session $session
    *   The session.
    * @param array{x: int, y: int, width: int, height: int} $head
    *   The head box.
    */
-  private static function dropProposalsOn(Session $session, array $head): void {
-    $session->proposals = array_filter(
-      $session->proposals,
-      static fn (array $proposal): bool => !self::sameHead($head, $proposal['head']),
-    );
+  private static function dropUnclaimedOn(Session $session, array $head): void {
+    $claimed = array_flip($session->claims);
+    $session->survey->people = array_values(array_filter(
+      $session->survey->people,
+      static fn (array $person): bool => isset($claimed[$person['id']]) || !self::sameHead($head, $person['head']),
+    ));
   }
 
   /**
