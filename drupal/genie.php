@@ -44,3 +44,9 @@ if (PHP_SAPI !== 'cli' && !is_dir($genie_keys)) {
 
 // The host code is the first line of this file, which bin/dev-drupal writes.
 $config['key.key.genie_host_code']['key_provider_settings']['file_location'] = "$genie_data/host-code";
+
+// The wish model's first server, such as a GPU box on the LAN. Ollama on this
+// machine answers when it fails, then the keyword reader.
+if ($genie_model_url = getenv('GENIE_MODEL_URL')) {
+  $config['ai.inference_provider.genie_ollama']['configuration']['base_url'] = $genie_model_url;
+}

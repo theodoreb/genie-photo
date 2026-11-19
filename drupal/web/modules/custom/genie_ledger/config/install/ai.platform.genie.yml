@@ -3,6 +3,7 @@ status: true
 dependencies:
   config:
     - ai.inference_provider.genie_ollama
+    - ai.platform.genie_cpu
 id: genie
 label: 'Genie'
 platform_plugin_id: platform_with_model_routing
@@ -12,4 +13,12 @@ platform_plugin_configuration:
   routing:
     plugin: catalog_based
     configuration: {  }
-middlewares: []
+middlewares:
+  -
+    plugin_id: genie_failover
+    configuration:
+      fallbacks:
+        - genie_cpu
+  -
+    plugin_id: genie_cache
+    configuration: {  }

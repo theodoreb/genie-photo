@@ -5,3 +5,14 @@ genie_ledger.settings:
     text_model:
       type: string
       label: 'Local model that reads wishes'
+
+plugin.plugin_configuration.ai_platform_middleware.genie_failover:
+  type: mapping
+  label: 'Failover middleware'
+  mapping:
+    fallbacks:
+      type: sequence
+      label: 'Platforms tried in order after the decorated one'
+      sequence:
+        type: string
+        label: 'AI platform id'

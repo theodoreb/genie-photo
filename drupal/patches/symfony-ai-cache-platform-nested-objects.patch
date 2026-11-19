@@ -1,0 +1,59 @@
+--- a/CachePlatform.php
++++ b/CachePlatform.php
+@@ -29,6 +29,8 @@
+ use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
+ use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+ use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
++use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
++use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+@@ -55,6 +57,10 @@
+                 propertyTypeExtractor: new PropertyInfoExtractor([], [new PhpDocExtractor(), new ReflectionExtractor()]),
+                 classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory(new AttributeLoader())),
+             )),
++            // Values nested in a structured output object.
++            new BackedEnumNormalizer(),
++            new DateTimeNormalizer(),
++            new ObjectNormalizer(propertyTypeExtractor: new PropertyInfoExtractor([], [new PhpDocExtractor(), new ReflectionExtractor()])),
+         ], [new JsonEncoder()]),
+         private readonly ?string $cacheKey = null,
+         private readonly ?int $cacheTtl = null,
+--- a/ResultNormalizer.php
++++ b/ResultNormalizer.php
+@@ -30,13 +30,16 @@
+ use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
+ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
++use Symfony\Component\Serializer\SerializerInterface;
+ 
+ /**
+  * @author Guillaume Loulier <personal@guillaumeloulier.fr>
+  */
+ final class ResultNormalizer implements NormalizerInterface, DenormalizerInterface, NormalizerAwareInterface
+ {
+-    use NormalizerAwareTrait;
++    use NormalizerAwareTrait {
++        setNormalizer as private setOuterNormalizer;
++    }
+ 
+     public function __construct(
+         private readonly ObjectNormalizer $objectNormalizer,
+@@ -49,6 +52,16 @@
+      *     payload: array<string, mixed>,
+      * }
+      */
++    public function setNormalizer(NormalizerInterface $normalizer): void
++    {
++        $this->setOuterNormalizer($normalizer);
++        // The object normalizer reads the values nested in a structured
++        // output object, such as enums, through the serializer.
++        if ($normalizer instanceof SerializerInterface) {
++            $this->objectNormalizer->setSerializer($normalizer);
++        }
++    }
++
+     public function normalize(mixed $data, ?string $format = null, array $context = []): array
+     {
+         return [

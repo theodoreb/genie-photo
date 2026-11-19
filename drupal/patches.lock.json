@@ -1,5 +1,5 @@
 {
-    "_hash": "596c5d4108a4e69dfc5749ae4db1a3132fe671a3197724d16c1cdea65f876556",
+    "_hash": "a909f450bb1f4fb4f4aefca19ce5fb41dac04dda53ee3add0eee292ef4965109",
     "patches": {
         "e0ipso/simple_oauth_21": [
             {
@@ -29,6 +29,30 @@
                 "description": "Deliver notifications on subscriptions/listen",
                 "url": "patches/mcp_server-notification-bus.patch",
                 "sha256": "3028513d7479a002333c50d1b638f2529c8e57c74497fa8307f99f5d42919a82",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "symfony/ai-failover-platform": [
+            {
+                "package": "symfony/ai-failover-platform",
+                "description": "Fail over when a deferred request fails",
+                "url": "patches/symfony-ai-failover-platform-deferred.patch",
+                "sha256": "f074cc42a6066faf330048fad05b344d1069667856c474140ade05fb566ee411",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "symfony/ai-cache-platform": [
+            {
+                "package": "symfony/ai-cache-platform",
+                "description": "Cache structured output objects that hold enums or objects",
+                "url": "patches/symfony-ai-cache-platform-nested-objects.patch",
+                "sha256": "e88b4f728da1b72a77071e740138cdac5377014e72ad242fdbf18443efdab6c5",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

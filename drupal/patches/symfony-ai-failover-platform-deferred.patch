@@ -1,0 +1,18 @@
+--- a/FailoverPlatform.php
++++ b/FailoverPlatform.php
+@@ -51,7 +51,14 @@
+ 
+     public function invoke(string|Model $model, object|array|string $input, array $options = []): DeferredResult
+     {
+-        return $this->do(static fn (PlatformInterface $platform): DeferredResult => $platform->invoke($model, $input, $options));
++        // A deferred result sends its request lazily: reading it here lets a
++        // failed request fail over to the next platform.
++        return $this->do(static function (PlatformInterface $platform) use ($model, $input, $options): DeferredResult {
++            $result = $platform->invoke($model, $input, $options);
++            $result->getResult();
++
++            return $result;
++        });
+     }
+ 
+     public function getModelCatalog(): ModelCatalogInterface

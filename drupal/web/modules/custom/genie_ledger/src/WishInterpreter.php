@@ -130,7 +130,12 @@ final class WishInterpreter {
     return $this->platforms->createInstance('managed:genie')->invoke(
       $model,
       new MessageBag(...$messages),
-      ['temperature' => 0, PlatformSubscriber::RESPONSE_FORMAT => WishReading::class],
+      [
+        'temperature' => 0,
+        PlatformSubscriber::RESPONSE_FORMAT => WishReading::class,
+        // The genie_cache middleware keeps answers under this key.
+        'prompt_cache_key' => 'genie_wish',
+      ],
     )->asObject();
   }
 

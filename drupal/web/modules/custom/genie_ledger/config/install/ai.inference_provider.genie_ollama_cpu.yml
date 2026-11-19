@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+id: genie_ollama_cpu
+label: 'Ollama on this machine'
+plugin: generic
+configuration:
+  base_url: 'http://127.0.0.1:11434'
+  supports_completions: true
+  supports_embeddings: false
+  completions_path: /v1/chat/completions
+  embeddings_path: /v1/embeddings
+  models: ''
