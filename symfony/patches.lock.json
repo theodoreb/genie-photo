@@ -1,12 +1,12 @@
 {
-    "_hash": "cb07ab4a5d7ec2b8d0f41e001f1319ec1f7aba79b8d4af77ba3569ab63c103af",
+    "_hash": "44f8d4029dc9d63e817cbbfc7ecb503b8876369d9058053d95f40134791d9e5d",
     "patches": {
         "mcp/sdk": [
             {
                 "package": "mcp/sdk",
                 "description": "Reuse a cached server/discover result",
                 "url": "patches/mcp-sdk-discovery-cache.patch",
-                "sha256": "b281b7bd8bacdaef7e4ccc6c77d548858a5f9bb0278e0c7a69640ebec6177171",
+                "sha256": "13f2939cd70796d280d230c5c43e0af1e814dbc2ee7bf7b461757616dca12744",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

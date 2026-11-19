@@ -133,15 +133,15 @@
 +            return null;
 +        }
 +
-+        $found = $this->cache->getMultiple(array_values($keys));
++        $found = iterator_to_array($this->cache->getMultiple(array_values($keys)));
 +
 +        foreach ([CacheScope::Private, CacheScope::Public] as $scope) {
-+            foreach ($found as $key => $stored) {
-+                if ($key === $keys[$scope->value] && \is_array($stored)) {
-+                    $this->logger->debug('Discovery resumed from cache', ['scope' => $scope->value]);
++            $stored = $found[$keys[$scope->value]] ?? null;
 +
-+                    return new Response($this->state->nextRequestId(), $stored);
-+                }
++            if (null !== $stored) {
++                $this->logger->debug('Discovery resumed from cache', ['scope' => $scope->value]);
++
++                return new Response($this->state->nextRequestId(), $stored);
 +            }
 +        }
 +

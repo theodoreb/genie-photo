@@ -65,11 +65,15 @@
    # contexts for the current caller on every lookup.
 --- a/src/McpServerFactory.php
 +++ b/src/McpServerFactory.php
-@@ -39,9 +39,11 @@
- use Mcp\Schema\ResourceDefinition;
- use Mcp\Schema\ResourceTemplate;
- use Mcp\Schema\Tool;
+@@ -34,6 +34,7 @@
+ use Mcp\Server\Capability\Registry\Loader\DiscoveryLoader;
+ use Mcp\Server\Capability\Registry\ReferenceHandler;
+ use Mcp\Server\Capability\Tool\NameValidator;
 +use Mcp\Schema\Enum\CacheScope;
+ use Mcp\Schema\Prompt;
+ use Mcp\Schema\PromptArgument;
+ use Mcp\Schema\ResourceDefinition;
+@@ -42,6 +43,7 @@
  use Mcp\Schema\ToolAnnotations;
  use Mcp\Server\Server;
  use Mcp\Server\Builder;
@@ -282,7 +286,7 @@
 +   * @param int $ttlMs
 +   *   The configured resources/read TTL in milliseconds. It caps the TTL of
 +   *   the result.
-+   * @param string|null $mimeType
++   * @param string $mimeType
 +   *   The MIME type of the resource definition, used to format the contents.
     *
 -   * @return array
@@ -300,7 +304,7 @@
      callable $contentCallback,
 -  ): array {
 +    int $ttlMs,
-+    ?string $mimeType,
++    string $mimeType,
 +  ): ReadResourceResult {
      // Access check — never cached.
      $access = $accessCallback();
@@ -332,14 +336,14 @@
 +   *   The ResourceContents payload array (uri, mimeType, text or blob).
 +   * @param string $expandedUri
 +   *   The resource URI.
-+   * @param string|null $mimeType
++   * @param string $mimeType
 +   *   The MIME type of the resource definition.
 +   * @param int $ttlMs
 +   *   The configured TTL cap in milliseconds.
 +   * @param int $max_age
 +   *   The content's max-age in seconds, or Cache::PERMANENT.
 +   */
-+  private function result(array $contents, string $expandedUri, ?string $mimeType, int $ttlMs, int $max_age): ReadResourceResult {
++  private function result(array $contents, string $expandedUri, string $mimeType, int $ttlMs, int $max_age): ReadResourceResult {
 +    $ttl = $max_age === Cache::PERMANENT ? $ttlMs : min($ttlMs, $max_age * 1000);
 +    $formatted = (new ResourceResultFormatter())->format($contents, $expandedUri, $mimeType);
 +    return new ReadResourceResult($formatted, $ttl);
@@ -353,7 +357,7 @@
      private ResourceContentCache $cache,
      private AccountInterface $currentUser,
 +    private int $ttlMs,
-+    private ?string $mimeType,
++    private string $mimeType,
    ) {}
  
    /**
@@ -373,7 +377,7 @@
      private ResourceContentCache $cache,
      private AccountInterface $currentUser,
 +    private int $ttlMs,
-+    private ?string $mimeType,
++    private string $mimeType,
    ) {}
  
    /**
@@ -462,7 +466,7 @@
  }
 --- /dev/null
 +++ b/mcp_server.post_update.php
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,25 @@
 +<?php
 +
 +/**
@@ -479,6 +483,8 @@
 + */
 +function mcp_server_post_update_cache_policy(): void {
 +  $settings = \Drupal::configFactory()->getEditable('mcp_server.settings');
++  // A deploy that imports configuration before running updates may have set
++  // the map already.
 +  if ($settings->get('cache') !== NULL) {
 +    return;
 +  }
