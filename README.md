@@ -16,7 +16,7 @@ bin/start
 
 `bin/start` prints a host code. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
 
-`bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
+`bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie.2) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
 The build is Drupack 1.0.0-rc6 with four patches in `fork/drupack/`:
 
