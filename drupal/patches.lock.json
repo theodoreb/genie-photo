@@ -1,5 +1,5 @@
 {
-    "_hash": "c08fb882c12198490abfeecf13c127c788608cabd9d69b3ca35f3755f4606244",
+    "_hash": "882ef19ea242fcc25b293a990db6be80558e388b1ecaa204ab0cc22f814c9d12",
     "patches": {
         "e0ipso/simple_oauth_21": [
             {
@@ -38,7 +38,7 @@
                 "package": "drupal/mcp_server",
                 "description": "Stamp caching hints from a cache setting",
                 "url": "patches/mcp_server-cache-policy.patch",
-                "sha256": "6a59a80ad15e20abbaf76a0492b00b5c8bfe2df9d3bfa71874a744957a81db15",
+                "sha256": "7def4ccae8b17014484ae417ea3bc6b9e478514ade44edfb7aafdef46626e922",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

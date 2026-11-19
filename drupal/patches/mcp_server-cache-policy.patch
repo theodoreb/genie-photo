@@ -53,6 +53,16 @@
 +  ttl_ms: 0
 +  scope: private
 +  methods: {}
+--- a/mcp_server.services.yml
++++ b/mcp_server.services.yml
+@@ -51,6 +51,7 @@
+     class: Drupal\mcp_server\Resource\ResourceContentCache
+     arguments:
+       - '@mcp_server.variation_cache.resource'
++      - '@datetime.time'
+ 
+   # Core's variation cache over the default bin, which resolves cache
+   # contexts for the current caller on every lookup.
 --- a/src/McpServerFactory.php
 +++ b/src/McpServerFactory.php
 @@ -39,9 +39,11 @@
@@ -67,15 +77,138 @@
  use Mcp\Server\Session\SessionLockInterface;
  use Mcp\Server\Session\SessionStoreInterface;
  use Mcp\Server\Subscription\NotificationBusInterface;
-@@ -199,6 +201,7 @@
+@@ -195,10 +197,12 @@
+     );
+     $instructions = $this->buildInstructions($config);
+ 
++    $policy = $this->buildCachePolicy($config);
+     $builder = Server::builder()
        ->setServerInfo($server_name, $server_version)
        ->setInstructions($instructions)
        ->setPaginationLimit($pagination_limit)
-+      ->setCachePolicy($this->buildCachePolicy($config))
++      ->setCachePolicy($policy)
        ->setLogger($this->logger)
        ->setEventDispatcher($this->eventDispatcher)
        ->setSession($this->sessionStore)
-@@ -798,6 +801,27 @@
+@@ -213,8 +217,9 @@
+ 
+     $this->registerTools($builder);
+     $this->registerPrompts($builder);
+-    $this->registerResources($builder);
+-    $this->registerResourceProviders($builder);
++    $resources_ttl_ms = $policy->ttlFor('resources/read');
++    $this->registerResources($builder, $resources_ttl_ms);
++    $this->registerResourceProviders($builder, $resources_ttl_ms);
+ 
+     // Register attribute-discovered tools from modules that called
+     // addDiscovery().
+@@ -640,7 +645,7 @@
+   /**
+    * Registers enabled resource template plugins.
+    */
+-  private function registerResources(Builder $builder): void {
++  private function registerResources(Builder $builder, int $ttlMs): void {
+     try {
+       $config = $this->configFactory
+         ->get('mcp_server.resource_template_providers');
+@@ -656,6 +661,7 @@
+           $builder,
+           $plugin_config['id'],
+           $plugin_config['configuration'] ?? [],
++          $ttlMs,
+         );
+       }
+     }
+@@ -674,6 +680,7 @@
+     Builder $builder,
+     string $plugin_id,
+     array $configuration,
++    int $ttlMs,
+   ): void {
+     try {
+       $plugin = $this->resourceTemplateProviderManager->createInstance(
+@@ -681,12 +688,15 @@
+         $configuration,
+       );
+ 
+-      $handler = new ResourceTemplateProviderHandler(
+-        $plugin,
+-        $this->resourceContentCache,
+-        $this->currentUser,
+-      );
+       foreach ($plugin->getResources() as $resource_data) {
++        $mime_type = $resource_data['mimeType'] ?? 'application/json';
++        $handler = new ResourceTemplateProviderHandler(
++          $plugin,
++          $this->resourceContentCache,
++          $this->currentUser,
++          $ttlMs,
++          $mime_type,
++        );
+         $completion_providers = $this->buildCompletionProviders(
+           $plugin->getCompletionProviders($resource_data['uri']),
+         );
+@@ -694,7 +704,7 @@
+           uriTemplate: $resource_data['uri'],
+           name: $resource_data['name'],
+           description: $resource_data['description'] ?? '',
+-          mimeType: $resource_data['mimeType'] ?? 'application/json',
++          mimeType: $mime_type,
+         );
+         $builder->add($template, $handler, $completion_providers);
+       }
+@@ -713,7 +723,7 @@
+   /**
+    * Registers enabled resource provider plugins.
+    */
+-  private function registerResourceProviders(Builder $builder): void {
++  private function registerResourceProviders(Builder $builder, int $ttlMs): void {
+     try {
+       $config = $this->configFactory
+         ->get('mcp_server.resource_providers');
+@@ -729,6 +739,7 @@
+           $builder,
+           $plugin_config['id'],
+           $plugin_config['configuration'] ?? [],
++          $ttlMs,
+         );
+       }
+     }
+@@ -747,23 +758,27 @@
+     Builder $builder,
+     string $plugin_id,
+     array $configuration,
++    int $ttlMs,
+   ): void {
+     try {
+       $plugin = $this->resourceProviderManager->createInstance(
+         $plugin_id,
+         $configuration,
+       );
+-      $handler = new ResourceProviderHandler(
+-        $plugin,
+-        $this->resourceContentCache,
+-        $this->currentUser,
+-      );
+       foreach ($plugin->getResources() as $resource_data) {
++        $mime_type = $resource_data['mimeType'] ?? 'application/json';
++        $handler = new ResourceProviderHandler(
++          $plugin,
++          $this->resourceContentCache,
++          $this->currentUser,
++          $ttlMs,
++          $mime_type,
++        );
+         $resource = new ResourceDefinition(
+           uri: $resource_data['uri'],
+           name: $resource_data['name'],
+           description: $resource_data['description'] ?? '',
+-          mimeType: $resource_data['mimeType'] ?? 'application/json',
++          mimeType: $mime_type,
+           size: $resource_data['size'] ?? NULL,
+         );
+         $builder->add($resource, $handler);
+@@ -798,6 +813,27 @@
    }
  
    /**
@@ -103,6 +236,230 @@
     * Builds the server instructions for the initialize handshake.
     *
     * Reads the optional "server_instructions" setting and lets modules refine
+--- a/src/Resource/ResourceContentCache.php
++++ b/src/Resource/ResourceContentCache.php
+@@ -4,9 +4,13 @@
+ 
+ namespace Drupal\mcp_server\Resource;
+ 
++use Drupal\Component\Datetime\TimeInterface;
+ use Drupal\Core\Access\AccessResultInterface;
++use Drupal\Core\Cache\Cache;
+ use Drupal\Core\Cache\CacheableMetadata;
+ use Drupal\Core\Cache\VariationCacheInterface;
++use Mcp\Schema\Result\ReadResourceResult;
++use Mcp\Server\Capability\Formatter\ResourceResultFormatter;
+ use Mcp\Server\Exception\ResourceNotFoundException;
+ 
+ /**
+@@ -25,6 +29,9 @@
+  * Plugins opt out of caching by returning a DTO whose CacheableMetadata
+  * has max-age 0; in that case no cache reads or writes occur for content
+  * (access is always re-evaluated regardless).
++ *
++ * The result carries a client cache TTL: the configured resources/read TTL,
++ * lowered to the content's remaining Drupal max-age.
+  */
+ final class ResourceContentCache {
+ 
+@@ -33,9 +40,12 @@
+    *
+    * @param \Drupal\Core\Cache\VariationCacheInterface $variationCache
+    *   The variation cache resource contents are stored in.
++   * @param \Drupal\Component\Datetime\TimeInterface $time
++   *   The time service, used to age a cache hit's expiry into a max-age.
+    */
+   public function __construct(
+     private readonly VariationCacheInterface $variationCache,
++    private readonly TimeInterface $time,
+   ) {}
+ 
+   /**
+@@ -52,9 +62,16 @@
+    *   any cache lookup; result is never cached.
+    * @param callable $contentCallback
+    *   Returns ?CacheableResourceContent. Invoked only on cache miss.
++   * @param int $ttlMs
++   *   The configured resources/read TTL in milliseconds. It caps the TTL of
++   *   the result.
++   * @param string|null $mimeType
++   *   The MIME type of the resource definition, used to format the contents.
+    *
+-   * @return array
+-   *   The ResourceContents payload array (uri, mimeType, text or blob).
++   * @return \Mcp\Schema\Result\ReadResourceResult
++   *   The formatted contents. Its TTL is $ttlMs when the content is
++   *   permanent, else the smaller of $ttlMs and the content's remaining
++   *   max-age in milliseconds.
+    *
+    * @throws \Mcp\Server\Exception\ResourceNotFoundException
+    *   When $accessCallback returns a non-allowed result, or $contentCallback
+@@ -65,7 +82,9 @@
+     string $expandedUri,
+     callable $accessCallback,
+     callable $contentCallback,
+-  ): array {
++    int $ttlMs,
++    ?string $mimeType,
++  ): ReadResourceResult {
+     // Access check — never cached.
+     $access = $accessCallback();
+     assert($access instanceof AccessResultInterface);
+@@ -79,7 +98,10 @@
+     $access_cacheability = CacheableMetadata::createFromObject($access);
+     $cached = $this->variationCache->get($keys, $access_cacheability);
+     if ($cached !== FALSE) {
+-      return $cached->data;
++      $max_age = $cached->expire === Cache::PERMANENT
++        ? Cache::PERMANENT
++        : max(0, $cached->expire - $this->time->getCurrentTime());
++      return $this->result($cached->data, $expandedUri, $mimeType, $ttlMs, $max_age);
+     }
+ 
+     $dto = $contentCallback();
+@@ -92,7 +114,27 @@
+     $dto = $dto->addCacheableDependency($access_cacheability);
+     $contents = $dto->toResourceContents();
+     $this->variationCache->set($keys, $contents, $dto->metadata, $access_cacheability);
+-    return $contents;
++    return $this->result($contents, $expandedUri, $mimeType, $ttlMs, $dto->metadata->getCacheMaxAge());
++  }
++
++  /**
++   * Formats contents into a result whose TTL is bounded by the max-age.
++   *
++   * @param array $contents
++   *   The ResourceContents payload array (uri, mimeType, text or blob).
++   * @param string $expandedUri
++   *   The resource URI.
++   * @param string|null $mimeType
++   *   The MIME type of the resource definition.
++   * @param int $ttlMs
++   *   The configured TTL cap in milliseconds.
++   * @param int $max_age
++   *   The content's max-age in seconds, or Cache::PERMANENT.
++   */
++  private function result(array $contents, string $expandedUri, ?string $mimeType, int $ttlMs, int $max_age): ReadResourceResult {
++    $ttl = $max_age === Cache::PERMANENT ? $ttlMs : min($ttlMs, $max_age * 1000);
++    $formatted = (new ResourceResultFormatter())->format($contents, $expandedUri, $mimeType);
++    return new ReadResourceResult($formatted, $ttl);
+   }
+ 
+ }
+--- a/src/Capability/Handler/ResourceProviderHandler.php
++++ b/src/Capability/Handler/ResourceProviderHandler.php
+@@ -19,6 +19,8 @@
+     private ResourceProviderInterface $plugin,
+     private ResourceContentCache $cache,
+     private AccountInterface $currentUser,
++    private int $ttlMs,
++    private ?string $mimeType,
+   ) {}
+ 
+   /**
+@@ -29,6 +31,8 @@
+       $uri,
+       fn() => $this->plugin->checkAccess($uri, $this->currentUser),
+       fn() => $this->plugin->getResourceContent($uri),
++      $this->ttlMs,
++      $this->mimeType,
+     );
+   }
+ 
+--- a/src/Capability/Handler/ResourceTemplateProviderHandler.php
++++ b/src/Capability/Handler/ResourceTemplateProviderHandler.php
+@@ -21,6 +21,8 @@
+     private ResourceTemplateProviderInterface $plugin,
+     private ResourceContentCache $cache,
+     private AccountInterface $currentUser,
++    private int $ttlMs,
++    private ?string $mimeType,
+   ) {}
+ 
+   /**
+@@ -31,6 +33,8 @@
+       $uri,
+       fn() => $this->plugin->checkAccess($uri, $this->currentUser),
+       fn() => $this->plugin->getResourceContent($uri),
++      $this->ttlMs,
++      $this->mimeType,
+     );
+   }
+ 
+--- a/tests/src/Kernel/Resource/ResourceContentCacheTest.php
++++ b/tests/src/Kernel/Resource/ResourceContentCacheTest.php
+@@ -10,6 +10,7 @@
+ use Drupal\KernelTests\KernelTestBase;
+ use Drupal\mcp_server\Resource\CacheableResourceContent;
+ use Drupal\Tests\user\Traits\UserCreationTrait;
++use Mcp\Schema\Result\ReadResourceResult;
+ use PHPUnit\Framework\Attributes\DataProvider;
+ use PHPUnit\Framework\Attributes\Group;
+ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+@@ -115,6 +116,26 @@
+   }
+ 
+   /**
++   * The result TTL is the cap lowered to the content's Drupal max-age.
++   */
++  public function testTtlIsBoundedByMaxAge(): void {
++    $this->setCurrentUser($this->createUser([], 'alice'));
++    $cap = 600000;
++
++    $miss = $this->readResult('test://minute', 60, $cap);
++    $this->assertGreaterThan(0, $miss->ttlMs);
++    $this->assertLessThanOrEqual(60000, $miss->ttlMs);
++
++    $hit = $this->readResult('test://minute', 60, $cap);
++    $this->assertSame(1, $this->generated);
++    $this->assertGreaterThan(0, $hit->ttlMs);
++    $this->assertLessThanOrEqual(60000, $hit->ttlMs);
++
++    $this->assertSame(0, $this->readResult('test://never', 0, $cap)->ttlMs);
++    $this->assertSame($cap, $this->readResult('test://forever', Cache::PERMANENT, $cap)->ttlMs);
++  }
++
++  /**
+    * Reads a resource whose content greets the current user.
+    *
+    * @param string $uri
+@@ -125,7 +146,24 @@
+    *   The access result's cache contexts.
+    */
+   private function read(string $uri = 'test://greeting', int $max_age = Cache::PERMANENT, array $access_contexts = []): string {
+-    $contents = $this->container->get('mcp_server.resource_content_cache')->generate(
++    $result = $this->readResult($uri, $max_age, 600000, $access_contexts);
++    return $result->contents[0]->text;
++  }
++
++  /**
++   * Reads a resource and returns the whole result.
++   *
++   * @param string $uri
++   *   The resource URI.
++   * @param int $max_age
++   *   The content's max-age.
++   * @param int $cap
++   *   The configured TTL cap in milliseconds.
++   * @param list<string> $access_contexts
++   *   The access result's cache contexts.
++   */
++  private function readResult(string $uri, int $max_age, int $cap, array $access_contexts = []): ReadResourceResult {
++    return $this->container->get('mcp_server.resource_content_cache')->generate(
+       $uri,
+       static fn () => AccessResult::allowed()->addCacheContexts($access_contexts),
+       function () use ($uri, $max_age): CacheableResourceContent {
+@@ -136,8 +174,9 @@
+           (new CacheableMetadata())->addCacheContexts(['user'])->setCacheMaxAge($max_age),
+         );
+       },
++      $cap,
++      'text/plain',
+     );
+-    return $contents['text'];
+   }
+ 
+ }
 --- /dev/null
 +++ b/mcp_server.post_update.php
 @@ -0,0 +1,23 @@
