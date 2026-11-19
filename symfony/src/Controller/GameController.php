@@ -120,21 +120,21 @@ final class GameController extends AbstractController
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function dismissProposal(Request $request): JsonResponse
     {
-        return $this->callTool('proposal_dismiss', ['proposal' => $request->request->getString('proposal')]);
+        return $this->callTool('web_proposal_dismiss', ['proposal' => $request->request->getString('proposal')]);
     }
 
     #[Route('/approve', name: 'app_approve', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function approve(Request $request): JsonResponse
     {
-        return $this->callTool('export_approve', ['hash' => $request->request->getString('hash')]);
+        return $this->callTool('web_export_approve', ['hash' => $request->request->getString('hash')]);
     }
 
     #[Route('/objects/protect', name: 'app_protect', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function protect(Request $request): JsonResponse
     {
-        return $this->callTool('protect_set', [
+        return $this->callTool('web_protect_set', [
             'object' => $request->request->getString('object'),
             'protected' => $request->request->getBoolean('protected'),
         ]);
@@ -166,7 +166,7 @@ final class GameController extends AbstractController
     private function picture(array $arguments, string $type): Response
     {
         try {
-            $bytes = $this->tools->image($this->tokens->accessToken(), 'picture_get', $arguments);
+            $bytes = $this->tools->image($this->tokens->accessToken(), 'web_picture_get', $arguments);
         } catch (DrupalToolFailed $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }

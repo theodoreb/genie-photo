@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\genie_ledger\Unit;
 
-use Drupal\genie_ledger\Places;
-use Drupal\genie_ledger\Session;
-use Drupal\genie_ledger\Survey;
+use Drupal\genie_ledger\Photo\Places;
+use Drupal\genie_ledger\Game\Session;
+use Drupal\genie_ledger\Photo\Survey;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\genie_ledger\Unit;
 
-use Drupal\genie_ledger\KeywordInterpreter;
-use Drupal\genie_ledger\Operation;
+use Drupal\genie_ledger\Wish\KeywordInterpreter;
+use Drupal\genie_ledger\Wish\Operation;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

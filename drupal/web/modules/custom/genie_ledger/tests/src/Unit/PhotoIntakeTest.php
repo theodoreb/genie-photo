@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\genie_ledger\Unit;
 
-use Drupal\genie_ledger\PhotoIntake;
+use Drupal\genie_ledger\Photo\PhotoIntake;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

@@ -2,10 +2,10 @@ genie_ledger.photo_put:
   path: '/genie/photo'
   methods: [PUT]
   defaults:
-    _controller: Drupal\genie_ledger\Controller\PhotoController::put
+    _controller: Drupal\genie_ledger\Web\PhotoController::put
   requirements:
     _permission: 'play genie'
-    _custom_access: '\Drupal\genie_ledger\Access\WebViewAccess::access'
+    _custom_access: '\Drupal\genie_ledger\Web\WebViewAccess::access'
   options:
     _auth: ['oauth2']
     no_cache: TRUE
@@ -13,7 +13,7 @@ genie_ledger.photo_put:
 genie_ledger.host:
   path: '/genie/host'
   defaults:
-    _form: Drupal\genie_ledger\Form\HostForm
+    _form: Drupal\genie_ledger\Web\HostForm
   requirements:
     # Open to visitors: the host code and a flood limit guard the form.
     _access: 'TRUE'
@@ -23,7 +23,7 @@ genie_ledger.host:
 genie_ledger.join:
   path: '/join/{code}'
   defaults:
-    _form: Drupal\genie_ledger\Form\JoinForm
+    _form: Drupal\genie_ledger\Web\JoinForm
   requirements:
     # Open to visitors: the invite code and a flood limit guard the form.
     _access: 'TRUE'

@@ -6,7 +6,7 @@ namespace Drupal\genie_ledger\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\genie_ledger\Games;
+use Drupal\genie_ledger\Game\Games;
 
 /**
  * Hooks for the genie games.

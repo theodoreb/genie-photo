@@ -103,7 +103,7 @@ To play several players from one machine, add the server once per player under a
 | `wait_for_update` | Waits up to 10 seconds for a change, approvals included |
 | `approve_export` | Sends you to the page that shows the picture, and reports your approval |
 
-Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `picture_get`, which returns its images. Assistants cannot call it.
+Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `web_picture_get`, which returns its images. Assistants cannot call it.
 
 Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.
 
@@ -139,41 +139,41 @@ Each line names a library feature and links to the code that uses it.
 
 ### Symfony AI
 
-- Platform `invoke()` with a `MessageBag`, on the platform Drupal AI builds from config: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
+- Platform `invoke()` with a `MessageBag`, on the platform Drupal AI builds from config: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/Wish/WishInterpreter.php).
 - The generic platform bridge reaches Ollama's OpenAI-style API: [`ai.inference_provider.genie_ollama.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.inference_provider.genie_ollama.yml).
-- Structured output: `PlatformSubscriber` turns the model's answer into a `WishReading` object: [`genie_ledger.services.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.services.yml), [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/WishReading.php).
-- The `#[Schema]` attribute limits the generated JSON schema to the allowed operations: [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/WishReading.php).
-- `ValidatorSubscriber` checks the object with Symfony Validator constraints. A `ValidationException` makes the genie ask again: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
-- The TransformersPhp bridge runs DETR object detection in PHP through FFI: [`PersonDetector.php`](drupal/web/modules/custom/genie_ledger/src/PersonDetector.php).
+- Structured output: `PlatformSubscriber` turns the model's answer into a `WishReading` object: [`genie_ledger.services.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.services.yml), [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/Wish/WishReading.php).
+- The `#[Schema]` attribute limits the generated JSON schema to the allowed operations: [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/Wish/WishReading.php).
+- `ValidatorSubscriber` checks the object with Symfony Validator constraints. A `ValidationException` makes the genie ask again: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/Wish/WishInterpreter.php).
+- The TransformersPhp bridge runs DETR object detection in PHP through FFI: [`PersonDetector.php`](drupal/web/modules/custom/genie_ledger/src/Photo/PersonDetector.php).
 - `FailoverPlatform` tries the next model server when one fails, wrapped as a Drupal AI platform middleware: [`Failover.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/ai/PlatformMiddleware/Failover.php), [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
-- `CachePlatform` answers a repeated wish without the model, under a `prompt_cache_key`: [`Cache.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/ai/PlatformMiddleware/Cache.php), [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
+- `CachePlatform` answers a repeated wish without the model, under a `prompt_cache_key`: [`Cache.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/ai/PlatformMiddleware/Cache.php), [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/Wish/WishInterpreter.php).
 - `MockPlatformFactory` replaces the model in a unit test: [`WishInterpreterTest.php`](drupal/web/modules/custom/genie_ledger/tests/src/Unit/WishInterpreterTest.php).
 
 ### PHP MCP SDK
 
 - Client: `Client::builder()`, `HttpTransport` with the player's bearer token, `callTool()`, `structuredContent` and `ImageContent`: [`McpDrupalTools.php`](symfony/src/Drupal/McpDrupalTools.php).
 - Server tools with input schemas, output schemas and annotations, through Drupal's `mcp_server` module: [`Plugin/mcp_server/Tool/`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/).
-- Output schemas the SDK checks on approval results: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php), [`ExportApproveTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ExportApproveTool.php), [`Approvals.php`](drupal/web/modules/custom/genie_ledger/src/Approvals.php).
+- Output schemas the SDK checks on approval results: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php), [`ExportApproveTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/WebView/ExportApproveTool.php), [`Approvals.php`](drupal/web/modules/custom/genie_ledger/src/Game/Approvals.php).
 - `ImageContent` results for the photo and the picture: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
-- URL elicitation: `ClientGateway::elicitUrl()`, `ElicitResult` and `ElicitationMode::Url` open the approval page: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php).
+- URL elicitation: `ClientGateway::elicitUrl()`, `ElicitResult` and `ElicitationMode::Url` open the approval page: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php).
 - A custom request and notification on the SDK's JSON-RPC classes: [`UrlElicitationRequest.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/UrlElicitationRequest.php), [`ElicitationCompleteNotification.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/ElicitationCompleteNotification.php).
-- `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php).
-- `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/MakeWishTool.php) and the other tools.
-- Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie_ledger/src/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
+- `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php).
+- `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/Assistant/MakeWishTool.php) and the other tools.
+- Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie_ledger/src/Game/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
 - Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
 - The smoke scripts call the server as an MCP client: [`SmokeSite.php`](symfony/tests/smoke/lib/SmokeSite.php).
 
 ### Drupal and Drupack
 
-- `mcp_server` serves the tools at `/mcp`. `mcp_server_oauth`, `simple_oauth` and `simple_oauth_21` sign each assistant in as its player: [`McpRouteSubscriber.php`](drupal/web/modules/custom/genie_ledger/src/Routing/McpRouteSubscriber.php).
+- `mcp_server` serves the tools at `/mcp`. `mcp_server_oauth`, `simple_oauth` and `simple_oauth_21` sign each assistant in as its player: [`McpRouteSubscriber.php`](drupal/web/modules/custom/genie_ledger/src/Web/McpRouteSubscriber.php).
 - A patch lets native clients use `http://localhost` redirect URIs: [`simple_oauth_21-localhost-redirect.patch`](drupal/patches/simple_oauth_21-localhost-redirect.patch).
-- Each game is a `genie_game` node with a `state_machine` workflow: [`genie_ledger.workflows.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.workflows.yml), [`Games.php`](drupal/web/modules/custom/genie_ledger/src/Games.php).
-- The host code is a Key entity read from a file. Core's flood service limits wrong host codes and invite links: [`HostForm.php`](drupal/web/modules/custom/genie_ledger/src/Form/HostForm.php), [`JoinForm.php`](drupal/web/modules/custom/genie_ledger/src/Form/JoinForm.php).
+- Each game is a `genie_game` node with a `state_machine` workflow: [`genie_ledger.workflows.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.workflows.yml), [`Games.php`](drupal/web/modules/custom/genie_ledger/src/Game/Games.php).
+- The host code is a Key entity read from a file. Core's flood service limits wrong host codes and invite links: [`HostForm.php`](drupal/web/modules/custom/genie_ledger/src/Web/HostForm.php), [`JoinForm.php`](drupal/web/modules/custom/genie_ledger/src/Web/JoinForm.php).
 - Cron abandons idle games, and `hook_user_format_name_alter` shows players without their game id: [`GenieHooks.php`](drupal/web/modules/custom/genie_ledger/src/Hook/GenieHooks.php).
 - The site runs on the `main` branches of Symfony AI and the MCP SDK, with patches for what broke: [`docs/upstream-breaks.md`](docs/upstream-breaks.md).
 - Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
-- A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie_ledger/src/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie_ledger/src/Session.php).
-- FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie_ledger/src/RevisionPublisher.php).
+- A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie_ledger/src/Photo/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie_ledger/src/Game/Session.php).
+- FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie_ledger/src/Game/RevisionPublisher.php).
 - Drupack runs Drupal, its Mercure hub, the web view and Composer. The project's build adds FFI: [`fork/drupack/`](fork/drupack/), [`bin/lib/get-drupack`](bin/lib/get-drupack).
 
 ### Symfony

@@ -42,7 +42,7 @@ final readonly class SmokeSite
      */
     public function frame(string $token, int $revision): string
     {
-        return $this->tools->image($token, 'picture_get', ['view' => 'frame', 'revision' => $revision]);
+        return $this->tools->image($token, 'web_picture_get', ['view' => 'frame', 'revision' => $revision]);
     }
 
     /**

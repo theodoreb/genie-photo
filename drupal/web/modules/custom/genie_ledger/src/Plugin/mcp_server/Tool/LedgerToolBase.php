@@ -8,7 +8,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\Game\Ledger;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;

@@ -6,10 +6,10 @@ namespace Drupal\genie_ledger\Drush\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\genie_ledger\Access\WebViewAccess;
-use Drupal\genie_ledger\Games;
-use Drupal\genie_ledger\PersonDetector;
-use Drupal\genie_ledger\WishInterpreter;
+use Drupal\genie_ledger\Web\WebViewAccess;
+use Drupal\genie_ledger\Game\Games;
+use Drupal\genie_ledger\Photo\PersonDetector;
+use Drupal\genie_ledger\Wish\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;

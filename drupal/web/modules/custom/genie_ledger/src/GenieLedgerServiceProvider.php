@@ -6,6 +6,7 @@ namespace Drupal\genie_ledger;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
+use Drupal\genie_ledger\Web\RequestSchemeEndpointDiscovery;
 
 /**
  * Swaps in the issuer that matches the address the site really serves.

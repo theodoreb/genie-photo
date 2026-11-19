@@ -34,14 +34,14 @@ foreach (['alice', 'bob', 'carol', 'dan'] as $index => $player) {
 $approve = static function (string ...$players) use ($site, &$tokens): array {
     $hash = $site->tools->call($tokens['alice'], 'session_get')['export']['hash'];
     foreach ($players as $player) {
-        $state = $site->tools->call($tokens[$player], 'export_approve', ['hash' => $hash]);
+        $state = $site->tools->call($tokens[$player], 'web_export_approve', ['hash' => $hash]);
     }
 
     return $state;
 };
 
 $assistant = $site->signInAsAssistant('alice');
-foreach (['picture_get', 'export_approve', 'protect_set', 'proposal_dismiss'] as $tool) {
+foreach (['web_picture_get', 'web_export_approve', 'web_protect_set', 'web_proposal_dismiss'] as $tool) {
     try {
         $site->tools->call($assistant, $tool, ['hash' => 'x']);
         SmokeSite::fail("An assistant reached $tool.");
@@ -116,7 +116,7 @@ $client = Client::builder()->build();
 $client->connect(new HttpTransport($site->drupalUrl.'/mcp', headers: ['Authorization' => 'Bearer '.$tokens['alice']]));
 $schemas = array_column($client->listTools()->tools, 'outputSchema', 'name');
 $client->disconnect();
-if (!isset($schemas['approve_export'], $schemas['export_approve'])) {
+if (!isset($schemas['approve_export'], $schemas['web_export_approve'])) {
     SmokeSite::fail('An approval tool declares no output schema.');
 }
 // erin joined without a place, so four approvals leave the game open.

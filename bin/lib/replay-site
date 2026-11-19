@@ -55,7 +55,7 @@ switch ($command) {
             fwrite(STDERR, $collision($session)."\n");
             exit(1);
         }
-        $tools->call($token, 'export_approve', ['hash' => $session['export']['hash']]);
+        $tools->call($token, 'web_export_approve', ['hash' => $session['export']['hash']]);
         break;
 
     case 'status':
@@ -80,7 +80,7 @@ switch ($command) {
             fwrite(STDERR, "The picture is not final.\n");
             exit(1);
         }
-        echo $tools->image($token, 'picture_get', ['view' => 'frame', 'revision' => $session['revision']]);
+        echo $tools->image($token, 'web_picture_get', ['view' => 'frame', 'revision' => $session['revision']]);
         break;
 
     default:

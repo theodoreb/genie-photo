@@ -6,7 +6,7 @@ services:
     parent: logger.channel_base
     arguments: ['genie_ledger']
   genie_ledger.mcp_route_subscriber:
-    class: Drupal\genie_ledger\Routing\McpRouteSubscriber
+    class: Drupal\genie_ledger\Web\McpRouteSubscriber
     autowire: false
     tags:
       - { name: event_subscriber }
@@ -18,21 +18,21 @@ services:
     autowire: false
     tags:
       - { name: event_subscriber }
-  Drupal\genie_ledger\Approvals: ~
-  Drupal\genie_ledger\CurrentGame: ~
-  Drupal\genie_ledger\Darkroom: ~
-  Drupal\genie_ledger\Exports: ~
-  Drupal\genie_ledger\Framer: ~
-  Drupal\genie_ledger\GameView: ~
-  Drupal\genie_ledger\Games: ~
-  Drupal\genie_ledger\KeywordInterpreter: ~
-  Drupal\genie_ledger\Ledger: ~
-  Drupal\genie_ledger\People: ~
-  Drupal\genie_ledger\PersonDetector: ~
-  Drupal\genie_ledger\PhotoIntake: ~
-  Drupal\genie_ledger\PhotoStore: ~
-  Drupal\genie_ledger\Pictures: ~
-  Drupal\genie_ledger\RevisionPublisher: ~
-  Drupal\genie_ledger\WebViewAddress: ~
-  Drupal\genie_ledger\WishInterpreter: ~
-  Drupal\genie_ledger\Wishes: ~
+  Drupal\genie_ledger\Game\Approvals: ~
+  Drupal\genie_ledger\Game\CurrentGame: ~
+  Drupal\genie_ledger\Photo\Darkroom: ~
+  Drupal\genie_ledger\Game\Exports: ~
+  Drupal\genie_ledger\Wish\Framer: ~
+  Drupal\genie_ledger\Game\GameView: ~
+  Drupal\genie_ledger\Game\Games: ~
+  Drupal\genie_ledger\Wish\KeywordInterpreter: ~
+  Drupal\genie_ledger\Game\Ledger: ~
+  Drupal\genie_ledger\Photo\People: ~
+  Drupal\genie_ledger\Photo\PersonDetector: ~
+  Drupal\genie_ledger\Photo\PhotoIntake: ~
+  Drupal\genie_ledger\Photo\PhotoStore: ~
+  Drupal\genie_ledger\Photo\Pictures: ~
+  Drupal\genie_ledger\Game\RevisionPublisher: ~
+  Drupal\genie_ledger\Web\WebViewAddress: ~
+  Drupal\genie_ledger\Wish\WishInterpreter: ~
+  Drupal\genie_ledger\Wish\Wishes: ~

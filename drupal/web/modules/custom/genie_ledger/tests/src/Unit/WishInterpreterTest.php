@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Drupal\Tests\genie_ledger\Unit;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;
-use Drupal\genie_ledger\KeywordInterpreter;
-use Drupal\genie_ledger\Operation;
-use Drupal\genie_ledger\Wish;
-use Drupal\genie_ledger\WishInterpreter;
+use Drupal\genie_ledger\Wish\KeywordInterpreter;
+use Drupal\genie_ledger\Wish\Operation;
+use Drupal\genie_ledger\Wish\Wish;
+use Drupal\genie_ledger\Wish\WishInterpreter;
 use Drupal\Tests\UnitTestCase;
 use Symfony\AI\Platform\Exception\RuntimeException;
 use Symfony\AI\Platform\StructuredOutput\PlatformSubscriber;

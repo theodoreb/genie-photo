@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\genie_ledger\Unit;
 
-use Drupal\genie_ledger\BodyPaint;
-use Drupal\genie_ledger\Darkroom;
-use Drupal\genie_ledger\Frame;
-use Drupal\genie_ledger\Outlines;
-use Drupal\genie_ledger\Places;
-use Drupal\genie_ledger\Session;
-use Drupal\genie_ledger\Survey;
+use Drupal\genie_ledger\Photo\BodyPaint;
+use Drupal\genie_ledger\Photo\Darkroom;
+use Drupal\genie_ledger\Wish\Frame;
+use Drupal\genie_ledger\Photo\Outlines;
+use Drupal\genie_ledger\Photo\Places;
+use Drupal\genie_ledger\Game\Session;
+use Drupal\genie_ledger\Photo\Survey;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
