@@ -7,6 +7,14 @@ services:
     autowire: false
     tags:
       - { name: event_subscriber }
+  Symfony\AI\Platform\StructuredOutput\PlatformSubscriber:
+    autowire: false
+    tags:
+      - { name: event_subscriber }
+  Symfony\AI\Platform\StructuredOutput\Validator\ValidatorSubscriber:
+    autowire: false
+    tags:
+      - { name: event_subscriber }
   Drupal\genie_ledger\Darkroom: ~
   Drupal\genie_ledger\Exports: ~
   Drupal\genie_ledger\Framer: ~
