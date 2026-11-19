@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.cfi_genie_person.outline
+  module:
+    - compound_field
+    - json_field
+id: cfi_genie_person.cfi_genie_person.outline
+field_name: outline
+entity_type: cfi_genie_person
+bundle: cfi_genie_person
+label: outline
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: json

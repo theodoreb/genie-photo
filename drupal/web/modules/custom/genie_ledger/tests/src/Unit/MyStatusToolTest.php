@@ -12,6 +12,7 @@ use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\genie_ledger\Ledger;
+use Drupal\genie_ledger\PhotoStore;
 use Drupal\genie_ledger\Plugin\mcp_server\Tool\MyStatusTool;
 use Drupal\genie_ledger\RevisionPublisher;
 use Drupal\genie_ledger\WishDesk;
@@ -45,7 +46,8 @@ final class MyStatusToolTest extends UnitTestCase {
   private function tool(?AccountProxyInterface $currentUser = NULL): MyStatusTool {
     $keyValue = $this->createStub(KeyValueFactoryInterface::class);
     $keyValue->method('get')->willReturn($this->createStub(KeyValueStoreInterface::class));
-    $ledger = new Ledger($keyValue, $this->createStub(LockBackendInterface::class), new RevisionPublisher());
+    $photos = (new \ReflectionClass(PhotoStore::class))->newInstanceWithoutConstructor();
+    $ledger = new Ledger($keyValue, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos);
     $desk = (new \ReflectionClass(WishDesk::class))->newInstanceWithoutConstructor();
     return new MyStatusTool([], 'my_status', NULL, $currentUser ?? $this->createStub(AccountProxyInterface::class), $ledger, $desk);
   }

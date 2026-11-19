@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_genie_detector
+    - media.type.genie_photo
+  module:
+    - options
+id: media.genie_photo.field_genie_detector
+field_name: field_genie_detector
+entity_type: media
+bundle: genie_photo
+label: 'Person detector'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

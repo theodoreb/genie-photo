@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: genie_photo
+label: 'Genie photo'
+description: null
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_genie_image
+field_map: {  }

@@ -34,7 +34,17 @@ final readonly class SmokeSite
         $this->http = HttpClient::create();
         $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
         $this->photos = new DrupalPhotos($this->http, $this->drupalUrl.'/genie');
-        (new Process(['./drupack', 'drush', 'genie:reset'], $root.'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
+        $this->drush('genie:reset');
+    }
+
+    /**
+     * Runs a Drush command on the site.
+     */
+    public function drush(string ...$arguments): string
+    {
+        $process = new Process(['./drupack', 'drush', ...$arguments], \dirname(__DIR__, 2).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']);
+
+        return $process->mustRun()->getOutput();
     }
 
     /**

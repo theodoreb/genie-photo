@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "810bf5e4abdfb155edf6f3687b345467",
+    "content-hash": "03c7f2d562befee93d5c3214f0a6d8e6",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1414,6 +1414,116 @@
             }
         },
         {
+            "name": "drupal/compound_field",
+            "version": "1.0.0-alpha4",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/compound_field.git",
+                "reference": "1.0.0-alpha4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/compound_field-1.0.0-alpha4.zip",
+                "reference": "1.0.0-alpha4",
+                "shasum": "86779aa744c5fef0f7c882333f482eed5ebe0267"
+            },
+            "require": {
+                "drupal/core": "^11.4.10",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "drupal/address": "^2.0",
+                "drupal/canvas": "^1.12",
+                "drupal/coder": "^8",
+                "drupal/core-dev": "^11.4.10",
+                "drupal/custom_field": "*",
+                "drupal/devel": "^5.5",
+                "drupal/entity_usage": "^2.2",
+                "drupal/graphql_compose": "^2.4",
+                "drupal/paragraphs": "^1.21",
+                "drupal/search_api": "^1.41",
+                "drupal/token": "^1.17",
+                "drupal/viewfield": "^3.0@beta",
+                "mglaman/phpstan-drupal": "^2.1.2",
+                "phpat/phpat": "^0.12.4",
+                "phpstan/extension-installer": "^1.2",
+                "phpstan/phpstan": "^2.3.0",
+                "phpstan/phpstan-strict-rules": "^2.0.11",
+                "shipmonk/dead-code-detector": "^1.2.0"
+            },
+            "suggest": {
+                "drush/drush": "^13: for the optional drush compound-field:* commands"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0-alpha4",
+                    "datestamp": "1794497646",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Alpha releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "scripts": {
+                "composer-root": [
+                    "@php scripts/composer-root.php"
+                ],
+                "install-dev-deps": [
+                    "PACKAGES=$(cat composer.json | jq -r '.[\"require-dev\"] // {} | to_entries[] | \"\\(.key):\\(.value)\"' | tr '\\n' ' ') && ROOT=$(composer run composer-root) && [ -n \"$ROOT\" ] && CORE_VERSION=$(grep \"const VERSION\" \"${ROOT}/core/lib/Drupal.php\" 2>/dev/null | sed \"s/.*'\\(.*\\)'.*/\\1/\" || echo \"0.0.0\") && COMPOSER_ROOT_VERSION=${CORE_VERSION:-0.0.0} composer --working-dir=\"${ROOT}\" require ${PACKAGES} --dev -W"
+                ],
+                "lint:phpstan": [
+                    "ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpstan -- --configuration=$(pwd)/phpstan.neon --autoload-file=$(pwd)/phpstan_rules/autoload.php analyze $(pwd)"
+                ],
+                "lint:phpcs": [
+                    "mkdir -p test-results && mkdir -p .cache/phpcs && ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpcs -- --standard=$(pwd)/phpcs.xml --cache=$(pwd)/.cache/phpcs/.phpcs.cache --report-width=auto --colors -s --report-junit=$(pwd)/test-results/phpcs.xml --report-full --report-summary $(pwd)"
+                ],
+                "lint:phpcs:files": [
+                    "fu_phpcs_files() { if [ $# -eq 0 ]; then echo \"lint:phpcs:files: no target given. Usage: composer run lint:phpcs:files -- <path>... (each path absolute, or relative to the module root)\" >&2; return 1; fi; mkdir -p .cache/phpcs; m=$(pwd); n=$#; while [ $n -gt 0 ]; do case $1 in /*) set -- \"$@\" \"$1\" ;; *) set -- \"$@\" \"$m/$1\" ;; esac; shift; n=$((n-1)); done; ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpcs -- --standard=\"$m/phpcs.xml\" --cache=\"$m/.cache/phpcs/.phpcs.cache\" --report-width=auto --colors -s --report-full --report-summary \"$@\"; }; fu_phpcs_files"
+                ],
+                "lint": [
+                    "@lint:phpstan",
+                    "@lint:phpcs"
+                ],
+                "fix:phpcbf": [
+                    "mkdir -p .cache/phpcs && ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpcbf -- --standard=$(pwd)/phpcs.xml --cache=$(pwd)/.cache/phpcs/.phpcs.cache --colors $(pwd)"
+                ],
+                "fix:phpcbf:files": [
+                    "fu_phpcbf_files() { if [ $# -eq 0 ]; then echo \"fix:phpcbf:files: no target given. Usage: composer run fix:phpcbf:files -- <path>... (each path absolute, or relative to the module root)\" >&2; return 1; fi; mkdir -p .cache/phpcs; m=$(pwd); n=$#; while [ $n -gt 0 ]; do case $1 in /*) set -- \"$@\" \"$1\" ;; *) set -- \"$@\" \"$m/$1\" ;; esac; shift; n=$((n-1)); done; ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpcbf -- --standard=\"$m/phpcs.xml\" --cache=\"$m/.cache/phpcs/.phpcs.cache\" --colors \"$@\"; }; fu_phpcbf_files"
+                ],
+                "fix": [
+                    "@fix:phpcbf"
+                ],
+                "phpstan-regenerate-ignores-for-non-min-core-version-features": [
+                    "rm $(pwd)/phpstan-ignores-non-min-core-version.neon && touch $(pwd)/phpstan-ignores-non-min-core-version.neon && ROOT=$(composer run composer-root) && composer --working-dir=\"$ROOT\" exec phpstan -- --configuration=$(pwd)/phpstan.neon --autoload-file=$(pwd)/phpstan_rules/autoload.php --generate-baseline=$(pwd)/phpstan-ignores-non-min-core-version.neon --allow-empty-baseline analyze $(pwd)"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Lee Rowlands",
+                    "homepage": "https://www.drupal.org/user/593202",
+                    "email": "lee.rowlands@previousnext.com.au"
+                },
+                {
+                    "name": "e0ipso",
+                    "homepage": "https://www.drupal.org/user/550110"
+                }
+            ],
+            "description": "Builds reusable field types out of other field types",
+            "homepage": "https://www.drupal.org/project/compound_field",
+            "keywords": [
+                "Actively maintained",
+                "Site structure"
+            ],
+            "support": {
+                "source": "https://git.drupalcode.org/project/compound_field"
+            }
+        },
+        {
             "name": "drupal/consumers",
             "version": "1.24.0",
             "source": {
@@ -1831,6 +1941,77 @@
                 "source": "https://git.drupalcode.org/project/drupack/-/tree/1.0.0-rc4"
             },
             "time": "2026-11-18T04:23:59+00:00"
+        },
+        {
+            "name": "drupal/json_field",
+            "version": "1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/json_field.git",
+                "reference": "8.x-1.7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/json_field-8.x-1.7.zip",
+                "reference": "8.x-1.7",
+                "shasum": "4243b6adc2dd9d44a8a243cede59f7935a0c9b65"
+            },
+            "require": {
+                "drupal/core": "^10.3 || ^11",
+                "ext-json": "*"
+            },
+            "require-dev": {
+                "drupal/diff": "^1",
+                "drupal/feeds": "dev-3.x@dev",
+                "swaggest/json-schema": "^0"
+            },
+            "suggest": {
+                "drupal/diff": "^0",
+                "swaggest/json-schema": "^0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "8.x-1.7",
+                    "datestamp": "1759661334",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "See contributors",
+                    "homepage": "https://www.drupal.org/node/2653746/committers",
+                    "role": "Developer"
+                },
+                {
+                    "name": "dawehner",
+                    "homepage": "https://www.drupal.org/user/99340"
+                },
+                {
+                    "name": "Jaesin",
+                    "homepage": "https://www.drupal.org/user/841054"
+                },
+                {
+                    "name": "ptmkenny",
+                    "homepage": "https://www.drupal.org/user/97885"
+                }
+            ],
+            "description": "Provides a JSON field, formatter and views integration",
+            "homepage": "https://www.drupal.org/project/json_field",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "http://cgit.drupalcode.org/json_field",
+                "issues": "https://www.drupal.org/project/issues/json_field"
+            }
         },
         {
             "name": "drupal/key",
@@ -16770,6 +16951,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "drupal/ai": 20,
+        "drupal/compound_field": 15,
         "drupal/drupack": 5,
         "drupal/mcp_server": 10,
         "drupal/mcp_server_oauth": 15

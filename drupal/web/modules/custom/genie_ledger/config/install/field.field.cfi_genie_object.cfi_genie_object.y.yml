@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.cfi_genie_object.y
+  module:
+    - compound_field
+id: cfi_genie_object.cfi_genie_object.y
+field_name: y
+entity_type: cfi_genie_object
+bundle: cfi_genie_object
+label: y
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

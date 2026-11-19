@@ -31,6 +31,11 @@ foreach ($outline['info']['detected'] as [$x, $y, $width, $height]) {
         SmokeSite::fail('A detector box leaves the photo.');
     }
 }
+// A detector that read a replaced photo must not touch this one.
+$site->drush('php:eval', '\Drupal::service(\Drupal\genie_ledger\Ledger::class)->recordDetection(0, "failed", []);');
+if ($outline['info']['detected'] !== $site->imageTool($assistant, 'photo_get', ['view' => 'outline'])['info']['detected']) {
+    SmokeSite::fail('A late detector result replaced the boxes.');
+}
 echo count($outline['info']['detected'])." people detected\n";
 
 $label = array_key_first($outline['info']['detected']);

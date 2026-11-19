@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_object
+    - field.field.cfi_genie_object.cfi_genie_object.h
+    - field.field.cfi_genie_object.cfi_genie_object.label
+    - field.field.cfi_genie_object.cfi_genie_object.reporter
+    - field.field.cfi_genie_object.cfi_genie_object.w
+    - field.field.cfi_genie_object.cfi_genie_object.x
+    - field.field.cfi_genie_object.cfi_genie_object.y
+    - field.storage.cfi_genie_object.h
+    - field.storage.cfi_genie_object.label
+    - field.storage.cfi_genie_object.reporter
+    - field.storage.cfi_genie_object.w
+    - field.storage.cfi_genie_object.x
+    - field.storage.cfi_genie_object.y
+  module:
+    - compound_field
+    - media
+id: media.field_genie_objects
+field_name: field_genie_objects
+entity_type: media
+type: 'compound_field:genie_object'
+settings: {  }
+module: compound_field
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

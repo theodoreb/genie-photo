@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_object
+  module:
+    - compound_field
+id: cfi_genie_object.h
+field_name: h
+entity_type: cfi_genie_object
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

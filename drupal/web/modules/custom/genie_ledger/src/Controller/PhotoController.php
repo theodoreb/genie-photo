@@ -53,18 +53,14 @@ final class PhotoController extends ControllerBase {
     $uploader = (int) $this->currentUser()->id();
     $name = $this->currentUser()->getAccountName();
     $session = $this->ledger->write(function (Session $session) use ($photo, $uploader, $name): void {
-      if ($session->photo !== NULL) {
+      if ($session->surveyRevision !== NULL) {
         throw new ConflictHttpException('This session already has its photo.');
       }
-      $this->photos->save($photo['jpeg']);
       $session->uploader = $uploader;
       $session->players[$uploader] = $name;
-      $session->photo = ['width' => $photo['width'], 'height' => $photo['height']];
-      if ($this->detector->available()) {
-        $session->detection = ['status' => 'pending', 'photo' => sha1($photo['jpeg']), 'boxes' => []];
-      }
+      $session->pin($this->photos->create($photo['jpeg'], $uploader, $this->detector->available() ? 'pending' : 'off'));
     });
-    if ($session->detection !== NULL) {
+    if ($session->survey->detector === 'pending') {
       $this->detector->launch();
     }
 

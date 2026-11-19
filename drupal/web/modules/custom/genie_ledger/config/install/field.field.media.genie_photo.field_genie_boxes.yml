@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_box
+    - field.storage.media.field_genie_boxes
+    - media.type.genie_photo
+  module:
+    - compound_field
+id: media.genie_photo.field_genie_boxes
+field_name: field_genie_boxes
+entity_type: media
+bundle: genie_photo
+label: 'Detected boxes'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: 'compound_field:genie_box'

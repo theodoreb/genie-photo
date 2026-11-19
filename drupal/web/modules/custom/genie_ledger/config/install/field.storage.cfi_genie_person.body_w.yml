@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_person
+  module:
+    - compound_field
+id: cfi_genie_person.body_w
+field_name: body_w
+entity_type: cfi_genie_person
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

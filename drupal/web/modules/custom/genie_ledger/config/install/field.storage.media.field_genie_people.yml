@@ -1,0 +1,40 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_person
+    - field.field.cfi_genie_person.cfi_genie_person.body_h
+    - field.field.cfi_genie_person.cfi_genie_person.body_w
+    - field.field.cfi_genie_person.cfi_genie_person.body_x
+    - field.field.cfi_genie_person.cfi_genie_person.body_y
+    - field.field.cfi_genie_person.cfi_genie_person.description
+    - field.field.cfi_genie_person.cfi_genie_person.head_h
+    - field.field.cfi_genie_person.cfi_genie_person.head_w
+    - field.field.cfi_genie_person.cfi_genie_person.head_x
+    - field.field.cfi_genie_person.cfi_genie_person.head_y
+    - field.field.cfi_genie_person.cfi_genie_person.outline
+    - field.storage.cfi_genie_person.body_h
+    - field.storage.cfi_genie_person.body_w
+    - field.storage.cfi_genie_person.body_x
+    - field.storage.cfi_genie_person.body_y
+    - field.storage.cfi_genie_person.description
+    - field.storage.cfi_genie_person.head_h
+    - field.storage.cfi_genie_person.head_w
+    - field.storage.cfi_genie_person.head_x
+    - field.storage.cfi_genie_person.head_y
+    - field.storage.cfi_genie_person.outline
+  module:
+    - compound_field
+    - media
+id: media.field_genie_people
+field_name: field_genie_people
+entity_type: media
+type: 'compound_field:genie_person'
+settings: {  }
+module: compound_field
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

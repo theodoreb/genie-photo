@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.cfi_genie_person.body_x
+  module:
+    - compound_field
+id: cfi_genie_person.cfi_genie_person.body_x
+field_name: body_x
+entity_type: cfi_genie_person
+bundle: cfi_genie_person
+label: body_x
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

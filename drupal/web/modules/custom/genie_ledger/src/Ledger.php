@@ -27,19 +27,27 @@ final class Ledger {
     #[Autowire(service: 'lock')]
     private readonly LockBackendInterface $lock,
     private readonly RevisionPublisher $publisher,
+    private readonly PhotoStore $photos,
   ) {
     $this->store = $keyValue->get('genie');
   }
 
   /**
-   * Returns the current session.
+   * Returns the current session, with the media revision it points to.
    */
   public function read(): Session {
-    return $this->store->get(self::KEY) ?? new Session();
+    $session = $this->store->get(self::KEY) ?? new Session();
+    if ($session->surveyRevision !== NULL) {
+      $session->pin($this->photos->survey($session->surveyRevision));
+    }
+    return $session;
   }
 
   /**
    * Applies a change under the lock and announces it.
+   *
+   * A changed survey becomes a new media revision first. Storing the session,
+   * which then points to that revision, commits the change.
    *
    * @param callable(\Drupal\genie_ledger\Session): void $change
    *   Changes the session. An exception leaves the stored session untouched.
@@ -50,7 +58,12 @@ final class Ledger {
     $this->acquire();
     try {
       $session = $this->read();
+      $before = $session->survey === NULL ? NULL : clone $session->survey;
       $change($session);
+      if ($before !== NULL && $session->survey != $before) {
+        $session->survey->revision = $this->photos->saveSurvey($session->survey);
+        $session->pin($session->survey);
+      }
       $session->update++;
       if ($changesPicture) {
         $session->revision++;
@@ -66,12 +79,32 @@ final class Ledger {
   }
 
   /**
-   * Forgets the session.
+   * Records what the detector found, unless the photo has changed meanwhile.
+   *
+   * @param int $media
+   *   The media item the detector read.
+   * @param string $status
+   *   The detector's new status.
+   * @param list<array{x: int, y: int, width: int, height: int}> $boxes
+   *   The boxes it found.
+   */
+  public function recordDetection(int $media, string $status, array $boxes): void {
+    $this->write(static function (Session $session) use ($media, $status, $boxes): void {
+      if ($session->survey?->media === $media) {
+        $session->survey->detector = $status;
+        $session->survey->boxes = $boxes;
+      }
+    }, FALSE);
+  }
+
+  /**
+   * Forgets the session, then the photo it pointed to.
    */
   public function reset(): void {
     $this->acquire();
     try {
       $this->store->delete(self::KEY);
+      $this->photos->delete();
     }
     finally {
       $this->lock->release(self::LOCK);

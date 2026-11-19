@@ -15,21 +15,31 @@ final class Session {
   public int $revision = 0;
 
   /**
+   * The media revision that holds what this session knows about the photo.
+   */
+  public ?int $surveyRevision = NULL;
+
+  /**
    * The account that uploaded the photo.
    */
   public ?int $uploader = NULL;
 
   /**
-   * Size of the stored photo.
+   * What the pinned media revision holds. It is never stored here.
+   */
+  public ?Survey $survey = NULL;
+
+  /**
+   * Size of the stored photo, from the survey.
    *
    * @var array{width: int, height: int}|null
    */
   public ?array $photo = NULL;
 
   /**
-   * The local person detector's work on this photo, when this PHP can run it.
+   * The local person detector's work on this photo, from the survey.
    *
-   * @var array{status: string, photo: string, boxes: list<array{x: int, y: int, width: int, height: int}>}|null
+   * @var array{status: string, boxes: list<array{x: int, y: int, width: int, height: int}>}|null
    */
   public ?array $detection = NULL;
 
@@ -110,5 +120,44 @@ final class Session {
    * @var array<int, string>
    */
   public array $approvals = [];
+
+  /**
+   * Points the session at a media revision and shows what it holds.
+   */
+  public function pin(Survey $survey): void {
+    $this->surveyRevision = $survey->revision;
+    $this->survey = $survey;
+    $this->refresh();
+  }
+
+  /**
+   * Rebuilds the values that come from the survey.
+   */
+  public function refresh(): void {
+    $this->photo = ['width' => $this->survey->width, 'height' => $this->survey->height];
+    $this->detection = ['status' => $this->survey->detector, 'boxes' => $this->survey->boxes];
+  }
+
+  /**
+   * Lists what the key-value store keeps.
+   *
+   * @return array<string, mixed>
+   *   The stored properties.
+   */
+  public function __serialize(): array {
+    return array_diff_key(get_object_vars($this), ['survey' => TRUE, 'photo' => TRUE, 'detection' => TRUE]);
+  }
+
+  /**
+   * Restores the stored properties.
+   *
+   * @param array<string, mixed> $data
+   *   The stored properties.
+   */
+  public function __unserialize(array $data): void {
+    foreach ($data as $name => $value) {
+      $this->$name = $value;
+    }
+  }
 
 }

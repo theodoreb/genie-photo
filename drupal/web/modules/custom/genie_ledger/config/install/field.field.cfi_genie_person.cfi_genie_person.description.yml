@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.cfi_genie_person.description
+  module:
+    - compound_field
+id: cfi_genie_person.cfi_genie_person.description
+field_name: description
+entity_type: cfi_genie_person
+bundle: cfi_genie_person
+label: description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

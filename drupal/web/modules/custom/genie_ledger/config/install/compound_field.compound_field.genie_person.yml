@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+label: 'Person'
+id: genie_person
+description: ''
+includes: {  }

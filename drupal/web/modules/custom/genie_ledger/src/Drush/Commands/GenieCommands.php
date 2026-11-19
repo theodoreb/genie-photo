@@ -10,7 +10,6 @@ use Drupal\genie_ledger\Access\WebViewAccess;
 use Drupal\genie_ledger\Ledger;
 use Drupal\genie_ledger\PersonDetector;
 use Drupal\genie_ledger\PhotoStore;
-use Drupal\genie_ledger\Session;
 use Drupal\genie_ledger\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
@@ -25,7 +24,6 @@ final class GenieCommands extends DrushCommands {
 
   public function __construct(
     private readonly Ledger $ledger,
-    private readonly PhotoStore $photos,
     private readonly WishInterpreter $interpreter,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly PersonDetector $detector,
@@ -39,23 +37,20 @@ final class GenieCommands extends DrushCommands {
    */
   #[CLI\Command(name: 'genie:detect')]
   public function detect(): void {
-    $photo = $this->ledger->read()->detection;
-    if (($photo['status'] ?? NULL) !== 'pending') {
+    $survey = $this->ledger->read()->survey;
+    if ($survey?->detector !== 'pending') {
       return;
     }
-    $found = ['status' => 'failed', 'photo' => $photo['photo'], 'boxes' => []];
+    $status = 'failed';
+    $boxes = [];
     try {
-      $found = ['status' => 'ready'] + ['boxes' => $this->detector->detect($this->fileSystem->realpath(PhotoStore::URI))] + $found;
+      $boxes = $this->detector->detect($this->fileSystem->realpath(PhotoStore::URI));
+      $status = 'ready';
     }
     catch (\Throwable $e) {
       $this->logger()->error($e->getMessage());
     }
-    // A reset and a new upload may have come while the model ran.
-    $this->ledger->write(static function (Session $session) use ($found): void {
-      if (($session->detection['photo'] ?? NULL) === $found['photo']) {
-        $session->detection = $found;
-      }
-    }, FALSE);
+    $this->ledger->recordDetection($survey->media, $status, $boxes);
   }
 
   /**
@@ -79,7 +74,6 @@ final class GenieCommands extends DrushCommands {
   #[CLI\Command(name: 'genie:reset')]
   public function reset(): void {
     $this->ledger->reset();
-    $this->photos->delete();
     $this->logger()->success('The genie session is empty.');
   }
 

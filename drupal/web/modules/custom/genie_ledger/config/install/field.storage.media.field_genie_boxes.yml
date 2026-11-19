@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - compound_field.compound_field.genie_box
+    - field.field.cfi_genie_box.cfi_genie_box.h
+    - field.field.cfi_genie_box.cfi_genie_box.w
+    - field.field.cfi_genie_box.cfi_genie_box.x
+    - field.field.cfi_genie_box.cfi_genie_box.y
+    - field.storage.cfi_genie_box.h
+    - field.storage.cfi_genie_box.w
+    - field.storage.cfi_genie_box.x
+    - field.storage.cfi_genie_box.y
+  module:
+    - compound_field
+    - media
+id: media.field_genie_boxes
+field_name: field_genie_boxes
+entity_type: media
+type: 'compound_field:genie_box'
+settings: {  }
+module: compound_field
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
