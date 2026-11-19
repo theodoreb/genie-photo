@@ -1,0 +1,131 @@
+--- a/config/schema/mcp_server.schema.yml
++++ b/config/schema/mcp_server.schema.yml
+@@ -36,6 +36,42 @@
+           type: integer
+           label: 'Elicitation request timeout in seconds'
+           description: 'Maximum time to wait for elicitation responses'
++    cache:
++      type: mapping
++      label: 'Caching hints'
++      description: 'How long, and to whom, clients may cache results on the 2026-07-28 revision (SEP-2549).'
++      mapping:
++        ttl_ms:
++          type: mcp_server.cache_ttl
++        scope:
++          type: mcp_server.cache_scope
++        methods:
++          type: sequence
++          label: 'Per-method overrides'
++          description: 'Keyed by MCP method name, such as server/discover or tools/list.'
++          sequence:
++            type: mapping
++            label: 'Method override'
++            mapping:
++              ttl_ms:
++                type: mcp_server.cache_ttl
++              scope:
++                type: mcp_server.cache_scope
++
++mcp_server.cache_ttl:
++  type: integer
++  label: 'Time to live in milliseconds'
++  constraints:
++    Range:
++      min: 0
++
++mcp_server.cache_scope:
++  type: string
++  label: 'Cache scope'
++  description: 'private lets only the requesting client cache a result; public lets shared caches keep it too.'
++  constraints:
++    AllowedValues:
++      choices: [private, public]
+ 
+ mcp_server.mcp_prompt_config.*:
+   type: config_entity
+--- a/config/install/mcp_server.settings.yml
++++ b/config/install/mcp_server.settings.yml
+@@ -7,3 +7,7 @@
+   poll_interval_ms: 300
+   sampling_timeout: 25
+   elicitation_timeout: 600
++cache:
++  ttl_ms: 0
++  scope: private
++  methods: {}
+--- a/src/McpServerFactory.php
++++ b/src/McpServerFactory.php
+@@ -39,9 +39,11 @@
+ use Mcp\Schema\ResourceDefinition;
+ use Mcp\Schema\ResourceTemplate;
+ use Mcp\Schema\Tool;
++use Mcp\Schema\Enum\CacheScope;
+ use Mcp\Schema\ToolAnnotations;
+ use Mcp\Server\Server;
+ use Mcp\Server\Builder;
++use Mcp\Server\Wire\CachePolicy;
+ use Mcp\Server\Session\SessionLockInterface;
+ use Mcp\Server\Session\SessionStoreInterface;
+ use Mcp\Server\Subscription\NotificationBusInterface;
+@@ -199,6 +201,7 @@
+       ->setServerInfo($server_name, $server_version)
+       ->setInstructions($instructions)
+       ->setPaginationLimit($pagination_limit)
++      ->setCachePolicy($this->buildCachePolicy($config))
+       ->setLogger($this->logger)
+       ->setEventDispatcher($this->eventDispatcher)
+       ->setSession($this->sessionStore)
+@@ -798,6 +801,27 @@
+   }
+ 
+   /**
++   * Builds the caching hints policy from the "cache" setting (SEP-2549).
++   *
++   * The SDK stamps these hints on cacheable results of the 2026-07-28
++   * revision. A result that carries its own hints keeps them.
++   *
++   * @param \Drupal\Core\Config\ImmutableConfig $config
++   *   The mcp_server.settings configuration.
++   *
++   * @return \Mcp\Server\Wire\CachePolicy
++   *   The default TTL and scope, with each per-method override applied.
++   */
++  private function buildCachePolicy(ImmutableConfig $config): CachePolicy {
++    $cache = $config->get('cache');
++    $policy = CachePolicy::default($cache['ttl_ms'], CacheScope::from($cache['scope']));
++    foreach ($cache['methods'] as $method => $override) {
++      $policy = $policy->withMethod($method, $override['ttl_ms'], CacheScope::from($override['scope']));
++    }
++    return $policy;
++  }
++
++  /**
+    * Builds the server instructions for the initialize handshake.
+    *
+    * Reads the optional "server_instructions" setting and lets modules refine
+--- /dev/null
++++ b/mcp_server.post_update.php
+@@ -0,0 +1,23 @@
++<?php
++
++/**
++ * @file
++ * Post update functions for the MCP Server module.
++ */
++
++declare(strict_types=1);
++
++use Drupal\Core\Config\FileStorage;
++
++/**
++ * Adds the caching hints setting, which caches nothing until configured.
++ */
++function mcp_server_post_update_cache_policy(): void {
++  $settings = \Drupal::configFactory()->getEditable('mcp_server.settings');
++  if ($settings->get('cache') !== NULL) {
++    return;
++  }
++  $path = \Drupal::service('extension.list.module')->getPath('mcp_server');
++  $defaults = (new FileStorage($path . '/config/install'))->read('mcp_server.settings');
++  $settings->set('cache', $defaults['cache'])->save();
++}

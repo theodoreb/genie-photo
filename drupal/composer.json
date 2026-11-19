@@ -123,7 +123,8 @@
             },
             "drupal/mcp_server": {
                 "Run on mcp/sdk 0.10 and later": "patches/mcp_server-mcp-sdk-0.10.patch",
-                "Deliver notifications on subscriptions/listen": "patches/mcp_server-notification-bus.patch"
+                "Deliver notifications on subscriptions/listen": "patches/mcp_server-notification-bus.patch",
+                "Stamp caching hints from a cache setting": "patches/mcp_server-cache-policy.patch"
             },
             "symfony/ai-failover-platform": {
                 "Fail over when a deferred request fails": "patches/symfony-ai-failover-platform-deferred.patch"
