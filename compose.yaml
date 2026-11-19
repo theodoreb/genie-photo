@@ -1,0 +1,8 @@
+services:
+  genie:
+    build: .
+    init: true
+    # The assistants and the browser reach both servers at the addresses bin/start prints.
+    ports:
+      - 127.0.0.1:7225:7225
+      - 127.0.0.1:8000:8000

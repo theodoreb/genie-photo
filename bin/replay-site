@@ -1,0 +1,87 @@
+#!/usr/bin/env php
+<?php
+
+// Does the site side of bin/replay: sign-in forms, the upload, the page click, the status line.
+// bin/replay runs it on this machine's PHP, or inside the container.
+
+declare(strict_types=1);
+
+use App\Drupal\DrupalPhotos;
+use App\Drupal\McpDrupalTools;
+use App\Security\DrupalOAuth;
+use App\Tests\Smoke\PlayerSession;
+use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\Process\Process;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+
+$mcp = $_ENV['DRUPAL_URL'].'/mcp';
+$tools = new McpDrupalTools($mcp);
+$web = static fn (string $player): string => (new PlayerSession(
+    $mcp,
+    $_ENV['PUBLIC_URL'].'/oauth/callback',
+    DrupalOAuth::CLIENT_ID,
+    $_ENV['GENIE_WEB_SECRET'],
+))->signIn($player);
+// The export is empty while no frame holds every wish, and the page then names the players in the way.
+$collision = static fn (array $session): string => 'No frame holds every wish. In the way: '.implode(', ', $session['frame']['players']).'.';
+
+[, $command, $player, $argument] = $argv + [null, '', 'alice', ''];
+switch ($command) {
+    case 'mcp-url':
+        echo $mcp, "\n";
+        break;
+
+    case 'reset':
+        (new Process(['./drupack', 'drush', 'genie:reset'], dirname(__DIR__).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
+        break;
+
+    case 'grant':
+        echo (new PlayerSession($mcp))->grant($argument, $player), "\n";
+        break;
+
+    case 'upload':
+        (new DrupalPhotos(HttpClient::create(), $_ENV['DRUPAL_URL'].'/genie'))->put($web($player), file_get_contents($argument));
+        break;
+
+    case 'approve':
+        $token = $web($player);
+        $session = $tools->call($token, 'session_get');
+        if (null === $session['export']) {
+            fwrite(STDERR, $collision($session)."\n");
+            exit(1);
+        }
+        $tools->call($token, 'export_approve', ['hash' => $session['export']['hash']]);
+        break;
+
+    case 'status':
+        $session = $tools->call($web($player), 'session_get');
+        $placed = array_column(array_filter($session['regions'], static fn (array $region): bool => 'person' === $region['kind'] && isset($region['owner'])), 'label');
+        $export = $session['export'];
+        printf(
+            "Players placed: %s. %s\n",
+            implode(', ', $placed) ?: 'none',
+            match (true) {
+                null === $export => $collision($session),
+                $export['final'] => 'The picture is final.',
+                default => 'Waiting for: '.implode(', ', $export['waiting_for']).'.',
+            },
+        );
+        break;
+
+    case 'picture':
+        $token = $web($player);
+        $session = $tools->call($token, 'session_get');
+        if (!($session['export']['final'] ?? false)) {
+            fwrite(STDERR, "The picture is not final.\n");
+            exit(1);
+        }
+        echo $tools->image($token, 'picture_get', ['view' => 'frame', 'revision' => $session['revision']]);
+        break;
+
+    default:
+        fwrite(STDERR, "Usage: bin/replay-site mcp-url|reset|grant|upload|approve|status|picture [player] [argument]\n");
+        exit(2);
+}

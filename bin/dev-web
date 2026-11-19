@@ -4,4 +4,4 @@
 cd "$(dirname "$0")/.."
 # One worker would stall every player during a slow model call.
 export PHP_CLI_SERVER_WORKERS=8
-exec php -d upload_max_filesize=25M -d post_max_size=200M -S 127.0.0.1:8000 -t public public/index.php
+exec php -d upload_max_filesize=25M -d post_max_size=200M -S "${GENIE_LISTEN_IP:?}:8000" -t public public/index.php

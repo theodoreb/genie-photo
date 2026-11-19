@@ -1,0 +1,87 @@
+#!/bin/sh
+# Plays the steps of demo/replay.md with one assistant, Codex or Claude Code, for all four players.
+set -eu
+cd "$(dirname "$0")/.."
+
+client="${1:-}"
+case "$client" in
+    codex | claude) ;;
+    *) echo 'Usage: bin/replay codex|claude' >&2; exit 2 ;;
+esac
+command -v "$client" >/dev/null || { echo "This needs $client." >&2; exit 1; }
+if [ "$client" = claude ] && ! (: </dev/tty) 2>/dev/null; then
+    echo 'Claude Code signs in only from a terminal. Run bin/replay claude in one.' >&2
+    exit 1
+fi
+
+# A running container started with docker compose holds the site. Otherwise bin/start serves it from here.
+if command -v docker >/dev/null && [ -n "$(docker compose ps -q --status running genie 2>/dev/null)" ]; then
+    site() { docker compose exec -T -e DRUPACK_NO_UPDATE_CHECK=1 genie drupal/drupack php bin/replay-site "$@" </dev/null; }
+else
+    site() { php bin/replay-site "$@" </dev/null; }
+fi
+
+work="$PWD/var/replay"
+mkdir -p "$work"
+mcp="$(site mcp-url)"
+
+# The assistant prints Drupal's sign-in address. bin/replay-site fills in the demo account,
+# and curl hands the code to the assistant's own callback on this machine.
+sign_in() {
+    log="$work/$1-login.log"
+    : >"$log"
+    if [ "$client" = codex ]; then
+        # Codex also reads a pasted callback URL, and stops at the end of its input. The FIFO stays open until it signs in.
+        rm -f "$work/input"
+        mkfifo "$work/input"
+        codex -c "mcp_servers.genie-$1.url=\"$mcp\"" mcp login "genie-$1" --no-browser <"$work/input" >"$log" 2>&1 &
+        exec 3>"$work/input"
+    else
+        (cd "$work" && { claude mcp remove "genie-$1" -s local || true; } && claude mcp add -s local --transport http "genie-$1" "$mcp") >/dev/null 2>&1
+        (cd "$work" && BROWSER=true claude mcp login "genie-$1" </dev/tty >"$log" 2>&1) &
+    fi
+    pid=$!
+    url=''
+    for _ in $(seq 60); do
+        url="$(grep -o 'https\{0,1\}://[^/]*/oauth/authorize?[A-Za-z0-9%&=_.~-]*' "$log" | head -1)"
+        [ -z "$url" ] || break
+        sleep 0.5
+    done
+    [ -n "$url" ] || { cat "$log" >&2; echo "$client printed no sign-in address for $1." >&2; exit 1; }
+    curl -fsS -o /dev/null "$(site grant "$1" "$url")"
+    wait "$pid" || { cat "$log" >&2; echo "$client did not sign in as $1." >&2; exit 1; }
+    [ "$client" = claude ] || exec 3>&-
+}
+
+ask() {
+    if [ "$client" = codex ]; then
+        codex exec --skip-git-repo-check -s read-only -C "$work" -c "mcp_servers.genie-$1.url=\"$mcp\"" "$2" </dev/null 2>>"$work/$1.log"
+    else
+        (cd "$work" && claude -p "$2" --strict-mcp-config --allowedTools "mcp__genie-$1" \
+            --mcp-config "{\"mcpServers\":{\"genie-$1\":{\"type\":\"http\",\"url\":\"$mcp\"}}}" </dev/null 2>>"$work/$1.log")
+    fi
+}
+
+site reset
+for player in alice bob carol dan; do
+    sign_in "$player"
+    echo "$client is signed in as genie-$player."
+done
+
+sed -n '/^## Steps$/,$p' demo/replay.md | grep -E '^[0-9]+\. ' | while IFS= read -r line; do
+    step="${line#*. }"
+    player="${step%%[ :]*}"
+    rest="${step#"$player"}"
+    started=$(date +%s)
+    printf '\n%s\n' "$line"
+    case "$rest" in
+        ': '*) ask "$player" "${rest#: }" ;;
+        ' uploads `'*'`.') file="${rest#* \`}"; site upload "$player" "${file%\`.}" ;;
+        ' approves on the page.') site approve "$player" ;;
+        *) echo "bin/replay cannot read this step." >&2; exit 1 ;;
+    esac
+    echo "($(($(date +%s) - started)) s) $(site status)"
+done
+
+site picture >"$work/final.png"
+echo 'Everyone approved. The final picture is in var/replay/final.png.'

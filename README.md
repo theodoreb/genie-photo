@@ -20,6 +20,22 @@ Open http://127.0.0.1:8000 and sign in as `alice`, `bob`, `carol` or `dan`. The 
 
 On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [build that adds PHP's FFI extension](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc4-ffi). It checks the file's SHA-256 first. Other systems keep the official Drupack.
 
+### With Docker instead
+
+Without PHP 8.4, Docker runs the same `bin/start` in one container:
+
+```sh
+git clone https://github.com/theodoreb/genie-photo.git
+cd genie-photo
+docker compose up
+```
+
+The ports are published on 127.0.0.1 only, so the addresses below stay the same. The container has no local model, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie drupal/drupack php bin/smoke-wish alice`.
+
+## Replay the demo
+
+`bin/replay codex` or `bin/replay claude` plays the video's story with one assistant for all four players. `demo/replay.md` lists its steps, and you can paste them into your own assistants instead.
+
 ## Play
 
 1. The first player uploads a photo. `demo/holiday-party.jpg` is ready to use.
@@ -48,6 +64,8 @@ codex mcp login genie
 # Mistral Vibe, which signs in as it adds the server
 vibe mcp add genie --url http://127.0.0.1:7225/mcp
 ```
+
+To play several players from one machine, add the server once per player under another name, such as `genie-bob`, and sign each one in as that player.
 
 Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local root. `.env.local` holds the address in use. On HTTPS, start Vibe with `SSL_CERT_FILE="$(mkcert -CAROOT)/rootCA.pem"`.
 

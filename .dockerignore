@@ -1,0 +1,16 @@
+.git
+.env.local
+.superpowers
+.phpunit.cache
+.php-cs-fixer.cache
+var
+vendor
+public/assets
+assets/vendor
+drupal/vendor
+drupal/web
+!drupal/web/modules/custom
+!drupal/web/themes/custom
+drupal/private
+drupal/drupack
+drupal/drush

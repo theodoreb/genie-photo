@@ -14,4 +14,4 @@ mkdir -p private/files
 ./drupack drush recipe ../recipes/genie_demo -y >/dev/null
 ./drupack drush cache:rebuild >/dev/null
 touch private/.installed
-./drupack start . --listen 127.0.0.1:7225 --yes </dev/null
+./drupack start . --listen "$GENIE_LISTEN_IP:7225" --yes </dev/null

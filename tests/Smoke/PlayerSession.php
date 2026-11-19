@@ -65,33 +65,21 @@ final class PlayerSession
         ]])->toArray()['client_id'];
     }
 
-    private function authorize(string $endpoint, string $clientId, string $verifier, string $name, string $password): string
+    /**
+     * Completes Drupal's sign-in and consent forms for an authorization URL,
+     * and returns the URL Drupal redirects to, which carries the code.
+     */
+    public function grant(string $authorizeUrl, string $name, string $password = 'genie'): string
     {
-        $state = bin2hex(random_bytes(8));
+        parse_str((string) parse_url($authorizeUrl, \PHP_URL_QUERY), $request);
         $browser = new HttpBrowser(HttpClient::create(['timeout' => 60]));
         $browser->followRedirects(false);
-
-        $browser->request('GET', $endpoint.'?'.http_build_query([
-            'response_type' => 'code',
-            'client_id' => $clientId,
-            'redirect_uri' => $this->redirectUri,
-            'state' => $state,
-            'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
-            'code_challenge_method' => 'S256',
-        ]));
+        $browser->request('GET', $authorizeUrl);
 
         for ($step = 0; $step < 10; ++$step) {
             $location = $browser->getInternalResponse()->getHeader('Location');
-            if (null !== $location && str_starts_with($location, $this->redirectUri)) {
-                parse_str((string) parse_url($location, \PHP_URL_QUERY), $query);
-                if (!isset($query['code'])) {
-                    throw new \RuntimeException('Authorization refused: '.$location);
-                }
-                if ($query['state'] !== $state) {
-                    throw new \RuntimeException('The authorization response carries another state.');
-                }
-
-                return $query['code'];
+            if (null !== $location && str_starts_with($location, $request['redirect_uri'])) {
+                return $location;
             }
             if (null !== $location) {
                 $browser->followRedirect();
@@ -107,5 +95,28 @@ final class PlayerSession
         }
 
         throw new \RuntimeException('Sign-in did not reach the redirect URI. Stopped at '.$browser->getHistory()->current()->getUri().': '.substr(trim(preg_replace('/\s+/', ' ', $browser->getCrawler()->filter('body')->text())), 0, 300));
+    }
+
+    private function authorize(string $endpoint, string $clientId, string $verifier, string $name, string $password): string
+    {
+        $state = bin2hex(random_bytes(8));
+        $location = $this->grant($endpoint.'?'.http_build_query([
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => $this->redirectUri,
+            'state' => $state,
+            'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
+            'code_challenge_method' => 'S256',
+        ]), $name, $password);
+
+        parse_str((string) parse_url($location, \PHP_URL_QUERY), $query);
+        if (!isset($query['code'])) {
+            throw new \RuntimeException('Authorization refused: '.$location);
+        }
+        if ($query['state'] !== $state) {
+            throw new \RuntimeException('The authorization response carries another state.');
+        }
+
+        return $query['code'];
     }
 }

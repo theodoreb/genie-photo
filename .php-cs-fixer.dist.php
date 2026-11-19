@@ -3,7 +3,7 @@
 $finder = (new PhpCsFixer\Finder())
     ->in(__DIR__)
     ->exclude(['drupal', 'var'])
-    ->append(glob(__DIR__.'/bin/smoke-*'))
+    ->append([...glob(__DIR__.'/bin/smoke-*'), __DIR__.'/bin/replay-site'])
 ;
 
 return (new PhpCsFixer\Config())
