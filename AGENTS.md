@@ -13,7 +13,7 @@ Genie photo: players share one group photo and make wishes through their own AI 
 ## Where things are
 
 - Symfony 8 web view: `symfony/`. It reaches Drupal only through MCP, in `symfony/src/Drupal/McpDrupalTools.php`.
-- Game rules and data: the Drupal module `drupal/web/modules/custom/genie_ledger`.
+- Game rules and data: the Drupal module `drupal/web/modules/custom/genie`.
 - Smoke scripts: `symfony/tests/smoke/<name>.php`, sharing `symfony/tests/smoke/lib/`.
 - The Drupack build: patches and the build script in `fork/drupack/`. `bin/lib/get-drupack` downloads it.
 

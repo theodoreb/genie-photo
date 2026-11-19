@@ -1,0 +1,32 @@
+genie.photo_put:
+  path: '/genie/photo'
+  methods: [PUT]
+  defaults:
+    _controller: Drupal\genie\Web\PhotoController::put
+  requirements:
+    _permission: 'play genie'
+    _custom_access: '\Drupal\genie\Web\WebViewAccess::access'
+  options:
+    _auth: ['oauth2']
+    no_cache: TRUE
+
+genie.host:
+  path: '/genie/host'
+  defaults:
+    _form: Drupal\genie\Web\HostForm
+  requirements:
+    # Open to visitors: the host code and a flood limit guard the form.
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE
+
+genie.join:
+  path: '/join/{code}'
+  defaults:
+    _form: Drupal\genie\Web\JoinForm
+  requirements:
+    # Open to visitors: the invite code and a flood limit guard the form.
+    _access: 'TRUE'
+    code: '[a-z0-9]{10}'
+  options:
+    no_cache: TRUE

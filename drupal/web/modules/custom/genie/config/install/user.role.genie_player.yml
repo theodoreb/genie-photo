@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - genie
+    - mcp_server
+    - simple_oauth
+id: genie_player
+label: 'Genie player'
+weight: 2
+is_admin: false
+permissions:
+  - 'access mcp server'
+  - 'grant simple_oauth codes'
+  - 'play genie'

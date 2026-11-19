@@ -1,0 +1,38 @@
+services:
+  _defaults:
+    autowire: true
+
+  logger.channel.genie:
+    parent: logger.channel_base
+    arguments: ['genie']
+  genie.mcp_route_subscriber:
+    class: Drupal\genie\Web\McpRouteSubscriber
+    autowire: false
+    tags:
+      - { name: event_subscriber }
+  Symfony\AI\Platform\StructuredOutput\PlatformSubscriber:
+    autowire: false
+    tags:
+      - { name: event_subscriber }
+  Symfony\AI\Platform\StructuredOutput\Validator\ValidatorSubscriber:
+    autowire: false
+    tags:
+      - { name: event_subscriber }
+  Drupal\genie\Game\Approvals: ~
+  Drupal\genie\Game\CurrentGame: ~
+  Drupal\genie\Photo\Darkroom: ~
+  Drupal\genie\Game\Exports: ~
+  Drupal\genie\Wish\Framer: ~
+  Drupal\genie\Game\GameView: ~
+  Drupal\genie\Game\Games: ~
+  Drupal\genie\Wish\KeywordInterpreter: ~
+  Drupal\genie\Game\Ledger: ~
+  Drupal\genie\Photo\People: ~
+  Drupal\genie\Photo\PersonDetector: ~
+  Drupal\genie\Photo\PhotoIntake: ~
+  Drupal\genie\Photo\PhotoStore: ~
+  Drupal\genie\Photo\Pictures: ~
+  Drupal\genie\Game\RevisionPublisher: ~
+  Drupal\genie\Web\WebViewAddress: ~
+  Drupal\genie\Wish\WishInterpreter: ~
+  Drupal\genie\Wish\Wishes: ~

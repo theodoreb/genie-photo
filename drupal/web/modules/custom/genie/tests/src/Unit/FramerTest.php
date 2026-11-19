@@ -1,0 +1,71 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\Tests\genie\Unit;
+
+use Drupal\genie\Wish\Collision;
+use Drupal\genie\Wish\Frame;
+use Drupal\genie\Wish\Framer;
+use Drupal\genie\Game\Session;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+
+/**
+ * Tests the crop search.
+ */
+#[CoversClass(Framer::class)]
+#[Group('genie')]
+final class FramerTest extends UnitTestCase {
+
+  /**
+   * An excluded player falls outside the largest crop that avoids them.
+   */
+  public function testExcludedPlayerLeavesTheFrame(): void {
+    $session = new Session();
+    $session->photo = ['width' => 1000, 'height' => 500];
+    $session->regions['person-7'] = [
+      'kind' => 'person',
+      'owner' => 7,
+      'label' => 'bob',
+      'x' => 0,
+      'y' => 100,
+      'width' => 200,
+      'height' => 200,
+      'head' => ['x' => 50, 'y' => 100, 'width' => 100, 'height' => 100],
+    ];
+    $this->assertEquals(new Frame(0, 0, 1000, 500), (new Framer())->frame($session));
+
+    $session->wishes[7] = 'exclude';
+    $frame = (new Framer())->frame($session);
+
+    $this->assertInstanceOf(Frame::class, $frame);
+    $this->assertGreaterThanOrEqual(200, $frame->x);
+    $this->assertEquals($frame, (new Framer())->frame($session));
+  }
+
+  /**
+   * Two players who both need the middle are named when no crop serves both.
+   */
+  public function testCollisionNamesThePlayers(): void {
+    $session = new Session();
+    $session->photo = ['width' => 1600, 'height' => 800];
+    foreach ([7 => ['bob', 300], 8 => ['carol', 1200]] as $uid => [$name, $x]) {
+      $session->regions["person-$uid"] = [
+        'kind' => 'person',
+        'owner' => $uid,
+        'label' => $name,
+        'x' => $x,
+        'y' => 350,
+        'width' => 100,
+        'height' => 100,
+        'head' => ['x' => $x, 'y' => 350, 'width' => 100, 'height' => 100],
+      ];
+      $session->centered[$uid] = TRUE;
+    }
+
+    $this->assertEquals(new Collision(['bob', 'carol']), (new Framer())->frame($session));
+  }
+
+}
