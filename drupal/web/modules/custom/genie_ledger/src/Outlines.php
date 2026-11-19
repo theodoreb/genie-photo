@@ -87,19 +87,15 @@ final class Outlines {
    *
    * @param \Drupal\genie_ledger\Session $session
    *   The session, which has a photo.
-   * @param bool $tracedOnly
-   *   TRUE leaves out people known only by their box.
    *
    * @return array<int, string>
    *   Region or proposal id, by cell index.
    */
-  public static function owners(Session $session, bool $tracedOnly = FALSE): array {
+  public static function owners(Session $session): array {
     $owners = [];
     foreach (self::people($session) as $id => $person) {
-      if (!$tracedOnly || $person['cells'] !== []) {
-        foreach (self::cellsOf($person, $session->photo) as $cell) {
-          $owners[$cell] ??= $id;
-        }
+      foreach (self::cellsOf($person, $session->photo) as $cell) {
+        $owners[$cell] ??= $id;
       }
     }
     return $owners;

@@ -2,7 +2,7 @@
 <?php
 
 // Critical path of detection: an assistant sees the photo, reports who is in it, claims
-// a person and paints on the head it was shown.
+// a person and paints on what it can reach.
 
 declare(strict_types=1);
 
@@ -54,20 +54,11 @@ if ($size['width'] + 40 !== imagesx($sheet) || $size['height'] + 40 !== imagesy(
     SmokeSite::fail('A person with no outline did not receive the whole photo.');
 }
 
-$grid = $site->imageTool($assistant, 'photo_get', ['view' => 'my_head']);
-if (null === $grid['image']) {
-    SmokeSite::fail('The assistant did not see its head.');
+$painted = $site->imageTool($assistant, 'paint_me', ['palette' => ['#ff00aa'], 'spans' => [[20, 15, 30, '0']]]);
+if (null === $painted['image'] || !$painted['info']['granted']) {
+    SmokeSite::fail('The paint result did not show the person.');
 }
-
-$sticker = $site->imageTool($assistant, 'set_sticker', [
-    'rows' => array_fill(0, 32, str_repeat('0', 32)),
-    'palette' => ['#ff00aa'],
-    'blur' => 0,
-]);
-if (null === $sticker['image'] || !$sticker['info']['granted']) {
-    SmokeSite::fail('The sticker result did not show the head.');
-}
-if (hash('sha256', $before) === hash('sha256', $site->photos->frame($web, $sticker['info']['revision']))) {
+if (hash('sha256', $before) === hash('sha256', $site->photos->frame($web, $painted['info']['revision']))) {
     SmokeSite::fail('The frame did not change.');
 }
-echo $sticker['info']['reply'], "\n";
+echo $painted['info']['reply'], "\n";

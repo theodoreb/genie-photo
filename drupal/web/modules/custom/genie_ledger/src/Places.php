@@ -332,14 +332,13 @@ final class Places {
   }
 
   /**
-   * Validates a head box, which wishes and stickers act on.
+   * Validates a head box, which wishes act on.
    *
    * @return array{x: int, y: int, width: int, height: int}
    *   The box.
    */
   private static function head(mixed $input, Session $session): array {
     $box = self::box($input, $session);
-    // A sticker fills the square around the head, so the longer side counts.
     if (max($box['width'], $box['height']) ** 2 > $session->photo['width'] * $session->photo['height'] * self::MAX_HEAD_SHARE) {
       throw new \InvalidArgumentException('A head can take at most a quarter of the photo.');
     }

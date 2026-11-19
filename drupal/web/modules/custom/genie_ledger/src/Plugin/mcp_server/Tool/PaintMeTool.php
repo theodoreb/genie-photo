@@ -6,7 +6,6 @@ namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie_ledger\BodyPaint;
-use Drupal\genie_ledger\Sticker;
 use Drupal\mcp_server\Attribute\Tool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
@@ -30,7 +29,7 @@ use Mcp\Server\ClientGateway;
       'palette' => [
         'type' => 'array',
         'items' => ['type' => 'string', 'description' => 'A color such as #ff8800.'],
-        'maxItems' => Sticker::MAX_COLORS,
+        'maxItems' => BodyPaint::MAX_COLORS,
       ],
     ],
   ],

@@ -60,8 +60,8 @@ final class Session {
   /**
    * Claimed people and found objects in photo pixels, from the survey.
    *
-   * A person's box is the body. The head box inside it takes covers and
-   * stickers. Cells hold the traced outline, and rank counts from the front.
+   * A person's box is the body. The head box inside it takes covers. Cells
+   * hold the traced outline, and rank counts from the front.
    *
    * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int, person?: string}>
    */
@@ -94,13 +94,6 @@ final class Session {
    * @var array<string, list<string>>
    */
   public array $suggestions = [];
-
-  /**
-   * The sticker of each player, by account id.
-   *
-   * @var array<int, \Drupal\genie_ledger\Sticker>
-   */
-  public array $stickers = [];
 
   /**
    * Who takes part: the uploader and everyone with a place, by account id.

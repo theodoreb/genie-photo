@@ -9,6 +9,15 @@ namespace Drupal\genie_ledger;
  */
 final readonly class BodyPaint {
 
+  public const EMPTY = '.';
+  public const ORIGINAL = '*';
+  public const MAX_COLORS = 16;
+
+  /**
+   * Most runs of cells one paint may send.
+   */
+  public const MAX_SPANS = 1024;
+
   /**
    * Builds a paint from checked values.
    *
@@ -45,12 +54,26 @@ final readonly class BodyPaint {
     if (!is_bool($pixelate)) {
       throw new \InvalidArgumentException('Pixelate is true or false.');
     }
-    if (!is_array($spans) || !array_is_list($spans) || count($spans) > Sticker::MAX_SPANS) {
-      throw new \InvalidArgumentException(sprintf('Spans is a list of at most %d runs.', Sticker::MAX_SPANS));
+    if (!is_array($spans) || !array_is_list($spans) || count($spans) > self::MAX_SPANS) {
+      throw new \InvalidArgumentException(sprintf('Spans is a list of at most %d runs.', self::MAX_SPANS));
     }
-    Sticker::assertPalette($palette);
+    if (!is_array($palette) || !array_is_list($palette) || count($palette) > self::MAX_COLORS) {
+      throw new \InvalidArgumentException(sprintf('A palette is a list of at most %d colors.', self::MAX_COLORS));
+    }
+    foreach ($palette as $color) {
+      if (!is_string($color) || !preg_match('/^#[0-9a-f]{6}$/iD', $color)) {
+        throw new \InvalidArgumentException('Palette colors look like #ff8800.');
+      }
+    }
     foreach ($spans as $span) {
-      Sticker::assertSpan($span, $palette);
+      if (!is_array($span) || !array_is_list($span) || count($span) !== 4
+        || !is_int($span[0]) || !is_int($span[1]) || !is_int($span[2]) || !is_string($span[3])
+        || !preg_match('/^[.*0-9a-f]$/D', $span[3])) {
+        throw new \InvalidArgumentException('A span is [row, first column, last column, cell].');
+      }
+      if (ctype_xdigit($span[3]) && hexdec($span[3]) >= count($palette)) {
+        throw new \InvalidArgumentException("Cell $span[3] has no color in the palette.");
+      }
     }
     return new self($pixelate, $palette, $spans);
   }

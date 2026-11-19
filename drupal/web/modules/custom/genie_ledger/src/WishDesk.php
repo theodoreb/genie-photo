@@ -58,25 +58,6 @@ final class WishDesk {
   }
 
   /**
-   * Places the player's sticker.
-   *
-   * @return array{granted: bool, reply: string, revision: int}
-   *   The outcome.
-   */
-  public function setSticker(int $uid, string $name, Sticker $sticker): array {
-    if (!isset($this->ledger->read()->regions["person-$uid"])) {
-      return $this->refusal(self::NO_PLACE);
-    }
-    $session = $this->ledger->write(static function (Session $session) use ($uid, $sticker): void {
-      $session->stickers[$uid] = $sticker;
-    });
-    $reply = ($session->wishes[$uid] ?? NULL) === Operation::Cover->value
-      ? sprintf('Noted, %s. Your cover hides the sticker until you ask to be shown.', $name)
-      : sprintf('Granted, %s. Your sticker is on the photo.', $name);
-    return ['granted' => TRUE, 'reply' => $reply, 'revision' => $session->revision];
-  }
-
-  /**
    * Repaints the player's whole person.
    *
    * @return array{granted: bool, reply: string, revision: int}
@@ -186,9 +167,8 @@ final class WishDesk {
       'photo' => $this->photos->read(),
       'picture' => $this->pictureJpeg($session),
       'outline' => $this->darkroom->outlineView($this->photos->read(), $session),
-      'my_head' => $this->headJpeg($session, $uid),
       'my_body' => $this->bodyJpeg($session, $uid),
-      default => throw new \InvalidArgumentException('The view is photo, picture, outline, my_head or my_body.'),
+      default => throw new \InvalidArgumentException('The view is photo, picture, outline or my_body.'),
     };
     if ($view === 'photo') {
       $info += $session->photo + [
@@ -211,9 +191,6 @@ final class WishDesk {
       $info['editable'] = Outlines::editable(Outlines::reach($session)["person-$uid"], $session->photo);
       $info['on_person'] = Outlines::editable(array_keys(Outlines::owners($session), "person-$uid", TRUE), $session->photo);
     }
-    if ($view === 'my_head') {
-      $info['grid'] = 'Numbers name sticker columns and rows from 0 to 31. Yellow lines mark every fourth cell.';
-    }
     return ['bytes' => $bytes, 'mime' => 'image/jpeg', 'info' => $info];
   }
 
@@ -226,16 +203,6 @@ final class WishDesk {
       throw new \InvalidArgumentException('No frame fits every wish right now.');
     }
     return $this->darkroom->toJpeg($export->png);
-  }
-
-  /**
-   * Renders a player's head under the sticker grid.
-   */
-  private function headJpeg(Session $session, int $uid): string {
-    if (!isset($session->regions["person-$uid"])) {
-      throw new \InvalidArgumentException(self::NO_PLACE);
-    }
-    return $this->darkroom->headView($this->photos->read(), $session, $uid);
   }
 
   /**
@@ -300,7 +267,7 @@ final class WishDesk {
    */
   private static function next(Session $session, int $uid): string {
     if (isset($session->regions["person-$uid"])) {
-      return 'Your place is claimed. Make a wish, call photo_get with view my_head before drawing a sticker, or with view my_body before paint_me.';
+      return 'Your place is claimed. Make a wish, or call photo_get with view my_body before paint_me.';
     }
     if ($session->proposals !== []) {
       return 'Ask your person which one they are. Look at the photo with view photo, then call claim_place with that id and a tight head box.';
@@ -374,7 +341,6 @@ final class WishDesk {
         'id' => $id,
         'protected' => isset($session->protected[$id]),
         'suggested_by' => $session->suggestions[$id] ?? [],
-        'has_sticker' => isset($session->stickers[$region['owner']]) && $region['kind'] === 'person',
       ];
     }
     return [
