@@ -15,7 +15,7 @@ $wish = $argv[2] ?? 'hide my face';
 $site = new SmokeSite();
 $token = $site->signIn($player);
 $site->uploadPhoto($token);
-$before = $site->photos->frame($token, $site->markPlace($token));
+$before = $site->frame($token, $site->markPlace($token));
 
 $outcome = $site->tools->call($token, 'make_wish', ['wish' => $wish]);
 echo $outcome['reply'], "\n";
@@ -23,7 +23,7 @@ if (!$outcome['granted']) {
     exit(1);
 }
 
-$after = $site->photos->frame($token, $outcome['revision']);
+$after = $site->frame($token, $outcome['revision']);
 if (hash('sha256', $before) === hash('sha256', $after)) {
     SmokeSite::fail('The frame did not change.');
 }

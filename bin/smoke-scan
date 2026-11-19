@@ -45,7 +45,7 @@ if ([$person] !== array_column($offered, 'id')) {
     SmokeSite::fail('The person given up did not return to the offers.');
 }
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
-$before = $site->photos->frame($web, $claim['revision']);
+$before = $site->frame($web, $claim['revision']);
 
 $body = $site->imageTool($assistant, 'photo_get', ['view' => 'my_body']);
 $size = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info'];
@@ -58,7 +58,7 @@ $painted = $site->imageTool($assistant, 'paint_me', ['palette' => ['#ff00aa'], '
 if (null === $painted['image'] || !$painted['info']['granted']) {
     SmokeSite::fail('The paint result did not show the person.');
 }
-if (hash('sha256', $before) === hash('sha256', $site->photos->frame($web, $painted['info']['revision']))) {
+if (hash('sha256', $before) === hash('sha256', $site->frame($web, $painted['info']['revision']))) {
     SmokeSite::fail('The frame did not change.');
 }
 echo $painted['info']['reply'], "\n";

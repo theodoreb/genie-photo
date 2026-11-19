@@ -2,13 +2,12 @@
 <?php
 
 // Critical path of approval: all four players approve the same picture, a new wish
-// voids the approvals, and an assistant reaches neither the pixel routes nor the web view's tools.
+// voids the approvals, and an assistant does not reach the web view's tools.
 
 declare(strict_types=1);
 
 use App\Drupal\DrupalToolFailed;
 use App\Tests\Smoke\SmokeSite;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
@@ -32,15 +31,7 @@ $approveAll = static function () use ($site, $tokens): array {
 };
 
 $assistant = $site->signInAsAssistant('alice');
-try {
-    $site->photos->get($assistant);
-    SmokeSite::fail('An assistant used the pixel routes.');
-} catch (HttpException $e) {
-    if (403 !== $e->getStatusCode()) {
-        throw $e;
-    }
-}
-foreach (['export_approve', 'protect_set', 'proposal_dismiss'] as $tool) {
+foreach (['picture_get', 'export_approve', 'protect_set', 'proposal_dismiss'] as $tool) {
     try {
         $site->tools->call($assistant, $tool, ['hash' => 'x']);
         SmokeSite::fail("An assistant reached $tool.");

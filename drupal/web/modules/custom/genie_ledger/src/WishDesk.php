@@ -195,6 +195,45 @@ final class WishDesk {
   }
 
   /**
+   * Returns an image the web view shows.
+   *
+   * @param string $view
+   *   Either photo or frame.
+   * @param mixed $revision
+   *   For a frame, the revision the page asks for.
+   *
+   * @return array{bytes: string, mime: string, info: array<string, mixed>}
+   *   The image and what to say about it.
+   *
+   * @throws \InvalidArgumentException
+   *   When that image does not exist.
+   */
+  public function webPicture(string $view, mixed $revision): array {
+    $session = $this->ledger->read();
+    if ($session->photo === NULL) {
+      throw new \InvalidArgumentException('The session has no photo yet.');
+    }
+    if ($view === 'photo') {
+      return ['bytes' => $this->photos->read(), 'mime' => 'image/jpeg', 'info' => $session->photo];
+    }
+    if ($view !== 'frame') {
+      throw new \InvalidArgumentException('The view is photo or frame.');
+    }
+    if ($revision !== $session->revision) {
+      throw new \InvalidArgumentException('This picture is out of date.');
+    }
+    $export = $this->exports->current($session);
+    if ($export === NULL) {
+      throw new \InvalidArgumentException('No frame fits every wish right now.');
+    }
+    return [
+      'bytes' => $export->png,
+      'mime' => 'image/png',
+      'info' => ['revision' => $revision, 'hash' => $export->hash],
+    ];
+  }
+
+  /**
    * Renders the shared picture for an assistant.
    */
   private function pictureJpeg(Session $session): string {

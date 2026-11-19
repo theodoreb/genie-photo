@@ -51,19 +51,13 @@ final class GameController extends AbstractController
     #[Route('/photo', name: 'app_photo', methods: ['GET'])]
     public function photo(): Response
     {
-        return new Response($this->photos->get($this->tokens->accessToken()), headers: [
-            'Content-Type' => 'image/jpeg',
-            'Cache-Control' => 'private, no-store',
-        ]);
+        return $this->picture(['view' => 'photo'], 'image/jpeg');
     }
 
     #[Route('/frame/{revision}', name: 'app_frame', requirements: ['revision' => '\d+'], methods: ['GET'])]
     public function frame(int $revision): Response
     {
-        return new Response($this->photos->frame($this->tokens->accessToken(), $revision), headers: [
-            'Content-Type' => 'image/png',
-            'Cache-Control' => 'private, no-store',
-        ]);
+        return $this->picture(['view' => 'frame', 'revision' => $revision], 'image/png');
     }
 
     #[Route('/photo', name: 'app_photo_upload', methods: ['POST'])]
@@ -115,6 +109,20 @@ final class GameController extends AbstractController
     public function claim(Request $request): JsonResponse
     {
         return $this->callTool('claim_place', ['person' => $request->request->getString('person')]);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function picture(array $arguments, string $type): Response
+    {
+        try {
+            $bytes = $this->tools->image($this->tokens->accessToken(), 'picture_get', $arguments);
+        } catch (DrupalToolFailed $e) {
+            throw $this->createNotFoundException($e->getMessage(), $e);
+        }
+
+        return new Response($bytes, headers: ['Content-Type' => $type, 'Cache-Control' => 'private, no-store']);
     }
 
     /**

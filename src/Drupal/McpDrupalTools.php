@@ -7,7 +7,9 @@ namespace App\Drupal;
 use Mcp\Client;
 use Mcp\Client\Transport\HttpTransport;
 use Mcp\Exception\ExceptionInterface as McpException;
+use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Result\CallToolResult;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -19,6 +21,9 @@ final readonly class McpDrupalTools
 {
     // A local text model can take minutes on a CPU.
     private const REQUEST_TIMEOUT_SECONDS = 300;
+
+    // A rendered picture of a detailed photo can pass the client's 8 MB default once in base64.
+    private const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
 
     public function __construct(
         #[Autowire('%env(DRUPAL_URL)%/mcp')]
@@ -35,8 +40,40 @@ final readonly class McpDrupalTools
      */
     public function call(string $bearerToken, string $tool, array $arguments = []): array
     {
+        return $this->invoke($bearerToken, $tool, $arguments)->structuredContent
+            ?? throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned no data.', $tool));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     *
+     * @return string the bytes of the image the tool returned
+     *
+     * @throws DrupalToolFailed when Drupal cannot be reached or the tool reports an error
+     */
+    public function image(string $bearerToken, string $tool, array $arguments = []): string
+    {
+        foreach ($this->invoke($bearerToken, $tool, $arguments)->content as $content) {
+            if ($content instanceof ImageContent) {
+                return base64_decode($content->data, true)
+                    ?: throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned a broken image.', $tool));
+            }
+        }
+
+        throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned no image.', $tool));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function invoke(string $bearerToken, string $tool, array $arguments): CallToolResult
+    {
         $client = Client::builder()->setRequestTimeout(self::REQUEST_TIMEOUT_SECONDS)->build();
-        $transport = new HttpTransport($this->endpoint, headers: ['Authorization' => 'Bearer '.$bearerToken]);
+        $transport = new HttpTransport(
+            $this->endpoint,
+            headers: ['Authorization' => 'Bearer '.$bearerToken],
+            maxSseBufferBytes: self::MAX_RESPONSE_BYTES,
+        );
 
         try {
             $client->connect($transport);
@@ -53,6 +90,6 @@ final readonly class McpDrupalTools
             throw new DrupalToolFailed($text);
         }
 
-        return $result->structuredContent ?? throw new DrupalToolFailed(\sprintf('Drupal tool "%s" returned no structured result.', $tool));
+        return $result;
     }
 }

@@ -34,6 +34,9 @@ foreach ($site->http->stream($stream, 10) as $chunk) {
         SmokeSite::fail('No update reached the subscriber.');
     }
     if (str_contains($chunk->getContent(), '"revision":'.$revision)) {
+        if (!str_starts_with($site->frame($alice, $revision), "\x89PNG")) {
+            SmokeSite::fail('The web view did not receive the rendered picture.');
+        }
         echo "alice received revision {$revision}\n";
         exit(0);
     }

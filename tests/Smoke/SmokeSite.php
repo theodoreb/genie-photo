@@ -38,6 +38,14 @@ final readonly class SmokeSite
     }
 
     /**
+     * Reads the shared picture of a revision, as the web view does.
+     */
+    public function frame(string $token, int $revision): string
+    {
+        return $this->tools->image($token, 'picture_get', ['view' => 'frame', 'revision' => $revision]);
+    }
+
+    /**
      * Runs a Drush command on the site.
      */
     public function drush(string ...$arguments): string

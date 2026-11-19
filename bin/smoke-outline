@@ -56,7 +56,7 @@ foreach (array_slice($outline['info']['detected'], 0, 2, true) as $label => [$x,
 $site->tools->call($assistant, 'scan_photo', ['people' => $scan, 'objects' => []]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person, 'head' => $scan[0]['head']]);
-$before = imagecreatefromstring($site->photos->frame($web, $claim['revision']));
+$before = imagecreatefromstring($site->frame($web, $claim['revision']));
 
 $body = $site->imageTool($assistant, 'photo_get', ['view' => 'my_body']);
 if (null === $body['image'] || [] === $body['info']['editable']) {
@@ -74,7 +74,7 @@ for ($row = 0; $row * $fine < $photo['height']; ++$row) {
     $spans[] = [$row, 0, intdiv($photo['width'] - 1, $fine), '0'];
 }
 $painted = $site->imageTool($assistant, 'paint_me', ['palette' => ['#ff0000'], 'spans' => $spans]);
-$after = imagecreatefromstring($site->photos->frame($web, $painted['info']['revision']));
+$after = imagecreatefromstring($site->frame($web, $painted['info']['revision']));
 
 $inside = static function (int $row, int $column, array $rectangles): bool {
     foreach ($rectangles as [$firstRow, $lastRow, $firstColumn, $lastColumn]) {
