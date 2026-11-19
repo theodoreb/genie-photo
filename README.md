@@ -27,7 +27,7 @@ On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [b
 3. Each player tells their assistant which person they are, or clicks their face on the web view.
 4. Players make wishes and repaint their whole person, as pixel art if they like.
 5. If two wishes cannot both hold, the page names the players in the way.
-6. Each player approves the picture. Any later change cancels the approvals.
+6. Each player approves the picture on a page that shows it. Any later change cancels the approvals.
 7. When everyone has approved, the page offers the download.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
@@ -61,15 +61,23 @@ Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local 
 | `make_wish` | Sends a wish to the genie |
 | `paint_me` | Repaints your whole person and a one-block safe zone, with optional pixel art, and returns the result |
 | `wait_for_update` | Waits up to 25 seconds for a change, approvals included |
-| `approve_export` | Asks you to approve, through MCP elicitation |
+| `approve_export` | Sends you to the page that shows the picture, and reports your approval |
 
 Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `picture_get`, which returns its images. Assistants cannot call it.
 
-Sign-in, the tools and the approval prompt were tested with Claude Code 2.1 and Codex 0.170. Vibe 3.1 signs in and uses the tools. It has no approval prompt, so a Vibe player approves on the web view.
+Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.
+
+| Client | How you reach the page |
+|---|---|
+| Claude Code 2.1.328 | It asks to open the page through MCP URL elicitation. Approve there, then choose "I'm done, continue". |
+| Codex 0.170 | It gives you the link and waits. Its terminal app declines URL requests. |
+| Vibe 3.1 | It has no elicitation, so `approve_export` returns the link. |
+
+Sign-in, the tools and the approval flow were tested with Claude Code and Codex. Vibe was tested for sign-in and the tools.
 
 ## Optional local model
 
-The site works without one. Wishes then go through a keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people.
+The site works without one. Wishes then go through a keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people. Symfony AI turns its answer into a validated PHP object. An invalid answer changes nothing, and the genie asks again.
 
 ## How it fits together
 
@@ -94,7 +102,8 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 | `bin/smoke-collision` | Two wishes that cannot both hold |
 | `bin/smoke-scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
 | `bin/smoke-outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
-| `bin/smoke-approve` | Approval, and what an assistant cannot reach |
+| `bin/smoke-review` | The approval page: return after sign-in, wrong player, changed picture |
+| `bin/smoke-approve` | Approval, URL elicitation, output schemas, and what an assistant cannot reach |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
 

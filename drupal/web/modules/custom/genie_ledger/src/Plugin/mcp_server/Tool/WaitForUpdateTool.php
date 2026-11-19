@@ -15,7 +15,7 @@ use Mcp\Server\ClientGateway;
 #[Tool(
   id: 'wait_for_update',
   label: new TranslatableMarkup('Wait for a change'),
-  description: new TranslatableMarkup('Waits up to 25 seconds for the session to move past the update number session_get gave you. Approvals count. Call it again if nothing changed.'),
+  description: new TranslatableMarkup('Waits up to 25 seconds for the session to move past the update number session_get or approve_export gave you. Approvals count. Call it again if nothing changed.'),
   inputSchema: [
     'type' => 'object',
     'properties' => ['after_update' => ['type' => 'integer']],

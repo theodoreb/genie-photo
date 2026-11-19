@@ -50,9 +50,11 @@ final class WishDesk {
   private const POLL_MICROSECONDS = 500_000;
 
   /**
-   * How long a request waits for the person, inside the client's own timeout.
+   * How long a request waits for the person.
+   *
+   * Claude Code 2.1.328 fails a silent call after about 60 seconds.
    */
-  private const APPROVAL_WAIT_SECONDS = 110;
+  private const APPROVAL_WAIT_SECONDS = 45;
 
   private const REPLIES = [
     'cover' => 'Granted, %s. Your face is now covered.',
@@ -445,7 +447,7 @@ final class WishDesk {
     }
     return [
       'status' => 'waiting_on_web',
-      'reply' => 'Nothing is approved yet. Your person approves on the page at review_url.',
+      'reply' => 'Nothing is approved yet. Give your person review_url. Then call wait_for_update with update as after_update, and call approve_export again.',
       'review_url' => $this->reviewUrl($session->revision, $export->hash, $name),
     ] + $state;
   }

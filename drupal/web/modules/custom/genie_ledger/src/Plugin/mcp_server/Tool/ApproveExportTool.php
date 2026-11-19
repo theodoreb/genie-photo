@@ -40,6 +40,8 @@ final class ApproveExportTool extends LedgerToolBase {
 
   private const ELICITATION_TIMEOUT = 120;
 
+  private const ASK = 'Open this page to see the picture and approve it. Any later change cancels the approval.';
+
   /**
    * The requests being served, for the protocol revision of this one.
    */
@@ -65,10 +67,64 @@ final class ApproveExportTool extends LedgerToolBase {
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);
     }
-    if ($request['approved_by_you'] || !$this->canOpenPage($gateway)) {
+    if ($request['approved_by_you'] || !$gateway->supportsElicitationUrl()) {
       return $request;
     }
+    return $this->hasServerRequests()
+      ? $this->askDuringCall($gateway, $uid, $request)
+      : $this->askAcrossRounds($gateway, $uid, $request);
+  }
 
+  /**
+   * Tells whether this call's protocol revision lets the server send requests.
+   *
+   * Revisions from 2026-07-28 have none. Sending one there ends the call with
+   * a server error.
+   */
+  private function hasServerRequests(): bool {
+    $header = $this->requests->getCurrentRequest()->headers->get(StreamableHttpTransport::PROTOCOL_VERSION_HEADER);
+    return !ProtocolVersion::tryFrom((string) $header)?->isModern();
+  }
+
+  /**
+   * Asks on a revision where the question ends the call.
+   *
+   * The client sends the call again with the answer, and this code runs anew.
+   *
+   * @param \Mcp\Server\ClientGateway $gateway
+   *   The connection to the client.
+   * @param int $uid
+   *   The player.
+   * @param array<string, mixed> $request
+   *   What the desk returned for this player.
+   *
+   * @return array<string, mixed>
+   *   The tool result.
+   */
+  private function askAcrossRounds(ClientGateway $gateway, int $uid, array $request): array {
+    try {
+      $answer = $gateway->elicitUrl(self::ASK, $request['review_url'], self::ELICITATION_TIMEOUT, 'approve-' . $request['hash']);
+    }
+    catch (ClientException) {
+      return $request;
+    }
+    return $answer->isAccepted() ? $this->desk->awaitApproval($uid, $request) : $request;
+  }
+
+  /**
+   * Asks with a server request, and closes the client's prompt afterwards.
+   *
+   * @param \Mcp\Server\ClientGateway $gateway
+   *   The connection to the client.
+   * @param int $uid
+   *   The player.
+   * @param array<string, mixed> $request
+   *   What the desk returned for this player.
+   *
+   * @return array<string, mixed>
+   *   The tool result.
+   */
+  private function askDuringCall(ClientGateway $gateway, int $uid, array $request): array {
     $id = bin2hex(random_bytes(16));
     if (!$this->pageOpened($gateway, $request['review_url'], $id)) {
       return $request;
@@ -82,27 +138,13 @@ final class ApproveExportTool extends LedgerToolBase {
   }
 
   /**
-   * Tells whether this client can be asked to open a page during the call.
-   *
-   * Revisions from 2026-07-28 have no server requests. Sending one there ends
-   * the call with a server error.
-   */
-  private function canOpenPage(ClientGateway $gateway): bool {
-    $header = $this->requests->getCurrentRequest()->headers->get(StreamableHttpTransport::PROTOCOL_VERSION_HEADER);
-    return $gateway->supportsElicitationUrl() && !ProtocolVersion::tryFrom((string) $header)?->isModern();
-  }
-
-  /**
    * Asks the client to open the page.
    *
    * Codex answers "decline" without showing anything, so a refusal only sends
    * the assistant back to giving its person the link.
    */
   private function pageOpened(ClientGateway $gateway, string $url, string $id): bool {
-    $response = $gateway->request(
-      new UrlElicitationRequest('Open this page to see the picture and approve it. Any later change cancels the approval.', $url, $id),
-      self::ELICITATION_TIMEOUT,
-    );
+    $response = $gateway->request(new UrlElicitationRequest(self::ASK, $url, $id), self::ELICITATION_TIMEOUT);
     return $response instanceof Response && ElicitResult::fromArray($response->result, ElicitationMode::Url)->isAccepted();
   }
 

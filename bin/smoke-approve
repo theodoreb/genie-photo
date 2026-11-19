@@ -108,9 +108,9 @@ $opened = $askWithUrlClient('bob', static fn (string $url) => $approveOnPage('bo
 if ('approved' !== $opened['status'] || !$opened['approved_by_you']) {
     SmokeSite::fail('The opened page did not finish the request.');
 }
-$modern = $askWithUrlClient('dan', static fn () => SmokeSite::fail('A client on the newest revision got a page request.'), ProtocolVersion::V2026_07_28);
-if ('waiting_on_web' !== $modern['status']) {
-    SmokeSite::fail('A client on the newest revision did not get the link.');
+$modern = $askWithUrlClient('dan', static fn (string $url) => $approveOnPage('dan', $url), ProtocolVersion::V2026_07_28);
+if ('approved' !== $modern['status']) {
+    SmokeSite::fail('A client on the newest revision did not reach the page.');
 }
 $accepted = $askWithUrlClient('carol', static fn () => $site->tools->call($tokens['dan'], 'make_wish', ['wish' => 'hide my face']));
 if ('picture_changed' !== $accepted['status'] || $accepted['approved_by_you']) {
