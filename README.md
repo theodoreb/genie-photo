@@ -2,7 +2,7 @@
 
 A group shares one photo. Each person signs in through their own AI assistant and makes wishes: hide my face, crop me out, put me in the middle, paint a smile on my mask. A genie grants each wish to the letter, and the shared picture changes for everyone. The photo is final when every player approves the exact same picture.
 
-Each assistant receives the photo, so it can find who is in it and paint on the head it sees. Your assistant's provider therefore receives the photo too. PHP code applies the crops, covers and stickers.
+Each assistant receives the photo, so it can find who is in it and paint the person it sees. Your assistant's provider therefore receives the photo too. PHP code applies the crops, covers and paint.
 
 ## Run it
 
@@ -25,7 +25,7 @@ On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [b
 1. The first player uploads a photo. `demo/holiday-party.jpg` is ready to use.
 2. A local detector boxes the people in the photo. One player asks their assistant to trace them.
 3. Each player tells their assistant which person they are, or clicks their face on the web view.
-4. Players make wishes, ask for stickers and repaint their whole person, as pixel art if they like.
+4. Players make wishes and repaint their whole person, as pixel art if they like.
 5. If two wishes cannot both hold, the page names the players in the way.
 6. Each player approves the picture. Any later change cancels the approvals.
 7. When everyone has approved, the page offers the download.
@@ -55,16 +55,15 @@ Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local 
 |---|---|
 | `my_status` | Names the signed-in player |
 | `session_get` | Describes the session, without image data |
-| `photo_get` | Returns the photo, the shared picture, the tracing grid, or your head or whole person under a grid |
+| `photo_get` | Returns the photo, the shared picture, the tracing grid, or what you can paint under a grid |
 | `scan_photo` | Reports the people, their outlines and the objects found in the photo |
 | `claim_place` | Takes a found person as yours, or corrects your head or box |
 | `make_wish` | Sends a wish to the genie |
-| `set_sticker` | Paints your 32 by 32 pixel sticker and returns the result |
-| `paint_me` | Repaints the cells of your whole person, with optional pixel art, and returns the result |
+| `paint_me` | Repaints your whole person and a one-block safe zone, with optional pixel art, and returns the result |
 | `wait_for_update` | Waits up to 25 seconds for a change, approvals included |
 | `approve_export` | Asks you to approve, through MCP elicitation |
 
-Protecting objects and dismissing people who are not playing stay on the web view.
+Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `picture_get`, which returns its images. Assistants cannot call it.
 
 Sign-in, the tools and the approval prompt were tested with Claude Code 2.1 and Codex 0.170. Vibe 3.1 signs in and uses the tools. It has no approval prompt, so a Vibe player approves on the web view.
 
@@ -78,9 +77,11 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 - Drupal in `drupal/` holds the rules, in the module `genie_ledger`. Drupal's `mcp_server` module serves assistants directly.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
 - Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs the FFI build of Drupack and a 42 MB model from Hugging Face. Without them, assistants find the people.
-- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint never leaves a player's own cells.
+- Every photo is scaled to a 1600-pixel long side, so blocks look the same on every photo.
+- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A player with no outline can paint everything except other people.
+- A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game session points to one revision.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes.
-- Assistants get images through MCP tools. The web view gets pixels over HTTP routes that accept only its token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
+- Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Checks
 
@@ -88,12 +89,11 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 |---|---|
 | `bin/qa` | Coding standards, PHPStan level 3 on Drupal code, linters, unit tests |
 | `bin/smoke-oauth alice` | Sign-in and one MCP call |
-| `bin/smoke-live` | Upload and a live update |
+| `bin/smoke-live` | Upload, a live update and the picture over MCP |
 | `bin/smoke-wish alice` | A wish changes the picture |
 | `bin/smoke-collision` | Two wishes that cannot both hold |
-| `bin/smoke-sticker` | A sticker changes the picture |
-| `bin/smoke-scan` | An assistant sees the photo, finds a person, claims it and paints |
-| `bin/smoke-outline` | The detector finds people, and an assistant traces, claims and pixelates one |
+| `bin/smoke-scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
+| `bin/smoke-outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke-approve` | Approval, and what an assistant cannot reach |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
