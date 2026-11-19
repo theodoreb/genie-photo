@@ -4,9 +4,9 @@
 set -eu
 cd "$(dirname "$0")/../drupal"
 
-tag=drupack-1.0.0-rc4-ffi
+tag=drupack-1.0.0-rc6-ffi
 file=$tag-linux-amd64-glibc
-sha256=e6a5bbcf1f0403de9aaf725adeff16d09b3b11ebc4ae1cb08d104aca3685e88b
+sha256=eeee35e1204d7f2374e270aaeed4bc889b39fc4dede86d90149b51d03673a782
 url=https://github.com/theodoreb/genie-photo/releases/download/$tag/$file
 
 matches() {

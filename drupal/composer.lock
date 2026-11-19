@@ -1901,16 +1901,16 @@
         },
         {
             "name": "drupal/drupack",
-            "version": "1.0.0-rc4",
+            "version": "1.0.0-rc6",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/drupack.git",
-                "reference": "f64af24e0dfbb883a9e2eca3a426bcc535b7278a"
+                "reference": "37804a11d5c1d5c2be3d6f46a1160dd5784149c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://git.drupalcode.org/api/v4/projects/project%2Fdrupack/repository/archive.zip?sha=f64af24e0dfbb883a9e2eca3a426bcc535b7278a",
-                "reference": "f64af24e0dfbb883a9e2eca3a426bcc535b7278a",
+                "url": "https://git.drupalcode.org/api/v4/projects/project%2Fdrupack/repository/archive.zip?sha=37804a11d5c1d5c2be3d6f46a1160dd5784149c0",
+                "reference": "37804a11d5c1d5c2be3d6f46a1160dd5784149c0",
                 "shasum": ""
             },
             "require": {
@@ -1938,9 +1938,9 @@
             "description": "Installs drupack, which serves a Drupal project with its own PHP and web server, into the project root.",
             "homepage": "https://github.com/tresbientech/drupack",
             "support": {
-                "source": "https://git.drupalcode.org/project/drupack/-/tree/1.0.0-rc4"
+                "source": "https://git.drupalcode.org/project/drupack/-/tree/1.0.0-rc6"
             },
-            "time": "2026-11-18T04:23:59+00:00"
+            "time": "2026-11-19T04:24:15+00:00"
         },
         {
             "name": "drupal/json_field",

@@ -18,7 +18,7 @@ Open http://127.0.0.1:8000 and sign in as `alice`, `bob`, `carol` or `dan`. The 
 
 `bin/start` installs the dependencies, downloads Drupack through Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
-On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [build that adds PHP's FFI extension](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc4-ffi). It checks the file's SHA-256 first. Other systems keep the official Drupack.
+On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [build that adds PHP's FFI extension](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-ffi). It checks the file's SHA-256 first. Other systems keep the official Drupack.
 
 ### With Docker instead
 
