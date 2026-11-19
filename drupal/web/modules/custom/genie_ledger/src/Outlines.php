@@ -7,42 +7,20 @@ namespace Drupal\genie_ledger;
 /**
  * Gives every grid cell of the photo to at most one person.
  *
- * The outline grid has cells of five fine cells, so a pixel painted on the fine
- * grid always falls wholly inside or outside a person's outline.
+ * Every stored photo has a long side of 1600 pixels, so every photo has the
+ * same blocks. One outline cell holds five by five fine paint cells.
  */
 final class Outlines {
 
+  public const LONG_SIDE = 1600;
+  public const FINE = 8;
   public const FINE_PER_CELL = 5;
-
-  /**
-   * Fine cells along the longer side of the photo.
-   */
-  private const FINE_ON_LONG_SIDE = 200;
+  public const CELL = self::FINE * self::FINE_PER_CELL;
 
   /**
    * Most runs one person's outline may hold.
    */
   private const MAX_RUNS = 600;
-
-  /**
-   * Returns the side of a fine cell in photo pixels.
-   *
-   * @param array{width: int, height: int} $photo
-   *   The photo size.
-   */
-  public static function fineSize(array $photo): int {
-    return (int) ceil(max($photo['width'], $photo['height']) / self::FINE_ON_LONG_SIDE);
-  }
-
-  /**
-   * Returns the side of an outline cell in photo pixels.
-   *
-   * @param array{width: int, height: int} $photo
-   *   The photo size.
-   */
-  public static function cellSize(array $photo): int {
-    return self::fineSize($photo) * self::FINE_PER_CELL;
-  }
 
   /**
    * Returns the number of outline columns.
@@ -51,7 +29,7 @@ final class Outlines {
    *   The photo size.
    */
   public static function columns(array $photo): int {
-    return (int) ceil($photo['width'] / self::cellSize($photo));
+    return (int) ceil($photo['width'] / self::CELL);
   }
 
   /**
@@ -61,7 +39,7 @@ final class Outlines {
    *   The photo size.
    */
   public static function rows(array $photo): int {
-    return (int) ceil($photo['height'] / self::cellSize($photo));
+    return (int) ceil($photo['height'] / self::CELL);
   }
 
   /**
@@ -84,7 +62,7 @@ final class Outlines {
     if (!is_array($runs) || !array_is_list($runs) || count($runs) > self::MAX_RUNS) {
       throw new \InvalidArgumentException(sprintf('An outline is a list of at most %d runs.', self::MAX_RUNS));
     }
-    $cell = self::cellSize($photo);
+    $cell = self::CELL;
     $firstColumn = max(0, (int) ceil(($body['x'] - $cell) / $cell - 0.5));
     $lastColumn = min(self::columns($photo) - 1, (int) floor(($body['x'] + $body['width'] + $cell) / $cell - 0.5));
     $firstRow = max(0, (int) ceil(($body['y'] - $cell) / $cell - 0.5));
@@ -146,7 +124,7 @@ final class Outlines {
    *   The area, inside the photo.
    */
   public static function area(int $cell, array $photo): array {
-    $side = self::cellSize($photo);
+    $side = self::CELL;
     $x = ($cell % self::columns($photo)) * $side;
     $y = intdiv($cell, self::columns($photo)) * $side;
     return [
@@ -209,7 +187,7 @@ final class Outlines {
    */
   private static function cellsOf(array $person, array $photo): array {
     $columns = self::columns($photo);
-    $side = self::cellSize($photo);
+    $side = self::CELL;
     $cells = [];
     foreach ($person['cells'] ?? [] as [$row, $first, $last]) {
       foreach (range($first, $last) as $column) {

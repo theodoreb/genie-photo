@@ -23,6 +23,11 @@ final class PersonDetector {
   private const MIN_SCORE = 0.5;
 
   /**
+   * Long side of the copy the model reads, in pixels.
+   */
+  private const DETECTION_SIDE = 1024;
+
+  /**
    * Smallest share of the photo a person's box may take.
    */
   private const MIN_SHARE = 0.01;
@@ -61,10 +66,10 @@ final class PersonDetector {
    * Finds the people in an image.
    *
    * @param string $file
-   *   The path of the image.
+   *   The path of a JPEG.
    *
    * @return list<array{x: int, y: int, width: int, height: int}>
-   *   One box per person, from left to right.
+   *   One box per person in the image's pixels, from left to right.
    */
   public function detect(string $file): array {
     $directory = self::MODELS;
@@ -73,22 +78,30 @@ final class PersonDetector {
       ->setCacheDir($this->fileSystem->realpath($directory))
       ->setImageDriver(ImageDriver::GD)
       ->apply();
-    $found = Factory::createPlatform()->invoke(self::MODEL, $file, [
-      'task' => Task::ObjectDetection,
-      'input_options' => ['threshold' => self::MIN_SCORE],
-    ])->asObject();
-
     [$width, $height] = getimagesize($file);
+    $scale = self::DETECTION_SIDE / max($width, $height);
+    $copy = $this->fileSystem->tempnam('temporary://', 'genie');
+    imagejpeg(imagescale(imagecreatefromjpeg($file), (int) round($width * $scale), (int) round($height * $scale), IMG_BICUBIC), $this->fileSystem->realpath($copy));
+    try {
+      $found = Factory::createPlatform()->invoke(self::MODEL, $this->fileSystem->realpath($copy), [
+        'task' => Task::ObjectDetection,
+        'input_options' => ['threshold' => self::MIN_SCORE],
+      ])->asObject();
+    }
+    finally {
+      $this->fileSystem->delete($copy);
+    }
+
     $people = [];
     foreach ($found as $object) {
       if ($object['label'] === 'person') {
         $box = $object['box'];
         $people[] = [
           'score' => $object['score'],
-          'left' => max(0, (int) round($box['xmin'])),
-          'top' => max(0, (int) round($box['ymin'])),
-          'right' => min($width, (int) round($box['xmax'])),
-          'bottom' => min($height, (int) round($box['ymax'])),
+          'left' => max(0, (int) round($box['xmin'] / $scale)),
+          'top' => max(0, (int) round($box['ymin'] / $scale)),
+          'right' => min($width, (int) round($box['xmax'] / $scale)),
+          'bottom' => min($height, (int) round($box['ymax'] / $scale)),
         ];
       }
     }

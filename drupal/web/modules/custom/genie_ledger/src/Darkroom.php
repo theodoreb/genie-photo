@@ -27,11 +27,6 @@ final class Darkroom {
   private const GRID_MAJOR = 4;
 
   /**
-   * Longer side of the outline view, in pixels.
-   */
-  private const OUTLINE_VIEW_SIDE = 1600;
-
-  /**
    * Outline cells between two numbers.
    */
   private const OUTLINE_LABEL_EVERY = 5;
@@ -174,21 +169,17 @@ final class Darkroom {
    */
   public function outlineView(string $jpeg, Session $session): string {
     $photo = $session->photo;
-    $scale = self::OUTLINE_VIEW_SIDE / max($photo['width'], $photo['height']);
-    $width = (int) round($photo['width'] * $scale);
-    $height = (int) round($photo['height'] * $scale);
-    $view = $this->framed(imagescale(imagecreatefromstring($jpeg), $width, $height, IMG_BICUBIC));
-    $side = Outlines::cellSize($photo) * $scale;
-    $this->drawGrid($view, $width, $height, $side, 1, self::OUTLINE_LABEL_EVERY, 0, 0);
+    $view = $this->framed(imagecreatefromstring($jpeg));
+    $this->drawGrid($view, $photo['width'], $photo['height'], Outlines::CELL, 1, self::OUTLINE_LABEL_EVERY, 0, 0);
 
     imagesetthickness($view, 4);
     $ink = imagecolorallocate($view, 255, 255, 255);
     $number = 0;
     foreach (Places::detected($session) as $label => $box) {
       $color = imagecolorallocate($view, ...self::BOX_COLORS[$number++ % count(self::BOX_COLORS)]);
-      $left = self::GRID_MARGIN + (int) round($box['x'] * $scale);
-      $top = self::GRID_MARGIN + (int) round($box['y'] * $scale);
-      imagerectangle($view, $left, $top, $left + (int) round($box['width'] * $scale), $top + (int) round($box['height'] * $scale), $color);
+      $left = self::GRID_MARGIN + $box['x'];
+      $top = self::GRID_MARGIN + $box['y'];
+      imagerectangle($view, $left, $top, $left + $box['width'], $top + $box['height'], $color);
       imagefilledrectangle($view, $left, $top, $left + 30, $top + 20, $color);
       imagestring($view, 5, $left + 5, $top + 2, $label, $ink);
     }
@@ -211,7 +202,7 @@ final class Darkroom {
     $dim = imagecolorallocatealpha($image, 0, 0, 0, 45);
     $owned = array_flip($cells);
     $columns = Outlines::columns($photo);
-    $cell = Outlines::cellSize($photo);
+    $cell = Outlines::CELL;
     for ($y = $bounds['y']; $y < $bounds['y'] + $bounds['height']; $y += $cell) {
       for ($x = $bounds['x']; $x < $bounds['x'] + $bounds['width']; $x += $cell) {
         if (!isset($owned[intdiv($y, $cell) * $columns + intdiv($x, $cell)])) {
@@ -219,7 +210,7 @@ final class Darkroom {
         }
       }
     }
-    $scale = max(1, min(self::BODY_VIEW_MAX_SCALE, intdiv(self::OUTLINE_VIEW_SIDE, max($bounds['width'], $bounds['height']))));
+    $scale = max(1, min(self::BODY_VIEW_MAX_SCALE, intdiv(Outlines::LONG_SIDE, max($bounds['width'], $bounds['height']))));
     $width = $bounds['width'] * $scale;
     $height = $bounds['height'] * $scale;
     $view = $this->framed(imagescale($this->copyOf($image, $bounds), $width, $height, IMG_NEAREST_NEIGHBOUR));
@@ -227,11 +218,11 @@ final class Darkroom {
       $view,
       $width,
       $height,
-      Outlines::fineSize($photo) * $scale,
+      Outlines::FINE * $scale,
       Outlines::FINE_PER_CELL,
       Outlines::FINE_PER_CELL * (int) ceil(self::MIN_LABEL_GAP / ($cell * $scale)),
-      intdiv($bounds['x'], Outlines::fineSize($photo)),
-      intdiv($bounds['y'], Outlines::fineSize($photo)),
+      intdiv($bounds['x'], Outlines::FINE),
+      intdiv($bounds['y'], Outlines::FINE),
     );
     return self::encodeJpeg($view);
   }
@@ -255,7 +246,7 @@ final class Darkroom {
    *   The picture's width.
    * @param int $height
    *   The picture's height.
-   * @param float|int $side
+   * @param int $side
    *   The side of a grid cell in sheet pixels.
    * @param int $major
    *   Grid cells between two bright lines.
@@ -266,12 +257,12 @@ final class Darkroom {
    * @param int $firstRow
    *   The number of the top row.
    */
-  private function drawGrid(\GdImage $view, int $width, int $height, float|int $side, int $major, int $labelEvery, int $firstColumn, int $firstRow): void {
+  private function drawGrid(\GdImage $view, int $width, int $height, int $side, int $major, int $labelEvery, int $firstColumn, int $firstRow): void {
     $ink = imagecolorallocate($view, 0, 0, 0);
     $faint = imagecolorallocatealpha($view, 255, 255, 255, 95);
     $bright = imagecolorallocatealpha($view, 255, 225, 0, 40);
     for ($line = 0; $line * $side <= $width; $line++) {
-      $at = self::GRID_MARGIN + (int) round($line * $side);
+      $at = self::GRID_MARGIN + $line * $side;
       $number = $firstColumn + $line;
       if ($number % $major === 0 || $side >= self::MIN_FAINT_LINE) {
         imageline($view, $at, self::GRID_MARGIN, $at, self::GRID_MARGIN + $height, $number % $major === 0 ? $bright : $faint);
@@ -281,7 +272,7 @@ final class Darkroom {
       }
     }
     for ($line = 0; $line * $side <= $height; $line++) {
-      $at = self::GRID_MARGIN + (int) round($line * $side);
+      $at = self::GRID_MARGIN + $line * $side;
       $number = $firstRow + $line;
       if ($number % $major === 0 || $side >= self::MIN_FAINT_LINE) {
         imageline($view, self::GRID_MARGIN, $at, self::GRID_MARGIN + $width, $at, $number % $major === 0 ? $bright : $faint);
@@ -330,8 +321,8 @@ final class Darkroom {
     }
     $bounds = self::bounds($cells, $photo);
     $original = $this->copyOf($image, $bounds);
-    $fine = Outlines::fineSize($photo);
-    $layer = $paint->pixelate ? $this->pixelated($original, $fine) : $this->copyOf($image, $bounds);
+    $fine = Outlines::FINE;
+    $layer = $paint->pixelate ? $this->pixelated($original) : $this->copyOf($image, $bounds);
     $colors = array_map(
       static fn (string $color): int => imagecolorallocate($layer, ...sscanf($color, '#%02x%02x%02x')),
       $paint->palette,
@@ -357,14 +348,10 @@ final class Darkroom {
   }
 
   /**
-   * Turns a picture into pixel art with a short palette.
-   *
-   * @param \GdImage $picture
-   *   The picture.
-   * @param int $fine
-   *   The side of one art pixel.
+   * Turns a picture into pixel art on the fine grid, with a short palette.
    */
-  private function pixelated(\GdImage $picture, int $fine): \GdImage {
+  private function pixelated(\GdImage $picture): \GdImage {
+    $fine = Outlines::FINE;
     $width = imagesx($picture);
     $height = imagesy($picture);
     $columns = (int) ceil($width / $fine);

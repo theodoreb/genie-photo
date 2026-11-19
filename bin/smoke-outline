@@ -25,6 +25,12 @@ do {
 if ('ready' !== $status || [] === $outline['info']['detected']) {
     SmokeSite::fail("The detector ended as $status.");
 }
+$photo = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info'];
+foreach ($outline['info']['detected'] as [$x, $y, $width, $height]) {
+    if ($x < 0 || $y < 0 || $x + $width > $photo['width'] || $y + $height > $photo['height']) {
+        SmokeSite::fail('A detector box leaves the photo.');
+    }
+}
 echo count($outline['info']['detected'])." people detected\n";
 
 $label = array_key_first($outline['info']['detected']);

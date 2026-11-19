@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Drupal\genie_ledger;
 
 /**
- * Turns an uploaded image into an upright JPEG with no metadata.
+ * Turns an uploaded image into an upright JPEG of the game's size.
  */
 final class PhotoIntake {
 
-  private const MAX_SIDE = 1600;
+  private const MIN_LONG_SIDE = 480;
+  private const MAX_SHAPE = 3;
   private const MAX_PIXELS = 40_000_000;
   private const TYPES = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP];
 
@@ -31,6 +32,13 @@ final class PhotoIntake {
     if ($info[0] * $info[1] > self::MAX_PIXELS) {
       throw new \InvalidArgumentException('This image has too many pixels.');
     }
+    $long = max($info[0], $info[1]);
+    if ($long < self::MIN_LONG_SIDE) {
+      throw new \InvalidArgumentException(sprintf('The long side of the photo must be at least %d pixels.', self::MIN_LONG_SIDE));
+    }
+    if ($long > min($info[0], $info[1]) * self::MAX_SHAPE) {
+      throw new \InvalidArgumentException(sprintf('The photo can be at most %d times wider than it is tall.', self::MAX_SHAPE));
+    }
     $image = @imagecreatefromstring($bytes);
     if ($image === FALSE) {
       throw new \InvalidArgumentException('This image cannot be read.');
@@ -38,10 +46,8 @@ final class PhotoIntake {
     if ($info[2] === IMAGETYPE_JPEG) {
       $image = $this->upright($image, $bytes);
     }
-    $longest = max(imagesx($image), imagesy($image));
-    if ($longest > self::MAX_SIDE) {
-      $image = imagescale($image, (int) round(imagesx($image) * self::MAX_SIDE / $longest));
-    }
+    $scale = Outlines::LONG_SIDE / $long;
+    $image = imagescale($image, (int) round(imagesx($image) * $scale), (int) round(imagesy($image) * $scale), IMG_BICUBIC);
     ob_start();
     imagejpeg($image, NULL, 88);
     return ['jpeg' => ob_get_clean(), 'width' => imagesx($image), 'height' => imagesy($image)];

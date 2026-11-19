@@ -200,7 +200,7 @@ final class WishDesk {
       $info += [
         'columns' => Outlines::columns($session->photo),
         'rows' => Outlines::rows($session->photo),
-        'cell_pixels' => Outlines::cellSize($session->photo),
+        'cell_pixels' => Outlines::CELL,
         'detector' => $session->detection['status'] ?? 'off',
         'detected' => array_map(self::boxList(...), Places::detected($session)),
         'how_to' => self::TRACING,
