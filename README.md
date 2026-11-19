@@ -113,6 +113,47 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
+## Features used
+
+Each line names a library feature and links to the code that uses it.
+
+### Symfony AI
+
+- Platform `invoke()` with a `MessageBag`, on the platform Drupal AI builds from config: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
+- The generic platform bridge reaches Ollama's OpenAI-style API: [`ai.inference_provider.genie_ollama.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.inference_provider.genie_ollama.yml).
+- Structured output: `PlatformSubscriber` turns the model's answer into a `WishReading` object: [`genie_ledger.services.yml`](drupal/web/modules/custom/genie_ledger/genie_ledger.services.yml), [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/WishReading.php).
+- The `#[Schema]` attribute limits the generated JSON schema to the allowed operations: [`WishReading.php`](drupal/web/modules/custom/genie_ledger/src/WishReading.php).
+- `ValidatorSubscriber` checks the object with Symfony Validator constraints. A `ValidationException` makes the genie ask again: [`WishInterpreter.php`](drupal/web/modules/custom/genie_ledger/src/WishInterpreter.php).
+- The TransformersPhp bridge runs DETR object detection in PHP through FFI: [`PersonDetector.php`](drupal/web/modules/custom/genie_ledger/src/PersonDetector.php).
+- `MockPlatformFactory` replaces the model in a unit test: [`WishInterpreterTest.php`](drupal/web/modules/custom/genie_ledger/tests/src/Unit/WishInterpreterTest.php).
+
+### PHP MCP SDK
+
+- Client: `Client::builder()`, `HttpTransport` with the player's bearer token, `callTool()`, `structuredContent` and `ImageContent`: [`McpDrupalTools.php`](src/Drupal/McpDrupalTools.php).
+- Server tools with input schemas, output schemas and annotations, through Drupal's `mcp_server` module: [`Plugin/mcp_server/Tool/`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/).
+- Output schemas the SDK checks on approval results: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php), [`ExportApproveTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ExportApproveTool.php), [`WishDesk.php`](drupal/web/modules/custom/genie_ledger/src/WishDesk.php).
+- `ImageContent` results for the photo and the picture: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
+- URL elicitation: `ClientGateway::elicitUrl()`, `ElicitResult` and `ElicitationMode::Url` open the approval page: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php).
+- A custom request and notification on the SDK's JSON-RPC classes: [`UrlElicitationRequest.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/UrlElicitationRequest.php), [`ElicitationCompleteNotification.php`](drupal/web/modules/custom/genie_ledger/src/Mcp/ElicitationCompleteNotification.php).
+- `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php).
+- `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/MakeWishTool.php) and the other tools.
+- The smoke scripts call the server as an MCP client: [`SmokeSite.php`](tests/Smoke/SmokeSite.php).
+
+### Drupal and Drupack
+
+- `mcp_server` serves the tools at `/mcp`. `mcp_server_oauth`, `simple_oauth` and `simple_oauth_21` sign each assistant in as its player: [`McpRouteSubscriber.php`](drupal/web/modules/custom/genie_ledger/src/Routing/McpRouteSubscriber.php).
+- A patch lets native clients use `http://localhost` redirect URIs: [`simple_oauth_21-localhost-redirect.patch`](drupal/patches/simple_oauth_21-localhost-redirect.patch).
+- Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
+- A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie_ledger/src/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie_ledger/src/Session.php).
+- FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie_ledger/src/RevisionPublisher.php).
+- Drupack runs Drupal, its Mercure hub, the web view and Composer. The project's build adds FFI: [`fork/drupack/`](fork/drupack/), [`bin/get-drupack`](bin/get-drupack).
+
+### Symfony
+
+- Security with a custom authenticator, an OAuth client of Drupal with PKCE and token refresh: [`DrupalAuthenticator.php`](src/Security/DrupalAuthenticator.php), [`DrupalOAuth.php`](src/Security/DrupalOAuth.php).
+- The browser subscribes to the Mercure hub with `EventSource`: [`GameController.php`](src/Controller/GameController.php), [`app.js`](assets/app.js), [`review.js`](assets/review.js).
+- AssetMapper and importmap load the JavaScript with no Node build: [`importmap.php`](importmap.php).
+
 ## Checks
 
 | Command | What it checks |
