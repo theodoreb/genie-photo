@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reinstalls the Drupal site from its recipe and serves it on 7225. bin/start then sets up the web view's client.
 set -eu
-cd "$(dirname "$0")/../drupal"
+cd "$(dirname "$0")/../../drupal"
 export DRUPACK_NO_UPDATE_CHECK=1
 ./drupack stop . >/dev/null 2>&1 || true
 chmod -R u+w web/sites/default 2>/dev/null || true

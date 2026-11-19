@@ -37,7 +37,7 @@ cd genie-photo
 docker compose up
 ```
 
-The ports are published on 127.0.0.1 only, so the addresses below stay the same. The image is x86-64, which Docker Desktop emulates on Apple silicon. The container has no Ollama, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie drupal/drupack php bin/smoke-wish alice`.
+The ports are published on 127.0.0.1 only, so the addresses below stay the same. The image is x86-64, which Docker Desktop emulates on Apple silicon. The container has no Ollama, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie bin/smoke wish alice`.
 
 ### On a public server
 
@@ -121,7 +121,7 @@ The site works without one. Wishes then go through a keyword reader. `GENIE_MODE
 
 ## How it fits together
 
-- Symfony 8 at the repository root is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `src/Drupal/McpDrupalTools.php`.
+- Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`.
 - Drupal in `drupal/` holds the rules, in the module `genie_ledger`. Drupal's `mcp_server` module serves assistants directly.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
 - Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
@@ -151,7 +151,7 @@ Each line names a library feature and links to the code that uses it.
 
 ### PHP MCP SDK
 
-- Client: `Client::builder()`, `HttpTransport` with the player's bearer token, `callTool()`, `structuredContent` and `ImageContent`: [`McpDrupalTools.php`](src/Drupal/McpDrupalTools.php).
+- Client: `Client::builder()`, `HttpTransport` with the player's bearer token, `callTool()`, `structuredContent` and `ImageContent`: [`McpDrupalTools.php`](symfony/src/Drupal/McpDrupalTools.php).
 - Server tools with input schemas, output schemas and annotations, through Drupal's `mcp_server` module: [`Plugin/mcp_server/Tool/`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/).
 - Output schemas the SDK checks on approval results: [`ApproveExportTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ApproveExportTool.php), [`ExportApproveTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/ExportApproveTool.php), [`WishDesk.php`](drupal/web/modules/custom/genie_ledger/src/WishDesk.php).
 - `ImageContent` results for the photo and the picture: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
@@ -161,7 +161,7 @@ Each line names a library feature and links to the code that uses it.
 - `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/MakeWishTool.php) and the other tools.
 - Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie_ledger/src/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
 - Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie_ledger/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
-- The smoke scripts call the server as an MCP client: [`SmokeSite.php`](tests/Smoke/SmokeSite.php).
+- The smoke scripts call the server as an MCP client: [`SmokeSite.php`](symfony/tests/smoke/lib/SmokeSite.php).
 
 ### Drupal and Drupack
 
@@ -174,33 +174,33 @@ Each line names a library feature and links to the code that uses it.
 - Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie_ledger/config/install/ai.platform.genie.yml).
 - A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie_ledger/src/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie_ledger/src/Session.php).
 - FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie_ledger/src/RevisionPublisher.php).
-- Drupack runs Drupal, its Mercure hub, the web view and Composer. The project's build adds FFI: [`fork/drupack/`](fork/drupack/), [`bin/get-drupack`](bin/get-drupack).
+- Drupack runs Drupal, its Mercure hub, the web view and Composer. The project's build adds FFI: [`fork/drupack/`](fork/drupack/), [`bin/lib/get-drupack`](bin/lib/get-drupack).
 
 ### Symfony
 
-- Security with a custom authenticator, an OAuth client of Drupal with PKCE and token refresh: [`DrupalAuthenticator.php`](src/Security/DrupalAuthenticator.php), [`DrupalOAuth.php`](src/Security/DrupalOAuth.php).
-- The browser subscribes to the Mercure hub with `EventSource`: [`GameController.php`](src/Controller/GameController.php), [`app.js`](assets/app.js), [`review.js`](assets/review.js).
-- AssetMapper and importmap load the JavaScript with no Node build: [`importmap.php`](importmap.php).
+- Security with a custom authenticator, an OAuth client of Drupal with PKCE and token refresh: [`DrupalAuthenticator.php`](symfony/src/Security/DrupalAuthenticator.php), [`DrupalOAuth.php`](symfony/src/Security/DrupalOAuth.php).
+- The browser subscribes to the Mercure hub with `EventSource`: [`GameController.php`](symfony/src/Controller/GameController.php), [`app.js`](symfony/assets/app.js), [`review.js`](symfony/assets/review.js).
+- AssetMapper and importmap load the JavaScript with no Node build: [`importmap.php`](symfony/importmap.php).
 
 ## Checks
 
 | Command | What it checks |
 |---|---|
 | `bin/qa` | Coding standards, PHPStan level 3 on Drupal code, linters, unit tests |
-| `bin/smoke-oauth alice` | A new game, sign-in and one MCP call |
-| `bin/smoke-host` | The host code, the upload on the web view, and a guest joining from the invite link |
-| `bin/smoke-subscribe` | A resource update reaches a `subscriptions/listen` stream |
-| `bin/smoke-live` | Upload, a live update and the picture over MCP |
-| `bin/smoke-wish alice` | A wish changes the picture |
-| `bin/smoke-collision` | Two wishes that cannot both hold |
-| `bin/smoke-scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
-| `bin/smoke-outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
-| `bin/smoke-review` | The approval page: return after sign-in, wrong player, changed picture |
-| `bin/smoke-approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
+| `bin/smoke oauth alice` | A new game, sign-in and one MCP call |
+| `bin/smoke host` | The host code, the upload on the web view, and a guest joining from the invite link |
+| `bin/smoke subscribe` | A resource update reaches a `subscriptions/listen` stream |
+| `bin/smoke live` | Upload, a live update and the picture over MCP |
+| `bin/smoke wish alice` | A wish changes the picture |
+| `bin/smoke collision` | Two wishes that cannot both hold |
+| `bin/smoke scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
+| `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
+| `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
+| `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
 
-Run a smoke script with Drupack's PHP, such as `drupal/drupack php bin/smoke-wish alice`. `bin/qa` uses the machine's PHP 8.4 or later. Each smoke script starts its own game. `drush genie:seats alice bob` does the same by hand and prints the accounts and passwords.
+`bin/smoke NAME` runs one smoke script on Drupack's PHP, such as `bin/smoke wish alice`. `bin/qa` uses the machine's PHP 8.4 or later. Each smoke script starts its own game. `drush genie:seats alice bob` does the same by hand and prints the accounts and passwords.
 
 ## License
 

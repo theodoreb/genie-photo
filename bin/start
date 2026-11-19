@@ -8,7 +8,7 @@ for tool in curl git; do
     command -v "$tool" >/dev/null || { echo "This project needs $tool." >&2; exit 1; }
 done
 
-bin/get-drupack
+bin/lib/get-drupack
 drupack="$PWD/drupal/drupack"
 export DRUPACK_NO_UPDATE_CHECK=1
 # Drupal serves plain HTTP, so the web view reaches it without a local root.
@@ -16,33 +16,34 @@ export DRUPACK_TLS_DIR=
 # The container listens on every interface, and Docker publishes the ports on loopback only.
 export GENIE_LISTEN_IP="${GENIE_LISTEN_IP:-127.0.0.1}"
 
-"$drupack" composer install --no-interaction --no-progress
+(cd symfony && "$drupack" composer install --no-interaction --no-progress)
 # Prod serves only compiled assets, so a server compiles them on each start.
-if [ "${APP_ENV:-}" = prod ]; then "$drupack" php bin/console asset-map:compile --quiet; fi
+if [ "${APP_ENV:-}" = prod ]; then (cd symfony && "$drupack" php bin/console asset-map:compile --quiet); fi
 (cd drupal && ./drupack composer install --no-interaction --no-progress)
 
 # The marker appears only after a complete install, so a failed one runs again.
 if [ -f drupal/private/.installed ]; then
     (cd drupal && { ./drupack stop . >/dev/null 2>&1 || true; } && ./drupack start . --listen "$GENIE_LISTEN_IP:7225" --yes </dev/null)
 else
-    bin/dev-drupal
+    bin/lib/dev-drupal
 fi
 
 # The model comes once from Hugging Face. Without it the assistants find the people.
 (cd drupal && ./drupack drush genie:detector-prepare) || echo 'The person detector is not ready. Assistants will find the people.' >&2
 
 # The environment names the public addresses on a server, .env on a workstation.
-public_url="${PUBLIC_URL:-$(sed -n 's/^PUBLIC_URL=//p' .env)}"
-drupal_url="${DRUPAL_URL:-$(sed -n 's/^DRUPAL_URL=//p' .env)}"
+public_url="${PUBLIC_URL:-$(sed -n 's/^PUBLIC_URL=//p' symfony/.env)}"
+drupal_url="${DRUPAL_URL:-$(sed -n 's/^DRUPAL_URL=//p' symfony/.env)}"
 callback="$public_url/oauth/callback"
 secret="$(cd drupal && ./drupack drush genie:web-client "$callback")"
 umask 077
 {
     # An older start also wrote DRUPAL_URL here, which .env now holds.
-    grep -vE '^(DRUPAL_URL|GENIE_WEB_SECRET)=' .env.local 2>/dev/null || true
+    grep -vE '^(DRUPAL_URL|GENIE_WEB_SECRET)=' symfony/.env.local 2>/dev/null || true
     echo "GENIE_WEB_SECRET=$secret"
-} >.env.new.local
-mv .env.new.local .env.local
+} >symfony/.env.new.local
+mv symfony/.env.new.local symfony/.env.local
 
 echo "Start a game at $drupal_url/genie/host with host code $(cat drupal/private/host-code)."
-exec bin/dev-web
+# Drupack's FrankenPHP serves the web view. Its php.ini caps an upload and a form at 64 MB.
+exec "$drupack" php-server --listen "$GENIE_LISTEN_IP:8000" --root symfony/public

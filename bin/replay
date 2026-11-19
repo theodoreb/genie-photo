@@ -16,16 +16,16 @@ fi
 
 # A running container started with docker compose holds the site. Otherwise bin/start serves it from here.
 if command -v docker >/dev/null && [ -n "$(docker compose ps -q --status running genie 2>/dev/null)" ]; then
-    site() { docker compose exec -T -e DRUPACK_NO_UPDATE_CHECK=1 genie drupal/drupack php bin/replay-site "$@" </dev/null; }
+    site() { docker compose exec -T -e DRUPACK_NO_UPDATE_CHECK=1 genie drupal/drupack php bin/lib/replay-site "$@" </dev/null; }
 else
-    site() { DRUPACK_NO_UPDATE_CHECK=1 drupal/drupack php bin/replay-site "$@" </dev/null; }
+    site() { DRUPACK_NO_UPDATE_CHECK=1 drupal/drupack php bin/lib/replay-site "$@" </dev/null; }
 fi
 
 work="$PWD/var/replay"
 mkdir -p "$work"
 mcp="$(site mcp-url)"
 
-# The assistant prints Drupal's sign-in address. bin/replay-site fills in the player's account,
+# The assistant prints Drupal's sign-in address. bin/lib/replay-site fills in the player's account,
 # and curl hands the code to the assistant's own callback on this machine.
 sign_in() {
     log="$work/$1-login.log"

@@ -8,8 +8,8 @@ RUN apt-get update \
 WORKDIR /app
 COPY . .
 ENV DRUPACK_NO_UPDATE_CHECK=1
-RUN bin/get-drupack \
-    && drupal/drupack composer install --no-interaction --no-progress \
+RUN bin/lib/get-drupack \
+    && (cd symfony && ../drupal/drupack composer install --no-interaction --no-progress) \
     && (cd drupal && ./drupack composer install --no-interaction --no-progress)
 
 ENV GENIE_LISTEN_IP=0.0.0.0

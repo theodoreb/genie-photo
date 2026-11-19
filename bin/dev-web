@@ -1,5 +1,0 @@
-#!/bin/sh
-# Serves the web view with Drupack's FrankenPHP, on the port Drupal's hub and OAuth client expect.
-# Drupack's php.ini caps an upload and a form at 64 MB.
-cd "$(dirname "$0")/.."
-exec drupal/drupack php-server --listen "${GENIE_LISTEN_IP:?}:8000" --root public

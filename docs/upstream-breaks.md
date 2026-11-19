@@ -83,7 +83,7 @@ Versions in use:
 - Target: `drupal/mcp_server`.
 - The `NotificationProvider` plugin type ships the contract only. The module never gives the SDK a notification bus, so `subscriptions/listen` acknowledges an empty filter and `resources.subscribe` is never usable.
 - Fix: `drupal/patches/mcp_server-notification-bus.patch` builds the SDK's `Psr16NotificationBus` on Drupal's expirable key-value store and passes it to `setNotificationBus()`.
-- `bin/smoke-subscribe` checks that an update reaches a listen stream.
+- `bin/smoke subscribe` checks that an update reaches a listen stream.
 
 ## 10. mcp/sdk: a listen stream subscribes to any resource URI
 

@@ -28,10 +28,9 @@ final readonly class Seats
      */
     public static function start(string ...$players): self
     {
-        $root = \dirname(__DIR__, 2);
-        $process = new Process(['./drupack', 'drush', 'genie:seats', ...$players], $root.'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']);
+        $process = new Process(['./drupack', 'drush', 'genie:seats', ...$players], \dirname(__DIR__, 4).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']);
         $json = $process->mustRun()->getOutput();
-        file_put_contents($root.self::FILE, $json);
+        file_put_contents(\dirname(__DIR__, 3).self::FILE, $json);
 
         return self::fromJson($json);
     }
@@ -41,7 +40,7 @@ final readonly class Seats
      */
     public static function saved(): self
     {
-        return self::fromJson(file_get_contents(\dirname(__DIR__, 2).self::FILE));
+        return self::fromJson(file_get_contents(\dirname(__DIR__, 3).self::FILE));
     }
 
     public function account(string $player): string

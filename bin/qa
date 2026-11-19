@@ -1,9 +1,7 @@
 #!/bin/sh
-# Static checks and unit tests. The bin/smoke-* scripts need the running site and stay separate.
+# Static checks and unit tests. bin/smoke needs the running site and stays separate.
 set -eu
 cd "$(dirname "$0")/.."
-vendor/bin/php-cs-fixer check --no-interaction
-php bin/console lint:container
-php bin/console lint:twig templates
+(cd symfony && vendor/bin/php-cs-fixer check --no-interaction && php bin/console lint:container && php bin/console lint:twig templates)
 (cd drupal && vendor/bin/phpcs && vendor/bin/phpstan analyse --no-progress --memory-limit=1G)
-bin/test-drupal
+bin/lib/test-drupal

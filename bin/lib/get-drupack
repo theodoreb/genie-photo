@@ -2,7 +2,7 @@
 # Puts this project's Drupack build in drupal/drupack. It runs Drupal, the web view and Composer,
 # so the machine needs no PHP. fork/drupack holds its changes to Drupack.
 set -eu
-cd "$(dirname "$0")/../drupal"
+cd "$(dirname "$0")/../../drupal"
 
 tag=drupack-1.0.0-rc6-genie.2
 file=$tag-linux-amd64-glibc

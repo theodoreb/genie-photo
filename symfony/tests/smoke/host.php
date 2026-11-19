@@ -11,8 +11,8 @@ use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 
-require dirname(__DIR__).'/vendor/autoload.php';
-(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+require dirname(__DIR__, 2).'/vendor/autoload.php';
+(new Dotenv())->bootEnv(dirname(__DIR__, 2).'/.env');
 
 $web = $_ENV['PUBLIC_URL'];
 // Follows Drupal's consent page until the browser is back on the web view.
@@ -30,14 +30,14 @@ $host->submit($host->getCrawler()->filter('#genie-host')->form(['code' => 'wrong
 if (!str_contains($host->getCrawler()->text(), 'This host code is wrong.')) {
     SmokeSite::fail('A wrong host code started a game.');
 }
-$code = trim((string) file_get_contents(dirname(__DIR__).'/drupal/private/host-code'));
+$code = trim((string) file_get_contents(dirname(__DIR__, 3).'/drupal/private/host-code'));
 $host->submit($host->getCrawler()->filter('#genie-host')->form(['code' => $code, 'name' => 'hana']));
 $upload = $arrive($host)->getCrawler()->filter('form.upload');
 if (0 === $upload->count()) {
     SmokeSite::fail('The host did not reach the upload form.');
 }
 $form = $upload->form();
-$form['photo']->upload(dirname(__DIR__).'/demo/holiday-party.jpg');
+$form['photo']->upload(dirname(__DIR__, 3).'/demo/holiday-party.jpg');
 $host->submit($form);
 $invite = $host->getCrawler()->filter('.invite a');
 if (0 === $invite->count()) {

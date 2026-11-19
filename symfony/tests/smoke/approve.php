@@ -19,7 +19,7 @@ use Mcp\Schema\Enum\ProtocolVersion;
 use Mcp\Schema\Request\ElicitRequest;
 use Mcp\Schema\Result\ElicitResult;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $site = new SmokeSite('alice', 'bob', 'carol', 'dan', 'erin');
 $tokens = [];

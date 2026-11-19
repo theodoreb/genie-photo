@@ -13,8 +13,8 @@ use App\Tests\Smoke\Seats;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 
-require dirname(__DIR__).'/vendor/autoload.php';
-(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+require dirname(__DIR__, 2).'/vendor/autoload.php';
+(new Dotenv())->bootEnv(dirname(__DIR__, 2).'/.env');
 
 $endpoint = $_ENV['DRUPAL_URL'].'/mcp';
 

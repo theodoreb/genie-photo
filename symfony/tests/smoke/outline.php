@@ -7,11 +7,11 @@ declare(strict_types=1);
 
 use App\Tests\Smoke\SmokeSite;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $site = new SmokeSite();
 $web = $site->signIn('alice');
-$site->photos->put($web, (string) file_get_contents(dirname(__DIR__).'/demo/holiday-party.jpg'));
+$site->photos->put($web, (string) file_get_contents(dirname(__DIR__, 3).'/demo/holiday-party.jpg'));
 $assistant = $site->signInAsAssistant('alice');
 
 $deadline = time() + 120;

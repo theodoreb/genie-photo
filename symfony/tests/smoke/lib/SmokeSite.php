@@ -29,8 +29,7 @@ final readonly class SmokeSite
 
     public function __construct(string ...$players)
     {
-        $root = \dirname(__DIR__, 2);
-        (new Dotenv())->bootEnv($root.'/.env');
+        (new Dotenv())->bootEnv(\dirname(__DIR__, 3).'/.env');
         $this->drupalUrl = $_ENV['DRUPAL_URL'];
         $this->http = HttpClient::create();
         $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
@@ -100,7 +99,7 @@ final readonly class SmokeSite
     {
         // The detector refuses a photo nobody is in, so the demo photo fills the left third.
         $image = imagecreatetruecolor(2000, 1000);
-        $people = imagecreatefromjpeg(\dirname(__DIR__, 2).'/demo/holiday-party.jpg');
+        $people = imagecreatefromjpeg(\dirname(__DIR__, 4).'/demo/holiday-party.jpg');
         imagecopyresampled($image, $people, 0, 0, 0, 0, 667, 1000, imagesx($people), imagesy($people));
         ob_start();
         imagejpeg($image);

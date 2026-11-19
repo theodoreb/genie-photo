@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 use App\Tests\Smoke\SmokeSite;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $site = new SmokeSite();
 $alice = $site->signInAsAssistant('alice');

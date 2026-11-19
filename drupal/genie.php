@@ -42,7 +42,7 @@ if (PHP_SAPI !== 'cli' && !is_dir($genie_keys)) {
   }
 }
 
-// The host code is the first line of this file, which bin/dev-drupal writes.
+// The host code is the first line of this file, which bin/lib/dev-drupal writes.
 $config['key.key.genie_host_code']['key_provider_settings']['file_location'] = "$genie_data/host-code";
 
 // The wish model's first server, such as a GPU box on the LAN. Ollama on this
@@ -51,7 +51,8 @@ if ($genie_model_url = getenv('GENIE_MODEL_URL')) {
   $config['ai.inference_provider.genie_ollama']['configuration']['base_url'] = $genie_model_url;
 }
 
-// Behind a TLS proxy, Drupal takes the client's scheme and host from that one address.
+// Behind a TLS proxy, Drupal takes the client's scheme and host from that
+// one address.
 if ($genie_proxy = getenv('GENIE_REVERSE_PROXY')) {
   $settings['reverse_proxy'] = TRUE;
   $settings['reverse_proxy_addresses'] = [$genie_proxy];

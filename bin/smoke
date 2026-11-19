@@ -1,0 +1,7 @@
+#!/bin/sh
+# Runs one smoke test against the running site, such as: bin/smoke wish alice 'hide my face'.
+set -eu
+cd "$(dirname "$0")/.."
+name="${1:?Usage: bin/smoke NAME [ARGS]. Names: $(cd symfony/tests/smoke && ls *.php | sed 's/\.php$//' | tr '\n' ' ')}"
+shift
+DRUPACK_NO_UPDATE_CHECK=1 exec drupal/drupack php "symfony/tests/smoke/$name.php" "$@"

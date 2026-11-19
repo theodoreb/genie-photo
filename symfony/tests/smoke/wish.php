@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 use App\Tests\Smoke\SmokeSite;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $player = $argv[1] ?? 'alice';
 $wish = $argv[2] ?? 'hide my face';
