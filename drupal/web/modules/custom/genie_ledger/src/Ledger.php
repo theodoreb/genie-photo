@@ -6,7 +6,11 @@ namespace Drupal\genie_ledger;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\genie_ledger\Plugin\mcp_server\ResourceProvider\GameResource;
 use Drupal\node\NodeInterface;
+use Mcp\Schema\Notification\ResourceUpdatedNotification;
+use Mcp\Schema\Notification\ToolListChangedNotification;
+use Mcp\Server\Subscription\NotificationBusInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -28,6 +32,8 @@ final class Ledger {
     private readonly RevisionPublisher $publisher,
     private readonly PhotoStore $photos,
     private readonly CurrentGame $game,
+    #[Autowire(service: 'mcp_server.notification_bus')]
+    private readonly NotificationBusInterface $bus,
   ) {}
 
   /**
@@ -118,6 +124,11 @@ final class Ledger {
       return [$game, $session];
     });
     $this->publisher->publish($game->uuid(), $session->revision);
+    $this->bus->publish(new ResourceUpdatedNotification(GameResource::uri($game->uuid())));
+    if ($session->transition !== NULL) {
+      // The new state lists other tools.
+      $this->bus->publish(new ToolListChangedNotification());
+    }
     return $session;
   }
 

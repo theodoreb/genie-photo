@@ -122,7 +122,8 @@
                 "Allow http://localhost redirect URIs for native clients": "patches/simple_oauth_21-localhost-redirect.patch"
             },
             "drupal/mcp_server": {
-                "Run on mcp/sdk 0.10 and later": "patches/mcp_server-mcp-sdk-0.10.patch"
+                "Run on mcp/sdk 0.10 and later": "patches/mcp_server-mcp-sdk-0.10.patch",
+                "Deliver notifications on subscriptions/listen": "patches/mcp_server-notification-bus.patch"
             }
         },
         "composer-patches": {

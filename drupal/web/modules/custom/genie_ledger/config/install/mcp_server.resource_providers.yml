@@ -1,0 +1,6 @@
+plugins:
+  -
+    id: genie_game
+    enabled: true
+    configuration:
+      enabled: true

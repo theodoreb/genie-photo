@@ -1,5 +1,5 @@
 {
-    "_hash": "73e940959cab7d2b6dfdf501490c9059b342b8a54092297a0eaa43a3a994399c",
+    "_hash": "596c5d4108a4e69dfc5749ae4db1a3132fe671a3197724d16c1cdea65f876556",
     "patches": {
         "e0ipso/simple_oauth_21": [
             {
@@ -19,6 +19,16 @@
                 "description": "Run on mcp/sdk 0.10 and later",
                 "url": "patches/mcp_server-mcp-sdk-0.10.patch",
                 "sha256": "9b7a99f3602adca7e3ac8bf602fb750119a93908c342d72ee9466728e202fb63",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "drupal/mcp_server",
+                "description": "Deliver notifications on subscriptions/listen",
+                "url": "patches/mcp_server-notification-bus.patch",
+                "sha256": "3028513d7479a002333c50d1b638f2529c8e57c74497fa8307f99f5d42919a82",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

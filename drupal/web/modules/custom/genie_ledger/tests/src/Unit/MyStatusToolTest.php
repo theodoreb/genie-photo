@@ -21,6 +21,7 @@ use Drupal\genie_ledger\WishDesk;
 use Drupal\Tests\UnitTestCase;
 use Drupal\node\NodeInterface;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Subscription\NotificationBusInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -61,7 +62,7 @@ final class MyStatusToolTest extends UnitTestCase {
       $game->enter(1);
     }
     $photos = (new \ReflectionClass(PhotoStore::class))->newInstanceWithoutConstructor();
-    $ledger = new Ledger($entityTypeManager, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos, $game);
+    $ledger = new Ledger($entityTypeManager, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos, $game, $this->createStub(NotificationBusInterface::class));
     $desk = (new \ReflectionClass(WishDesk::class))->newInstanceWithoutConstructor();
     return new MyStatusTool([], 'my_status', NULL, $currentUser, $ledger, $desk);
   }

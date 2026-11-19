@@ -1,0 +1,184 @@
+--- a/mcp_server.services.yml	2026-11-19 10:22:45.882284706 +0100
++++ b/mcp_server.services.yml	2026-11-19 10:23:24.820158706 +0100
+@@ -88,6 +88,7 @@
+       - '@cache.discovery'
+       - '@module_handler'
+       - '@private_key'
++      - '@mcp_server.notification_bus'
+ 
+   # MCP Server.
+   # The main server instance created by the factory.
+@@ -153,3 +154,15 @@
+   plugin.manager.mcp_server.notification:
+     class: Drupal\mcp_server\Plugin\NotificationProviderManager
+     parent: default_plugin_manager
++
++  # Carries notifications to the subscriptions/listen streams of every worker.
++  mcp_server.notification_bus:
++    class: Mcp\Server\Subscription\Psr16NotificationBus
++    arguments:
++      - '@mcp_server.notification_cache'
++  Mcp\Server\Subscription\NotificationBusInterface: '@mcp_server.notification_bus'
++  mcp_server.notification_cache:
++    class: Drupal\mcp_server\Subscription\KeyValueSimpleCache
++    arguments:
++      - '@keyvalue.expirable'
++      - 'mcp_server.notifications'
+--- a/src/McpServerFactory.php	2026-11-19 10:22:45.883305110 +0100
++++ b/src/McpServerFactory.php	2026-11-19 10:23:24.820302528 +0100
+@@ -44,6 +44,7 @@
+ use Mcp\Server\Builder;
+ use Mcp\Server\Session\SessionLockInterface;
+ use Mcp\Server\Session\SessionStoreInterface;
++use Mcp\Server\Subscription\NotificationBusInterface;
+ use Psr\Container\ContainerInterface;
+ use Psr\EventDispatcher\EventDispatcherInterface;
+ use Psr\Log\LoggerInterface;
+@@ -130,6 +131,8 @@
+    *   The module handler, for the instructions alter hook.
+    * @param \Drupal\Core\PrivateKey $privateKey
+    *   The private key, for signing the multi round-trip request state.
++   * @param \Mcp\Server\Subscription\NotificationBusInterface $notificationBus
++   *   The bus that carries notifications to subscriptions/listen streams.
+    */
+   public function __construct(
+     private readonly ConfigFactoryInterface $configFactory,
+@@ -148,6 +151,7 @@
+     private readonly CacheBackendInterface $discoveryCache,
+     private readonly ModuleHandlerInterface $moduleHandler,
+     private readonly PrivateKey $privateKey,
++    private readonly NotificationBusInterface $notificationBus,
+   ) {}
+ 
+   /**
+@@ -199,6 +203,7 @@
+       ->setEventDispatcher($this->eventDispatcher)
+       ->setSession($this->sessionStore)
+       ->setSessionLock($this->sessionLock)
++      ->setNotificationBus($this->notificationBus)
+       ->setContainer($this->container)
+       ->setReferenceHandler(
+         new ShieldedReferenceHandler(new ArrayArgumentsReferenceHandler(new ReferenceHandler($this->container))),
+--- a/src/Subscription/KeyValueSimpleCache.php	1970-01-01 01:00:00.000000000 +0100
++++ b/src/Subscription/KeyValueSimpleCache.php	2026-11-19 10:23:15.989250800 +0100
+@@ -0,0 +1,120 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\mcp_server\Subscription;
++
++use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
++use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
++use Psr\SimpleCache\CacheInterface;
++
++/**
++ * A PSR-16 cache on Drupal's expirable key-value store.
++ *
++ * The SDK's Psr16NotificationBus keeps its notifications here. Each PHP worker
++ * reads the same database rows, so a request that changes something reaches
++ * the subscriptions/listen streams held by other workers.
++ */
++final class KeyValueSimpleCache implements CacheInterface {
++
++  /**
++   * The store holding the entries.
++   */
++  private readonly KeyValueStoreExpirableInterface $store;
++
++  /**
++   * Constructs a KeyValueSimpleCache.
++   *
++   * @param \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $factory
++   *   The expirable key-value factory.
++   * @param string $collection
++   *   The collection that holds the entries.
++   */
++  public function __construct(KeyValueExpirableFactoryInterface $factory, string $collection) {
++    $this->store = $factory->get($collection);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function get(string $key, mixed $default = NULL): mixed {
++    return $this->store->get($key, $default);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function set(string $key, mixed $value, null|int|\DateInterval $ttl = NULL): bool {
++    $seconds = self::seconds($ttl);
++    if ($seconds === NULL) {
++      $this->store->set($key, $value);
++    }
++    elseif ($seconds > 0) {
++      $this->store->setWithExpire($key, $value, $seconds);
++    }
++    else {
++      $this->store->delete($key);
++    }
++    return TRUE;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function delete(string $key): bool {
++    $this->store->delete($key);
++    return TRUE;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function clear(): bool {
++    $this->store->deleteAll();
++    return TRUE;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getMultiple(iterable $keys, mixed $default = NULL): iterable {
++    $keys = [...$keys];
++    return $this->store->getMultiple($keys) + array_fill_keys($keys, $default);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function setMultiple(iterable $values, null|int|\DateInterval $ttl = NULL): bool {
++    foreach ($values as $key => $value) {
++      $this->set((string) $key, $value, $ttl);
++    }
++    return TRUE;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function deleteMultiple(iterable $keys): bool {
++    $this->store->deleteMultiple([...$keys]);
++    return TRUE;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function has(string $key): bool {
++    return $this->store->has($key);
++  }
++
++  /**
++   * Turns a PSR-16 time to live into seconds, NULL for no expiry.
++   */
++  private static function seconds(null|int|\DateInterval $ttl): ?int {
++    if ($ttl instanceof \DateInterval) {
++      return (new \DateTimeImmutable('@0'))->add($ttl)->getTimestamp();
++    }
++    return $ttl;
++  }
++
++}

@@ -82,7 +82,7 @@ To play several players from one machine, add the server once per player under a
 | `claim_place` | Takes a found person as yours, or corrects your head or box |
 | `make_wish` | Sends a wish to the genie |
 | `paint_me` | Repaints your whole person and a one-block safe zone, with optional pixel art, and returns the result |
-| `wait_for_update` | Waits up to 25 seconds for a change, approvals included |
+| `wait_for_update` | Waits up to 10 seconds for a change, approvals included |
 | `approve_export` | Sends you to the page that shows the picture, and reports your approval |
 
 Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `picture_get`, which returns its images. Assistants cannot call it.
