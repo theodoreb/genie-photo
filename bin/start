@@ -17,6 +17,8 @@ export DRUPACK_TLS_DIR=
 export GENIE_LISTEN_IP="${GENIE_LISTEN_IP:-127.0.0.1}"
 
 "$drupack" composer install --no-interaction --no-progress
+# Prod serves only compiled assets, so a server compiles them on each start.
+if [ "${APP_ENV:-}" = prod ]; then "$drupack" php bin/console asset-map:compile --quiet; fi
 (cd drupal && ./drupack composer install --no-interaction --no-progress)
 
 # The marker appears only after a complete install, so a failed one runs again.
