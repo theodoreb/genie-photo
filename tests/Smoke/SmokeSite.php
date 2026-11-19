@@ -7,7 +7,7 @@ namespace App\Tests\Smoke;
 use App\Drupal\DrupalPhotos;
 use App\Drupal\McpDrupalTools;
 use App\Security\DrupalOAuth;
-use Mcp\Client;
+use Mcp\Client\Client;
 use Mcp\Client\Transport\HttpTransport;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;

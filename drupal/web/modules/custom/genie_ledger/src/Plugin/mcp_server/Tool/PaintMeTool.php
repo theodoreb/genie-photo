@@ -7,7 +7,7 @@ namespace Drupal\genie_ledger\Plugin\mcp_server\Tool;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie_ledger\BodyPaint;
 use Drupal\mcp_server\Attribute\Tool;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 
 /**

@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 use App\Drupal\DrupalToolFailed;
 use App\Tests\Smoke\SmokeSite;
-use Mcp\Client;
+use Mcp\Client\Client;
 use Mcp\Client\Handler\Request\ElicitationCallbackInterface;
 use Mcp\Client\Handler\Request\ElicitationRequestHandler;
 use Mcp\Client\Transport\HttpTransport;

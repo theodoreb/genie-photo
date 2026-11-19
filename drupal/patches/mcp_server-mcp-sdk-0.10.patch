@@ -1,0 +1,367 @@
+--- a/composer.json	2026-10-29 17:00:37.000000000 +0100
++++ b/composer.json	2026-11-19 09:59:49.491234869 +0100
+@@ -21,7 +21,7 @@
+   ],
+   "require": {
+     "php": "^8.3",
+-    "mcp/sdk": "^0.9",
++    "mcp/sdk": "^0.10 || ^0.11",
+     "psr/simple-cache": "^3.0"
+   },
+   "require-dev": {
+--- a/src/Capability/Handler/ArrayArgumentsReferenceHandler.php	1970-01-01 01:00:00.000000000 +0100
++++ b/src/Capability/Handler/ArrayArgumentsReferenceHandler.php	2026-11-19 09:58:39.366841430 +0100
+@@ -0,0 +1,51 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\mcp_server\Capability\Handler;
++
++use Mcp\Server\Capability\Registry\ElementReference;
++use Mcp\Server\Capability\Registry\ReferenceHandlerInterface;
++use Mcp\Server\Capability\Registry\ToolReference;
++
++/**
++ * Hands tool plugins their arguments as nested arrays.
++ *
++ * Since mcp/sdk 0.10, a JSON object nested in tools/call arguments reaches
++ * ToolHandlerInterface::execute() as \stdClass. Tool plugins read nested
++ * values as arrays, so this turns each nested \stdClass back into an array.
++ * The SDK's own objects in the arguments, such as _session, stay as they are.
++ */
++final readonly class ArrayArgumentsReferenceHandler implements ReferenceHandlerInterface {
++
++  /**
++   * Constructs an ArrayArgumentsReferenceHandler.
++   *
++   * @param \Mcp\Server\Capability\Registry\ReferenceHandlerInterface $inner
++   *   The reference handler doing the actual dispatch.
++   */
++  public function __construct(
++    private ReferenceHandlerInterface $inner,
++  ) {}
++
++  /**
++   * {@inheritdoc}
++   */
++  public function handle(ElementReference $reference, array $arguments): mixed {
++    if ($reference instanceof ToolReference) {
++      $arguments = array_map(self::toArrays(...), $arguments);
++    }
++    return $this->inner->handle($reference, $arguments);
++  }
++
++  /**
++   * Turns \stdClass values into arrays, at every depth.
++   */
++  private static function toArrays(mixed $value): mixed {
++    if ($value instanceof \stdClass) {
++      $value = get_object_vars($value);
++    }
++    return is_array($value) ? array_map(self::toArrays(...), $value) : $value;
++  }
++
++}
+--- a/src/Capability/Handler/PromptConfigHandler.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Capability/Handler/PromptConfigHandler.php	2026-11-19 09:56:14.498130156 +0100
+@@ -4,7 +4,7 @@
+ 
+ namespace Drupal\mcp_server\Capability\Handler;
+ 
+-use Mcp\Exception\PromptGetException;
++use Mcp\Server\Exception\PromptGetException;
+ use Mcp\Server\ClientGateway;
+ use Mcp\Server\Handler\PromptHandlerInterface;
+ 
+@@ -21,7 +21,7 @@
+    *
+    * @param array $messages
+    *   The message templates from the prompt configuration entity.
+-   * @param array<string, \Mcp\Capability\Completion\ProviderInterface> $completionProviders
++   * @param array<string, \Mcp\Server\Capability\Completion\ProviderInterface> $completionProviders
+    *   Completion providers keyed by argument machine name. An argument with a
+    *   provider only accepts values the provider lists as completions.
+    */
+@@ -60,7 +60,7 @@
+    * @param array $arguments
+    *   Client-supplied argument values, keyed by argument machine name.
+    *
+-   * @throws \Mcp\Exception\PromptGetException
++   * @throws \Mcp\Server\Exception\PromptGetException
+    *   When a supplied value is not among its provider's completions.
+    */
+   private function validateArguments(array $arguments): void {
+--- a/src/Capability/Handler/ShieldedReferenceHandler.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Capability/Handler/ShieldedReferenceHandler.php	2026-11-19 09:56:14.499225890 +0100
+@@ -5,8 +5,8 @@
+ namespace Drupal\mcp_server\Capability\Handler;
+ 
+ use Drupal\mcp_server\Capability\FiberShield;
+-use Mcp\Capability\Registry\ElementReference;
+-use Mcp\Capability\Registry\ReferenceHandlerInterface;
++use Mcp\Server\Capability\Registry\ElementReference;
++use Mcp\Server\Capability\Registry\ReferenceHandlerInterface;
+ 
+ /**
+  * Shields tools/call, prompts/get and resources/read from Drupal's suspends.
+@@ -21,7 +21,7 @@
+   /**
+    * Constructs a ShieldedReferenceHandler.
+    *
+-   * @param \Mcp\Capability\Registry\ReferenceHandlerInterface $inner
++   * @param \Mcp\Server\Capability\Registry\ReferenceHandlerInterface $inner
+    *   The reference handler doing the actual dispatch.
+    */
+   public function __construct(
+--- a/src/Capability/Loader/ChainedCompletionProvider.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Capability/Loader/ChainedCompletionProvider.php	2026-11-19 09:56:14.503755625 +0100
+@@ -4,7 +4,7 @@
+ 
+ namespace Drupal\mcp_server\Capability\Loader;
+ 
+-use Mcp\Capability\Completion\ProviderInterface;
++use Mcp\Server\Capability\Completion\ProviderInterface;
+ 
+ /**
+  * Chains multiple completion providers for a single argument.
+@@ -14,7 +14,7 @@
+   /**
+    * Constructs a new object.
+    *
+-   * @param array<int, \Mcp\Capability\Completion\ProviderInterface> $providers
++   * @param array<int, \Mcp\Server\Capability\Completion\ProviderInterface> $providers
+    *   Providers configured for an argument in the order they should execute.
+    */
+   public function __construct(
+--- a/src/Capability/Loader/PluginProviderAdapter.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Capability/Loader/PluginProviderAdapter.php	2026-11-19 09:56:14.508083414 +0100
+@@ -5,7 +5,7 @@
+ namespace Drupal\mcp_server\Capability\Loader;
+ 
+ use Drupal\mcp_server\Plugin\ArgumentCompletionProviderInterface;
+-use Mcp\Capability\Completion\ProviderInterface;
++use Mcp\Server\Capability\Completion\ProviderInterface;
+ 
+ /**
+  * Adapts Drupal completion provider plugins to MCP SDK ProviderInterface.
+--- a/src/Capability/Loader/ShieldedCompletionProvider.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Capability/Loader/ShieldedCompletionProvider.php	2026-11-19 09:56:14.500279842 +0100
+@@ -5,7 +5,7 @@
+ namespace Drupal\mcp_server\Capability\Loader;
+ 
+ use Drupal\mcp_server\Capability\FiberShield;
+-use Mcp\Capability\Completion\ProviderInterface;
++use Mcp\Server\Capability\Completion\ProviderInterface;
+ 
+ /**
+  * Shields completion/complete from Drupal's suspends.
+@@ -20,7 +20,7 @@
+   /**
+    * Constructs a ShieldedCompletionProvider.
+    *
+-   * @param \Mcp\Capability\Completion\ProviderInterface $inner
++   * @param \Mcp\Server\Capability\Completion\ProviderInterface $inner
+    *   The provider doing the actual completion.
+    */
+   public function __construct(
+--- a/src/Controller/McpServerController.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Controller/McpServerController.php	2026-11-19 09:56:14.513557401 +0100
+@@ -6,7 +6,7 @@
+ 
+ use Drupal\Core\Controller\ControllerBase;
+ use Drupal\mcp_server\Transport\TransportMiddlewareCollector;
+-use Mcp\Server;
++use Mcp\Server\Server;
+ use Mcp\Server\Transport\Http\Middleware\PassthroughMiddleware;
+ use Mcp\Server\Transport\StreamableHttpTransport;
+ use Psr\Http\Message\ResponseFactoryInterface;
+--- a/src/EventSubscriber/StdioRequestTimeSubscriber.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/EventSubscriber/StdioRequestTimeSubscriber.php	2026-11-19 09:56:14.510190779 +0100
+@@ -4,7 +4,7 @@
+ 
+ namespace Drupal\mcp_server\EventSubscriber;
+ 
+-use Mcp\Event\RequestEvent;
++use Mcp\Server\Event\RequestEvent;
+ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
+--- a/src/McpServerFactory.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/McpServerFactory.php	2026-11-19 09:58:39.377124172 +0100
+@@ -17,6 +17,7 @@
+ use Drupal\mcp_server\Capability\Handler\PromptConfigHandler;
+ use Drupal\mcp_server\Capability\Handler\ResourceProviderHandler;
+ use Drupal\mcp_server\Capability\Handler\ResourceTemplateProviderHandler;
++use Drupal\mcp_server\Capability\Handler\ArrayArgumentsReferenceHandler;
+ use Drupal\mcp_server\Capability\Handler\ShieldedReferenceHandler;
+ use Drupal\mcp_server\Capability\Loader\ChainedCompletionProvider;
+ use Drupal\mcp_server\Capability\Loader\PluginProviderAdapter;
+@@ -28,18 +29,18 @@
+ use Drupal\mcp_server\Plugin\ToolPluginInterface;
+ use Drupal\mcp_server\Plugin\ToolPluginManager;
+ use Drupal\mcp_server\Resource\ResourceContentCache;
+-use Mcp\Capability\Discovery\CachedDiscoverer;
+-use Mcp\Capability\Discovery\Discoverer;
+-use Mcp\Capability\Registry\Loader\DiscoveryLoader;
+-use Mcp\Capability\Registry\ReferenceHandler;
+-use Mcp\Capability\Tool\NameValidator;
++use Mcp\Server\Capability\Discovery\CachedDiscoverer;
++use Mcp\Server\Capability\Discovery\Discoverer;
++use Mcp\Server\Capability\Registry\Loader\DiscoveryLoader;
++use Mcp\Server\Capability\Registry\ReferenceHandler;
++use Mcp\Server\Capability\Tool\NameValidator;
+ use Mcp\Schema\Prompt;
+ use Mcp\Schema\PromptArgument;
+ use Mcp\Schema\ResourceDefinition;
+ use Mcp\Schema\ResourceTemplate;
+ use Mcp\Schema\Tool;
+ use Mcp\Schema\ToolAnnotations;
+-use Mcp\Server;
++use Mcp\Server\Server;
+ use Mcp\Server\Builder;
+ use Mcp\Server\Session\SessionLockInterface;
+ use Mcp\Server\Session\SessionStoreInterface;
+@@ -178,7 +179,7 @@
+   /**
+    * Creates a configured MCP Server instance.
+    *
+-   * @return \Mcp\Server
++   * @return \Mcp\Server\Server
+    *   The configured MCP server.
+    */
+   public function create(): Server {
+@@ -200,7 +201,7 @@
+       ->setSessionLock($this->sessionLock)
+       ->setContainer($this->container)
+       ->setReferenceHandler(
+-        new ShieldedReferenceHandler(new ReferenceHandler($this->container)),
++        new ShieldedReferenceHandler(new ArrayArgumentsReferenceHandler(new ReferenceHandler($this->container))),
+       );
+ 
+     $builder->setRequestState($this->requestStateKey());
+@@ -562,7 +563,7 @@
+    * @param array<string, array<int, array{plugin_id: string, configuration?: array<string, mixed>}>> $declarations
+    *   Provider declarations keyed by argument name.
+    *
+-   * @return array<string, \Mcp\Capability\Completion\ProviderInterface>
++   * @return array<string, \Mcp\Server\Capability\Completion\ProviderInterface>
+    *   Completion providers keyed by argument name. Arguments whose
+    *   declarations all fail to instantiate are omitted.
+    */
+--- a/src/Resource/ResourceContentCache.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Resource/ResourceContentCache.php	2026-11-19 09:56:14.505845834 +0100
+@@ -7,7 +7,7 @@
+ use Drupal\Core\Access\AccessResultInterface;
+ use Drupal\Core\Cache\CacheableMetadata;
+ use Drupal\Core\Cache\VariationCacheInterface;
+-use Mcp\Exception\ResourceNotFoundException;
++use Mcp\Server\Exception\ResourceNotFoundException;
+ 
+ /**
+  * Wraps resource content generation with a variation-cache layer.
+@@ -56,7 +56,7 @@
+    * @return array
+    *   The ResourceContents payload array (uri, mimeType, text or blob).
+    *
+-   * @throws \Mcp\Exception\ResourceNotFoundException
++   * @throws \Mcp\Server\Exception\ResourceNotFoundException
+    *   When $accessCallback returns a non-allowed result, or $contentCallback
+    *   returns NULL. Both cases throw the same exception so a denied read
+    *   does not reveal that the resource exists.
+--- a/src/Session/LockBackendSessionLock.php	2026-10-29 17:00:37.000000000 +0100
++++ b/src/Session/LockBackendSessionLock.php	2026-11-19 09:56:14.509094151 +0100
+@@ -7,7 +7,7 @@
+ use Drupal\Component\Datetime\TimeInterface;
+ use Drupal\Core\Database\Connection;
+ use Drupal\Core\Lock\LockBackendInterface;
+-use Mcp\Exception\SessionLockTimeoutException;
++use Mcp\Server\Exception\SessionLockTimeoutException;
+ use Mcp\Server\Session\SessionLockInterface;
+ use Symfony\Component\Uid\Uuid;
+ 
+--- a/tests/src/Kernel/McpServerInstructionsTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Kernel/McpServerInstructionsTest.php	2026-11-19 09:56:14.512522742 +0100
+@@ -6,7 +6,7 @@
+ 
+ use Drupal\KernelTests\KernelTestBase;
+ use Drupal\mcp_server_instructions_test\Hook\TestInstructionsHooks;
+-use Mcp\Server;
++use Mcp\Server\Server;
+ use Mcp\Server\Handler\Request\InitializeHandler;
+ use PHPUnit\Framework\Attributes\Group;
+ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+@@ -20,7 +20,7 @@
+  * The SDK's serialization of that value into the handshake is the framework's
+  * concern and is not asserted here.
+  *
+- * Reflects into the built Mcp\Server because the SDK exposes no public accessor
++ * Reflects into the built Mcp\Server\Server because the SDK exposes no public accessor
+  * for the configured InitializeHandler.
+  *
+  * @group mcp_server
+--- a/tests/src/Kernel/Plugin/ResourceProviderRegistrationTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Kernel/Plugin/ResourceProviderRegistrationTest.php	2026-11-19 09:56:14.501317976 +0100
+@@ -5,10 +5,10 @@
+ namespace Drupal\Tests\mcp_server\Kernel\Plugin;
+ 
+ use Drupal\KernelTests\KernelTestBase;
+-use Mcp\Capability\Registry\ResourceReference;
+-use Mcp\Capability\RegistryInterface;
+-use Mcp\Exception\ResourceNotFoundException;
+-use Mcp\Server;
++use Mcp\Server\Capability\Registry\ResourceReference;
++use Mcp\Server\Capability\RegistryInterface;
++use Mcp\Server\Exception\ResourceNotFoundException;
++use Mcp\Server\Server;
+ use Mcp\Server\Handler\Request\ReadResourceHandler;
+ use Mcp\Server\Session\SessionInterface;
+ use PHPUnit\Framework\Attributes\Group;
+--- a/tests/src/Kernel/Session/LockBackendSessionLockTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Kernel/Session/LockBackendSessionLockTest.php	2026-11-19 09:56:14.511338197 +0100
+@@ -13,7 +13,7 @@
+ use Drupal\Tests\user\Traits\UserCreationTrait;
+ use Mcp\Schema\Elicitation\ElicitationSchema;
+ use Mcp\Schema\Elicitation\StringSchemaDefinition;
+-use Mcp\Server;
++use Mcp\Server\Server;
+ use Mcp\Server\ClientGateway;
+ use Mcp\Server\Session\InMemorySessionStore;
+ use PHPUnit\Framework\Attributes\CoversClass;
+--- a/tests/src/Kernel/StdioRequestTimeTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Kernel/StdioRequestTimeTest.php	2026-11-19 09:56:14.504828589 +0100
+@@ -5,7 +5,7 @@
+ namespace Drupal\Tests\mcp_server\Kernel;
+ 
+ use Drupal\KernelTests\KernelTestBase;
+-use Mcp\Event\RequestEvent;
++use Mcp\Server\Event\RequestEvent;
+ use Mcp\Server\Transport\StdioTransport;
+ use PHPUnit\Framework\Attributes\Group;
+ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+--- a/tests/src/Unit/Capability/Handler/PromptConfigHandlerTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Unit/Capability/Handler/PromptConfigHandlerTest.php	2026-11-19 09:56:14.507005710 +0100
+@@ -6,9 +6,9 @@
+ 
+ use Drupal\mcp_server\Capability\Handler\PromptConfigHandler;
+ use Drupal\Tests\UnitTestCase;
+-use Mcp\Capability\Completion\ProviderInterface;
+-use Mcp\Capability\Formatter\PromptResultFormatter;
+-use Mcp\Exception\PromptGetException;
++use Mcp\Server\Capability\Completion\ProviderInterface;
++use Mcp\Server\Capability\Formatter\PromptResultFormatter;
++use Mcp\Server\Exception\PromptGetException;
+ use Mcp\Schema\Content\TextContent;
+ use Mcp\Server\ClientGateway;
+ use PHPUnit\Framework\Attributes\Group;
+--- a/tests/src/Unit/Session/LockBackendSessionLockRaceTest.php	2026-10-29 17:00:37.000000000 +0100
++++ b/tests/src/Unit/Session/LockBackendSessionLockRaceTest.php	2026-11-19 09:56:14.497011612 +0100
+@@ -7,7 +7,7 @@
+ use Drupal\Core\Database\Connection;
+ use Drupal\mcp_server\Session\LockBackendSessionLock;
+ use Drupal\Tests\UnitTestCase;
+-use Mcp\Exception\SessionLockTimeoutException;
++use Mcp\Server\Exception\SessionLockTimeoutException;
+ use PHPUnit\Framework\Attributes\CoversClass;
+ use PHPUnit\Framework\Attributes\Group;
+ use Symfony\Component\Uid\Uuid;

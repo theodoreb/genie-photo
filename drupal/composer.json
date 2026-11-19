@@ -5,13 +5,44 @@
     "license": "GPL-2.0-or-later",
     "repositories": [
         {
+            "type": "package",
+            "package": {
+                "name": "drupal/ai",
+                "version": "dev-2.x",
+                "type": "drupal-module",
+                "license": "GPL-2.0-or-later",
+                "source": {
+                    "type": "git",
+                    "url": "https://git.drupalcode.org/project/ai.git",
+                    "reference": "5d6ae6f5ae6c5f9beff9cbe179875109993f331e"
+                },
+                "extra": {
+                    "branch-alias": {
+                        "dev-2.x": "2.x-dev"
+                    }
+                },
+                "require": {
+                    "drupal/core": "^11.2",
+                    "drupal/key": "^1.18",
+                    "drupal/symfony_http_client": "^1.0",
+                    "drupal/token": "^1.16",
+                    "league/commonmark": "^2.8",
+                    "league/html-to-markdown": "^5.2.3",
+                    "yethee/tiktoken": "^1.1.1",
+                    "openai-php/client": ">=v0.10.1",
+                    "symfony/ai-platform": "^1.0",
+                    "symfony/ai-generic-platform": "^1.0"
+                }
+            }
+        },
+        {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         }
     ],
     "require": {
-        "php": ">=8.4",
         "ext-pdo_sqlite": "*",
+        "php": ">=8.4",
         "composer/installers": "^2.3",
         "cweagans/composer-patches": "2.0.0",
         "drupal/ai": "2.x-dev@dev",
@@ -23,12 +54,17 @@
         "drupal/mcp_server_oauth": "^1.0@alpha",
         "drupal/simple_oauth": "^6.1",
         "drush/drush": "^13.6",
-        "e0ipso/simple_oauth_21": "^1.13"
+        "e0ipso/simple_oauth_21": "^1.13",
+        "mcp/sdk": "dev-main as 0.9.99",
+        "symfony/ai-cache-platform": "dev-main",
+        "symfony/ai-failover-platform": "dev-main",
+        "symfony/ai-generic-platform": "dev-main as 1.0.0",
+        "symfony/ai-platform": "dev-main as 1.0.0"
     },
     "require-dev": {
         "codewithkyrian/transformers": "^0.6.2",
         "drupal/core-dev": "^11.4",
-        "symfony/ai-transformers-php-platform": "^0.14"
+        "symfony/ai-transformers-php-platform": "dev-main"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
@@ -83,10 +119,15 @@
         "patches": {
             "e0ipso/simple_oauth_21": {
                 "Allow http://localhost redirect URIs for native clients": "patches/simple_oauth_21-localhost-redirect.patch"
+            },
+            "drupal/mcp_server": {
+                "Run on mcp/sdk 0.10 and later": "patches/mcp_server-mcp-sdk-0.10.patch"
             }
         },
         "composer-patches": {
-            "disable-resolvers": ["\\cweagans\\Composer\\Resolver\\Dependencies"]
+            "disable-resolvers": [
+                "\\cweagans\\Composer\\Resolver\\Dependencies"
+            ]
         }
     }
 }

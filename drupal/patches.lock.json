@@ -1,5 +1,5 @@
 {
-    "_hash": "baca17db64dfe382fa78c70523ca1d999032005732b167ffb684a5fa1db20f71",
+    "_hash": "73e940959cab7d2b6dfdf501490c9059b342b8a54092297a0eaa43a3a994399c",
     "patches": {
         "e0ipso/simple_oauth_21": [
             {
@@ -7,6 +7,18 @@
                 "description": "Allow http://localhost redirect URIs for native clients",
                 "url": "patches/simple_oauth_21-localhost-redirect.patch",
                 "sha256": "f0e0746efa8d671e943c0ab3a07845d346ed787bdee16707f52293f8bdc8a13a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "drupal/mcp_server": [
+            {
+                "package": "drupal/mcp_server",
+                "description": "Run on mcp/sdk 0.10 and later",
+                "url": "patches/mcp_server-mcp-sdk-0.10.patch",
+                "sha256": "9b7a99f3602adca7e3ac8bf602fb750119a93908c342d72ee9466728e202fb63",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

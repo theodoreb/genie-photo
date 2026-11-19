@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Drupal;
 
-use Mcp\Client;
+use Mcp\Client\Client;
 use Mcp\Client\Transport\HttpTransport;
-use Mcp\Exception\ExceptionInterface as McpException;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Exception\ExceptionInterface as McpException;
 use Mcp\Schema\Result\CallToolResult;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
