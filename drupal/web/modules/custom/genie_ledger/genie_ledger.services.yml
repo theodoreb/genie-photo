@@ -31,3 +31,4 @@ services:
   Drupal\genie_ledger\RevisionPublisher: ~
   Drupal\genie_ledger\WishDesk: ~
   Drupal\genie_ledger\WishInterpreter: ~
+  Drupal\genie_ledger\WebViewAddress: ~

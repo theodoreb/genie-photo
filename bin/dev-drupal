@@ -11,6 +11,7 @@ rm -rf web/sites/default/files web/sites/default/settings.php private
 chmod u+w web/sites/default web/sites/default/settings.php
 echo "require dirname(DRUPAL_ROOT) . '/genie.php';" >> web/sites/default/settings.php
 mkdir -p private/files
+od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > private/host-code
 ./drupack drush recipe ../recipes/genie_site -y >/dev/null
 ./drupack drush cache:rebuild >/dev/null
 touch private/.installed

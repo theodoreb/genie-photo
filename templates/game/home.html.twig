@@ -26,7 +26,11 @@
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
       data-player="{{ app.user.uid }}">
+    {% if session.state in ['closed', 'abandoned'] %}
+        <p class="hint">{{ session.state == 'closed' ? 'Everyone approved. This picture is final.' : 'This game saw no change for a day. It stays as it was.' }}</p>
+    {% endif %}
     {% if session.photo %}
+        <p class="hint invite">Invite the others in the photo: <a href="{{ session.invite }}">{{ session.invite }}</a></p>
         <div class="panels">
             <section>
                 <h2>The shared photo</h2>
@@ -51,6 +55,8 @@
                 <ul id="objects" class="objects"></ul>
             </section>
         </div>
+    {% elseif not session.is_uploader %}
+        <p class="hint">The host has not added the group photo yet. This page updates when they do.</p>
     {% else %}
         <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>

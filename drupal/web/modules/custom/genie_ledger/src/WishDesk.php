@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\genie_ledger;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\genie_ledger\Access\WebViewAccess;
+use Drupal\Core\Url;
 
 /**
  * The single entry point for what players ask of the genie.
@@ -82,7 +81,7 @@ final class WishDesk {
     private readonly Exports $exports,
     private readonly PhotoStore $photos,
     private readonly Darkroom $darkroom,
-    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly WebViewAddress $webView,
   ) {}
 
   /**
@@ -503,11 +502,7 @@ final class WishDesk {
    * Builds the address of the page that shows one picture for one player.
    */
   private function reviewUrl(int $revision, string $hash, string $name): string {
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $client */
-    [$client] = array_values($this->entityTypeManager->getStorage('consumer')->loadByProperties(['client_id' => WebViewAccess::CLIENT_ID]));
-    // Scheme, the empty part between the slashes, and host with any port.
-    $origin = implode('/', array_slice(explode('/', $client->get('redirect')->value), 0, 3));
-    return sprintf('%s/review/%d/%s?for=%s', $origin, $revision, $hash, rawurlencode($name));
+    return sprintf('%s/review/%d/%s?for=%s', $this->webView->origin(), $revision, $hash, rawurlencode($name));
   }
 
   /**
@@ -531,6 +526,7 @@ final class WishDesk {
     return [
       'state' => $game->get('field_genie_state')->value,
       'topic' => RevisionPublisher::TOPIC . $game->uuid(),
+      'invite' => Url::fromRoute('genie_ledger.join', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString(),
       'revision' => $session->revision,
       'update' => $session->update,
       'photo' => $session->photo,

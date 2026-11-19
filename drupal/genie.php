@@ -41,3 +41,6 @@ if (PHP_SAPI !== 'cli' && !is_dir($genie_keys)) {
     }
   }
 }
+
+// The host code is the first line of this file, which bin/dev-drupal writes.
+$config['key.key.genie_host_code']['key_provider_settings']['file_location'] = "$genie_data/host-code";

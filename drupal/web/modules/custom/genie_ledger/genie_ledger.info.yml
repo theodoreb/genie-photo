@@ -12,6 +12,7 @@ dependencies:
   - ai:ai
   - compound_field:compound_field
   - json_field:json_field
+  - key:key
   - mcp_server:mcp_server
   - mcp_server_oauth:mcp_server_oauth
   - simple_oauth:simple_oauth

@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+// Starts a game with the host code, uploads the photo on the web view, and seats
+// a second player from the invite link, each in their own browser.
+
+declare(strict_types=1);
+
+use App\Tests\Smoke\SmokeSite;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\HttpClient\HttpClient;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+
+$web = $_ENV['PUBLIC_URL'];
+// Follows Drupal's consent page until the browser is back on the web view.
+$arrive = static function (HttpBrowser $browser) use ($web): HttpBrowser {
+    for ($step = 0; $step < 5 && !str_starts_with($browser->getHistory()->current()->getUri(), $web); ++$step) {
+        $browser->submit($browser->getCrawler()->filter('form input[type=submit]')->first()->form());
+    }
+
+    return $browser;
+};
+
+$host = new HttpBrowser(HttpClient::create(['timeout' => 60]));
+$host->request('GET', $_ENV['DRUPAL_URL'].'/genie/host');
+$host->submit($host->getCrawler()->filter('#genie-host')->form(['code' => 'wrong', 'name' => 'hana']));
+if (!str_contains($host->getCrawler()->text(), 'This host code is wrong.')) {
+    SmokeSite::fail('A wrong host code started a game.');
+}
+$code = trim((string) file_get_contents(dirname(__DIR__).'/drupal/private/host-code'));
+$host->submit($host->getCrawler()->filter('#genie-host')->form(['code' => $code, 'name' => 'hana']));
+$upload = $arrive($host)->getCrawler()->filter('form.upload');
+if (0 === $upload->count()) {
+    SmokeSite::fail('The host did not reach the upload form.');
+}
+$form = $upload->form();
+$form['photo']->upload(dirname(__DIR__).'/demo/holiday-party.jpg');
+$host->submit($form);
+$invite = $host->getCrawler()->filter('.invite a');
+if (0 === $invite->count()) {
+    SmokeSite::fail('The host got no invite link: '.$host->getCrawler()->filter('.error')->text(''));
+}
+
+$guest = new HttpBrowser(HttpClient::create(['timeout' => 60]));
+$guest->request('GET', $invite->attr('href'));
+$guest->submit($guest->getCrawler()->filter('#genie-join')->form(['name' => 'hana']));
+if (!str_contains($guest->getCrawler()->text(), 'already called hana')) {
+    SmokeSite::fail('Two players in one game got the same name.');
+}
+$guest->submit($guest->getCrawler()->filter('#genie-join')->form(['name' => 'ivo']));
+if ('ivo' !== $arrive($guest)->getCrawler()->filter('header span')->last()->text()) {
+    SmokeSite::fail('The guest did not reach the game as ivo.');
+}
+echo "hana hosts, ivo joined\n";

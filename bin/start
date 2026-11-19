@@ -39,5 +39,5 @@ umask 077
 } >.env.new.local
 mv .env.new.local .env.local
 
-echo 'Open http://127.0.0.1:8000 and sign in as alice, bob, carol or dan, password genie.'
+echo "Start a game at $(sed -n 's/^DRUPAL_URL=//p' .env)/genie/host with host code $(cat drupal/private/host-code)."
 exec bin/dev-web
