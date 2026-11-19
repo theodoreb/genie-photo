@@ -6,7 +6,7 @@ Each assistant receives the photo, so it can find who is in it and paint the per
 
 ## Run it
 
-You need PHP 8.4 or later, Composer and curl. Ports 7225 and 8000 must be free. Tested on Linux x86-64.
+You need Linux x86-64 with glibc 2.28 or later, curl and git. PHP is not needed. Ports 7225 and 8000 must be free.
 
 ```sh
 git clone https://github.com/theodoreb/genie-photo.git
@@ -16,13 +16,19 @@ bin/start
 
 Open http://127.0.0.1:8000 and sign in as `alice`, `bob`, `carol` or `dan`. The password is `genie`.
 
-`bin/start` installs the dependencies, downloads Drupack through Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
+`bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
-On Linux x86-64 with glibc 2.28 or later, `bin/start` replaces Drupack with a [build that adds PHP's FFI extension](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-ffi). It checks the file's SHA-256 first. Other systems keep the official Drupack.
+The build is Drupack 1.0.0-rc6 with three patches in `fork/drupack/`:
+
+- Drupack serves and runs Composer for a PHP project without Drupal, here the Symfony web view.
+- Composer's `@php` scripts run on Drupack's PHP.
+- PHP has the FFI extension, which the person detector needs.
+
+`fork/drupack/build` rebuilds the same file from the drupal.org tag with Docker.
 
 ### With Docker instead
 
-Without PHP 8.4, Docker runs the same `bin/start` in one container:
+On macOS, Windows or another Linux, Docker runs the same `bin/start` in one container:
 
 ```sh
 git clone https://github.com/theodoreb/genie-photo.git
@@ -30,7 +36,7 @@ cd genie-photo
 docker compose up
 ```
 
-The ports are published on 127.0.0.1 only, so the addresses below stay the same. The container has no local model, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie drupal/drupack php bin/smoke-wish alice`.
+The ports are published on 127.0.0.1 only, so the addresses below stay the same. The image is x86-64, which Docker Desktop emulates on Apple silicon. The container has no Ollama, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie drupal/drupack php bin/smoke-wish alice`.
 
 ## Replay the demo
 
@@ -67,8 +73,6 @@ vibe mcp add genie --url http://127.0.0.1:7225/mcp
 
 To play several players from one machine, add the server once per player under another name, such as `genie-bob`, and sign each one in as that player.
 
-Drupal serves HTTPS instead when the machine trusts Drupack's or mkcert's local root. `.env.local` holds the address in use. On HTTPS, start Vibe with `SSL_CERT_FILE="$(mkcert -CAROOT)/rootCA.pem"`.
-
 | Tool | What it does |
 |---|---|
 | `my_status` | Names the signed-in player |
@@ -102,11 +106,11 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 - Symfony 8 at the repository root is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `src/Drupal/McpDrupalTools.php`.
 - Drupal in `drupal/` holds the rules, in the module `genie_ledger`. Drupal's `mcp_server` module serves assistants directly.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
-- Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs the FFI build of Drupack and a 42 MB model from Hugging Face. Without them, assistants find the people.
+- Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
 - Every photo is scaled to a 1600-pixel long side, so blocks look the same on every photo.
 - Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A player with no outline can paint everything except other people.
 - A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game session points to one revision.
-- Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes.
+- Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Checks
@@ -125,7 +129,7 @@ The site works without one. Wishes then go through a keyword reader. With [Ollam
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
 
-Smoke scripts reset the session. To reset it by hand, run `cd drupal && ./drupack drush genie:reset`.
+Run a smoke script with Drupack's PHP, such as `drupal/drupack php bin/smoke-wish alice`. `bin/qa` uses the machine's PHP 8.4 or later. Smoke scripts reset the session. To reset it by hand, run `cd drupal && ./drupack drush genie:reset`.
 
 ## License
 
