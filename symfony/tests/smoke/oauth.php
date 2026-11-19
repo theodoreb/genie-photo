@@ -10,6 +10,8 @@ use App\Drupal\DrupalToolFailed;
 use App\Drupal\McpDrupalTools;
 use App\Tests\Smoke\PlayerSession;
 use App\Tests\Smoke\Seats;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 
@@ -30,7 +32,7 @@ $player = $argv[1] ?? 'alice';
 $seats = Seats::start($player);
 $token = (new PlayerSession($endpoint))->signIn($seats->account($player), $seats->password($player));
 try {
-    $name = (new McpDrupalTools($endpoint))->call($token, 'my_status')['name'];
+    $name = (new McpDrupalTools($endpoint, new Psr16Cache(new ArrayAdapter())))->call($token, 'my_status')['name'];
     echo $name, "\n";
     exit($name === $player ? 0 : 1);
 } catch (DrupalToolFailed $e) {

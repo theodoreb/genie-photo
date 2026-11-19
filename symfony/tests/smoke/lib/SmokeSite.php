@@ -12,6 +12,8 @@ use Mcp\Client\Transport\HttpTransport;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
 use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -32,7 +34,7 @@ final readonly class SmokeSite
         (new Dotenv())->bootEnv(\dirname(__DIR__, 3).'/.env');
         $this->drupalUrl = $_ENV['DRUPAL_URL'];
         $this->http = HttpClient::create();
-        $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp');
+        $this->tools = new McpDrupalTools($this->drupalUrl.'/mcp', new Psr16Cache(new ArrayAdapter()));
         $this->photos = new DrupalPhotos($this->http, $this->drupalUrl.'/genie');
         $this->seats = Seats::start(...$players ?: ['alice', 'bob', 'carol', 'dan']);
     }

@@ -1,0 +1,235 @@
+--- a/composer.json
++++ b/composer.json
+@@ -31,6 +31,7 @@
+     "psr/http-server-handler": "^1.0",
+     "psr/http-server-middleware": "^1.0",
+     "psr/log": "^1.0 || ^2.0 || ^3.0",
++    "psr/simple-cache": "^2.0 || ^3.0",
+     "symfony/deprecation-contracts": "^2.5 || ^3.0",
+     "symfony/uid": "^5.4 || ^6.4 || ^7.3 || ^8.0"
+   },
+@@ -50,7 +51,6 @@
+     "phpstan/phpstan": "^2.1",
+     "phpunit/phpunit": "^10.5",
+     "psr/cache": "^1.0 || ^2.0 || ^3.0",
+-    "psr/simple-cache": "^2.0 || ^3.0",
+     "react/async": "^4.3",
+     "react/http": "^1.11",
+     "react/promise": "^3.0",
+--- a/src/Client/Builder.php
++++ b/src/Client/Builder.php
+@@ -21,6 +21,7 @@
+ use Mcp\Schema\Implementation;
+ use Psr\Log\LoggerInterface;
+ use Psr\Log\NullLogger;
++use Psr\SimpleCache\CacheInterface;
+ 
+ /**
+  * Fluent builder for creating Client instances.
+@@ -43,6 +44,7 @@
+     private int $requestTimeout = 120;
+     private int $maxRetries = 3;
+     private ?LoggerInterface $logger = null;
++    private ?CacheInterface $cache = null;
+ 
+     /** @var NotificationHandlerInterface[] */
+     private array $notificationHandlers = [];
+@@ -162,6 +164,17 @@
+     }
+ 
+     /**
++     * Keep the `server/discover` result for its `ttlMs`, so a client that connects
++     * per request skips the probe. Only a client on an HTTP transport uses it.
++     */
++    public function setCache(CacheInterface $cache): self
++    {
++        $this->cache = $cache;
++
++        return $this;
++    }
++
++    /**
+      * Add a notification handler for server notifications.
+      */
+     public function addNotificationHandler(NotificationHandlerInterface $handler): self
+@@ -219,6 +232,7 @@
+             requestHandlers: $this->requestHandlers,
+             notificationHandlers: $this->notificationHandlers,
+             logger: $logger,
++            cache: $this->cache,
+         );
+ 
+         return new Client($protocol, $config, $logger);
+--- a/src/Client/Protocol.php
++++ b/src/Client/Protocol.php
+@@ -26,6 +26,7 @@
+ use Mcp\Client\Transport\HeaderAwareTransportInterface;
+ use Mcp\Client\Transport\HttpTransport;
+ use Mcp\Client\Transport\TransportInterface;
++use Mcp\Schema\Enum\CacheScope;
+ use Mcp\Schema\Enum\LoggingLevel;
+ use Mcp\Schema\Enum\ProtocolVersion;
+ use Mcp\Schema\Exception\InvalidInputMessageException;
+@@ -45,6 +46,7 @@
+ use Mcp\Schema\ServerCapabilities;
+ use Psr\Log\LoggerInterface;
+ use Psr\Log\NullLogger;
++use Psr\SimpleCache\CacheInterface;
+ 
+ /**
+  * Client protocol handler for MCP communication.
+@@ -68,6 +70,8 @@
+      */
+     private const MAX_ROUND_TRIPS = 10;
+ 
++    private const KEY_PREFIX = 'mcp.discover.';
++
+     private ?TransportInterface $transport = null;
+     private ClientStateInterface $state;
+     private MessageFactory $messageFactory;
+@@ -108,6 +112,7 @@
+         array $notificationHandlers = [],
+         ?MessageFactory $messageFactory = null,
+         ?LoggerInterface $logger = null,
++        private readonly ?CacheInterface $cache = null,
+     ) {
+         $this->state = new ClientState();
+         $this->messageFactory = $messageFactory ?? MessageFactory::make();
+@@ -227,8 +232,18 @@
+     {
+         $this->enterModernEra($version ?? $config->protocolVersion, $config);
+ 
+-        $probe = $this->request(new DiscoverRequest(), $config->initTimeout);
+-        $adopted = $this->adopt($probe);
++        $probe = $this->resumeDiscovery();
++        $adopted = null === $probe ? null : $this->adopt($probe);
++
++        // A stored result this client can no longer adopt, such as after a server upgrade, is probed again live.
++        if (!$adopted instanceof Response) {
++            $probe = $this->request(new DiscoverRequest(), $config->initTimeout);
++            $adopted = $this->adopt($probe);
++
++            if ($adopted instanceof Response) {
++                $this->storeDiscovery($probe);
++            }
++        }
+ 
+         if ($adopted instanceof Response || $adopted instanceof Error) {
+             return $adopted;
+@@ -262,6 +277,76 @@
+         return $handshake;
+     }
+ 
++    /**
++     * The cached `server/discover` result for this caller, as the response a probe would have returned.
++     *
++     * @return Response<array<string, mixed>>|null
++     */
++    private function resumeDiscovery(): ?Response
++    {
++        $keys = $this->cacheKeys();
++
++        if (null === $keys) {
++            return null;
++        }
++
++        $found = $this->cache->getMultiple(array_values($keys));
++
++        foreach ([CacheScope::Private, CacheScope::Public] as $scope) {
++            foreach ($found as $key => $stored) {
++                if ($key === $keys[$scope->value] && \is_array($stored)) {
++                    $this->logger->debug('Discovery resumed from cache', ['scope' => $scope->value]);
++
++                    return new Response($this->state->nextRequestId(), $stored);
++                }
++            }
++        }
++
++        return null;
++    }
++
++    /**
++     * Keep a probe's result for its `ttlMs`; the server is remote, so the hint is checked first.
++     *
++     * @param Response<array<string, mixed>> $probe
++     */
++    private function storeDiscovery(Response $probe): void
++    {
++        $keys = $this->cacheKeys();
++        $ttlMs = $probe->result['ttlMs'] ?? null;
++
++        if (null === $keys || !\is_int($ttlMs) || $ttlMs < 1000) {
++            return;
++        }
++
++        $scope = CacheScope::Public->value === ($probe->result['cacheScope'] ?? null) ? CacheScope::Public : CacheScope::Private;
++        $this->cache->set($keys[$scope->value], $probe->result, intdiv($ttlMs, 1000));
++    }
++
++    /**
++     * The cache keys by scope, null unless a cache is set and the transport can name who the caller is.
++     *
++     * @return array<string, string>|null
++     */
++    private function cacheKeys(): ?array
++    {
++        if (null === $this->cache || !$this->transport instanceof HttpTransport) {
++            return null;
++        }
++
++        $private = $this->transport->cacheIdentity(CacheScope::Private);
++        $public = $this->transport->cacheIdentity(CacheScope::Public);
++
++        if (null === $private || null === $public) {
++            return null;
++        }
++
++        return [
++            CacheScope::Private->value => self::KEY_PREFIX.$private,
++            CacheScope::Public->value => self::KEY_PREFIX.$public,
++        ];
++    }
++
+     private function enterModernEra(ProtocolVersion $version, Configuration $config): void
+     {
+         $this->envelope = new RequestEnvelope($version, $config->capabilities, $config->clientInfo, $this->logLevel);
+--- a/src/Client/Transport/HttpTransport.php
++++ b/src/Client/Transport/HttpTransport.php
+@@ -22,6 +22,7 @@
+ use Mcp\Client\Exception\RequestException;
+ use Mcp\Client\Exception\TimeoutException;
+ use Mcp\Client\MonotonicClock;
++use Mcp\Schema\Enum\CacheScope;
+ use Mcp\Schema\Exception\InvalidArgumentException as SchemaInvalidArgumentException;
+ use Mcp\Schema\JsonRpc\Error;
+ use Mcp\Schema\JsonRpc\Response;
+@@ -167,6 +168,29 @@
+         $this->streamFactory = $streamFactory ?? Psr17FactoryDiscovery::findStreamFactory();
+     }
+ 
++    /**
++     * Who a cached result may be shared with: the endpoint for a public one, the
++     * endpoint with the request headers for a private one. Null when the
++     * credential is not in the headers, so nothing may be cached.
++     *
++     * @internal
++     */
++    public function cacheIdentity(CacheScope $scope): ?string
++    {
++        if ($this->httpClient instanceof AuthenticatingHttpClient) {
++            return null;
++        }
++
++        if (CacheScope::Public === $scope) {
++            return hash('sha256', $this->endpoint);
++        }
++
++        $headers = $this->headers;
++        ksort($headers);
++
++        return hash('sha256', $this->endpoint."\0".json_encode($headers, JSON_THROW_ON_ERROR));
++    }
++
+     private function sendUnchallenged(RequestInterface $request): ResponseInterface
+     {
+         if ($this->httpClient instanceof AuthenticatingHttpClient) {

@@ -10,6 +10,7 @@ use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\Exception\ExceptionInterface as McpException;
 use Mcp\Schema\Result\CallToolResult;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -28,6 +29,7 @@ final readonly class McpDrupalTools
     public function __construct(
         #[Autowire('%env(DRUPAL_URL)%/mcp')]
         private string $endpoint,
+        private CacheInterface $cache,
     ) {
     }
 
@@ -68,7 +70,7 @@ final readonly class McpDrupalTools
      */
     private function invoke(string $bearerToken, string $tool, array $arguments): CallToolResult
     {
-        $client = Client::builder()->setRequestTimeout(self::REQUEST_TIMEOUT_SECONDS)->build();
+        $client = Client::builder()->setRequestTimeout(self::REQUEST_TIMEOUT_SECONDS)->setCache($this->cache)->build();
         $transport = new HttpTransport(
             $this->endpoint,
             headers: ['Authorization' => 'Bearer '.$bearerToken],
