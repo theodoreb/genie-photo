@@ -47,6 +47,13 @@ if ([$person] !== array_column($offered, 'id')) {
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
 $before = $site->photos->frame($web, $claim['revision']);
 
+$body = $site->imageTool($assistant, 'photo_get', ['view' => 'my_body']);
+$size = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info'];
+$sheet = imagecreatefromstring((string) $body['image']);
+if ($size['width'] + 40 !== imagesx($sheet) || $size['height'] + 40 !== imagesy($sheet)) {
+    SmokeSite::fail('A person with no outline did not receive the whole photo.');
+}
+
 $grid = $site->imageTool($assistant, 'photo_get', ['view' => 'my_head']);
 if (null === $grid['image']) {
     SmokeSite::fail('The assistant did not see its head.');

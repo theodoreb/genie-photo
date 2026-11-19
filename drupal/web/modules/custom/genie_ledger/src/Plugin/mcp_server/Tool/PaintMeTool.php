@@ -17,7 +17,7 @@ use Mcp\Server\ClientGateway;
 #[Tool(
   id: 'paint_me',
   label: new TranslatableMarkup('Paint my whole person'),
-  description: new TranslatableMarkup('Repaints your whole person in the shared photo. Call photo_get with view my_body first: its "editable" rectangles and bright image area are the only cells you can change, so anyone in front of you stays untouched. Set pixelate to true to turn your person into pixel art. Add spans to paint on top: each span is [row, first column, last column, cell] on the numbered fine grid. A cell is a hex digit that picks a palette color, "*" for the photo pixels or "." to leave it. A new paint replaces the old one, and pixelate false with no spans removes it. The result shows your person, so you can check it and correct it.'),
+  description: new TranslatableMarkup('Repaints your whole person in the shared photo. Call photo_get with view my_body first. Its "editable" rectangles and bright image area are the only cells you can change: your person and a one-block safe zone of background, or the whole photo around other people when you have no outline. "on_person" lists the cells on your person. Set pixelate to true to turn your person into pixel art. Add spans to paint on top: each span is [row, first column, last column, cell] on the numbered fine grid. A cell is a hex digit that picks a palette color, "*" for the photo pixels or "." to leave it. A new paint replaces the old one, and pixelate false with no spans removes it. The result shows what you can paint, so you can check it and correct it.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [

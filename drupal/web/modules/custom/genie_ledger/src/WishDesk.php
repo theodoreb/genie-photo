@@ -207,8 +207,9 @@ final class WishDesk {
       ];
     }
     if ($view === 'my_body') {
-      $info['grid'] = 'Numbers name fine rows and columns of the whole photo. Dimmed cells belong to someone else or to the background.';
-      $info['editable'] = Outlines::editable(array_keys(Outlines::owners($session), "person-$uid", TRUE), $session->photo);
+      $info['grid'] = 'Numbers name fine rows and columns of the whole photo. Dimmed cells are out of your reach.';
+      $info['editable'] = Outlines::editable(Outlines::reach($session)["person-$uid"], $session->photo);
+      $info['on_person'] = Outlines::editable(array_keys(Outlines::owners($session), "person-$uid", TRUE), $session->photo);
     }
     if ($view === 'my_head') {
       $info['grid'] = 'Numbers name sticker columns and rows from 0 to 31. Yellow lines mark every fourth cell.';
@@ -244,7 +245,7 @@ final class WishDesk {
     if (!isset($session->regions["person-$uid"])) {
       throw new \InvalidArgumentException(self::NO_PLACE);
     }
-    if (!in_array("person-$uid", Outlines::owners($session), TRUE)) {
+    if (Outlines::reach($session)["person-$uid"] === []) {
       throw new \InvalidArgumentException('People in front of you cover your whole person.');
     }
     return $this->darkroom->bodyView($this->photos->read(), $session, $uid);

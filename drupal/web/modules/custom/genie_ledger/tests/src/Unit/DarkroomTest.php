@@ -41,6 +41,8 @@ final class DarkroomTest extends UnitTestCase {
       'width' => 64,
       'height' => 64,
       'head' => ['x' => 32, 'y' => 32, 'width' => 64, 'height' => 64],
+      'cells' => [],
+      'rank' => 0,
     ];
     $rows = array_fill(0, Sticker::SIZE, str_repeat('0', 16) . str_repeat(Sticker::EMPTY, 16));
     $session->stickers[7] = Sticker::fromInput($rows, ['#ff0000'], 8);

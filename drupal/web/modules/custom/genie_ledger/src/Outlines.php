@@ -94,22 +94,54 @@ final class Outlines {
    *   Region or proposal id, by cell index.
    */
   public static function owners(Session $session, bool $tracedOnly = FALSE): array {
-    $people = $session->proposals;
-    foreach ($session->regions as $id => $region) {
-      if ($region['kind'] === 'person') {
-        $people[$id] = $region;
-      }
-    }
-    uasort($people, static fn (array $one, array $other): int => ($one['rank'] ?? PHP_INT_MAX) <=> ($other['rank'] ?? PHP_INT_MAX));
     $owners = [];
-    foreach ($people as $id => $person) {
-      if (!$tracedOnly || !empty($person['cells'])) {
+    foreach (self::people($session) as $id => $person) {
+      if (!$tracedOnly || $person['cells'] !== []) {
         foreach (self::cellsOf($person, $session->photo) as $cell) {
           $owners[$cell] ??= $id;
         }
       }
     }
     return $owners;
+  }
+
+  /**
+   * Finds the cells each person's assistant may paint.
+   *
+   * A traced person gets their cells and a ring of one cell of background. The
+   * person nearest the front gets a ring cell two people could claim. A person
+   * with no outline gets the photo, except the cells of other people.
+   *
+   * @param \Drupal\genie_ledger\Session $session
+   *   The session, which has a photo.
+   *
+   * @return array<string, list<int>>
+   *   Cell indexes, by region or proposal id.
+   */
+  public static function reach(Session $session): array {
+    $owners = self::owners($session);
+    $total = self::columns($session->photo) * self::rows($session->photo);
+    $ringTaken = [];
+    $reach = [];
+    foreach (self::people($session) as $id => $person) {
+      if ($person['cells'] === []) {
+        $reach[$id] = array_values(array_filter(
+          range(0, $total - 1),
+          static fn (int $cell): bool => !isset($owners[$cell]) || $owners[$cell] === $id,
+        ));
+        continue;
+      }
+      $own = array_keys($owners, $id, TRUE);
+      $ring = [];
+      foreach (self::around($own, $session->photo) as $cell) {
+        if (!isset($owners[$cell]) && !isset($ringTaken[$cell])) {
+          $ringTaken[$cell] = TRUE;
+          $ring[] = $cell;
+        }
+      }
+      $reach[$id] = [...$own, ...$ring];
+    }
+    return $reach;
   }
 
   /**
@@ -175,6 +207,50 @@ final class Outlines {
   }
 
   /**
+   * Lists everyone in the photo, the person nearest the front first.
+   *
+   * @return array<string, array<string, mixed>>
+   *   Regions and proposals, by id.
+   */
+  private static function people(Session $session): array {
+    $people = $session->proposals;
+    foreach ($session->regions as $id => $region) {
+      if ($region['kind'] === 'person') {
+        $people[$id] = $region;
+      }
+    }
+    uasort($people, static fn (array $one, array $other): int => $one['rank'] <=> $other['rank']);
+    return $people;
+  }
+
+  /**
+   * Lists the cells that touch some cells, corners included.
+   *
+   * @param list<int> $cells
+   *   The cell indexes.
+   * @param array{width: int, height: int} $photo
+   *   The photo size.
+   *
+   * @return list<int>
+   *   The touching cells, without the given ones.
+   */
+  private static function around(array $cells, array $photo): array {
+    $columns = self::columns($photo);
+    $rows = self::rows($photo);
+    $around = [];
+    foreach ($cells as $cell) {
+      $row = intdiv($cell, $columns);
+      $column = $cell % $columns;
+      for ($r = max(0, $row - 1); $r <= min($rows - 1, $row + 1); $r++) {
+        for ($c = max(0, $column - 1); $c <= min($columns - 1, $column + 1); $c++) {
+          $around[$r * $columns + $c] = TRUE;
+        }
+      }
+    }
+    return array_keys(array_diff_key($around, array_flip($cells)));
+  }
+
+  /**
    * Lists the cells a person stands on.
    *
    * @param array<string, mixed> $person
@@ -189,7 +265,7 @@ final class Outlines {
     $columns = self::columns($photo);
     $side = self::CELL;
     $cells = [];
-    foreach ($person['cells'] ?? [] as [$row, $first, $last]) {
+    foreach ($person['cells'] as [$row, $first, $last]) {
       foreach (range($first, $last) as $column) {
         $cells[] = $row * $columns + $column;
       }

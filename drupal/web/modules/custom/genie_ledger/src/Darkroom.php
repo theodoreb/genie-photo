@@ -130,9 +130,10 @@ final class Darkroom {
     // Hidden pixels go first, so no sticker blur can carry them elsewhere.
     $this->paintOver($image, $hidden);
     $owners = Outlines::owners($session);
+    $reach = Outlines::reach($session);
     foreach ($session->regions as $id => $region) {
       if ($region['kind'] === 'person' && isset($session->paints[$region['owner']])) {
-        $this->paintPerson($image, $session->photo, array_keys($owners, $id, TRUE), $session->paints[$region['owner']]);
+        $this->paintPerson($image, $session->photo, array_keys($owners, $id, TRUE), $reach[$id], $session->paints[$region['owner']]);
       }
     }
     $traced = Outlines::owners($session, TRUE);
@@ -187,25 +188,27 @@ final class Darkroom {
   }
 
   /**
-   * Shows a player's person as the picture has it, under the fine grid.
+   * Shows what a player can paint, as the picture has it, under the fine grid.
    *
-   * Cells the player cannot paint are dimmed.
+   * A traced person gets a crop around their cells and safe zone. A person with
+   * no outline gets the whole photo. Cells out of reach are dimmed.
    *
    * @return string
    *   JPEG bytes. The numbers name fine rows and columns of the whole photo.
    */
   public function bodyView(string $jpeg, Session $session, int $uid): string {
     $photo = $session->photo;
-    $cells = array_keys(Outlines::owners($session), "person-$uid", TRUE);
-    $bounds = self::bounds($cells, $photo);
+    $id = "person-$uid";
+    $cells = Outlines::reach($session)[$id];
+    $bounds = $session->regions[$id]['cells'] === [] ? ['x' => 0, 'y' => 0] + $photo : self::bounds($cells, $photo);
     $image = $this->develop($jpeg, $session);
     $dim = imagecolorallocatealpha($image, 0, 0, 0, 45);
-    $owned = array_flip($cells);
+    $reachable = array_flip($cells);
     $columns = Outlines::columns($photo);
     $cell = Outlines::CELL;
     for ($y = $bounds['y']; $y < $bounds['y'] + $bounds['height']; $y += $cell) {
       for ($x = $bounds['x']; $x < $bounds['x'] + $bounds['width']; $x += $cell) {
-        if (!isset($owned[intdiv($y, $cell) * $columns + intdiv($x, $cell)])) {
+        if (!isset($reachable[intdiv($y, $cell) * $columns + intdiv($x, $cell)])) {
           imagefilledrectangle($image, $x, $y, $x + $cell - 1, $y + $cell - 1, $dim);
         }
       }
@@ -304,25 +307,35 @@ final class Darkroom {
   }
 
   /**
-   * Repaints a person, inside the cells they own.
+   * Repaints a person. Pixel art stays on their cells, and spans on their reach.
    *
    * @param \GdImage $image
    *   The photo.
    * @param array{width: int, height: int} $photo
    *   The photo size.
-   * @param list<int> $cells
+   * @param list<int> $own
    *   The cells the person owns.
+   * @param list<int> $reach
+   *   The cells the paint may change.
    * @param \Drupal\genie_ledger\BodyPaint $paint
    *   The paint.
    */
-  private function paintPerson(\GdImage $image, array $photo, array $cells, BodyPaint $paint): void {
-    if ($cells === []) {
+  private function paintPerson(\GdImage $image, array $photo, array $own, array $reach, BodyPaint $paint): void {
+    if ($reach === []) {
       return;
     }
-    $bounds = self::bounds($cells, $photo);
+    $bounds = self::bounds($reach, $photo);
     $original = $this->copyOf($image, $bounds);
+    $layer = $this->copyOf($image, $bounds);
+    if ($paint->pixelate && $own !== []) {
+      $ownBounds = self::bounds($own, $photo);
+      $art = $this->pixelated($this->copyOf($image, $ownBounds));
+      foreach ($own as $cell) {
+        $area = Outlines::area($cell, $photo);
+        imagecopy($layer, $art, $area['x'] - $bounds['x'], $area['y'] - $bounds['y'], $area['x'] - $ownBounds['x'], $area['y'] - $ownBounds['y'], $area['width'], $area['height']);
+      }
+    }
     $fine = Outlines::FINE;
-    $layer = $paint->pixelate ? $this->pixelated($original) : $this->copyOf($image, $bounds);
     $colors = array_map(
       static fn (string $color): int => imagecolorallocate($layer, ...sscanf($color, '#%02x%02x%02x')),
       $paint->palette,
@@ -341,7 +354,7 @@ final class Darkroom {
         imagefilledrectangle($layer, $left, $top, $right - 1, $top + $fine - 1, $colors[hexdec($cell)]);
       }
     }
-    foreach ($cells as $cell) {
+    foreach ($reach as $cell) {
       $area = Outlines::area($cell, $photo);
       imagecopy($image, $layer, $area['x'], $area['y'], $area['x'] - $bounds['x'], $area['y'] - $bounds['y'], $area['width'], $area['height']);
     }
