@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Approve the picture{% endblock %}
+
+{% block importmap %}{{ importmap('review') }}{% endblock %}
+
+{% block body %}
+<header class="bar">
+    <strong>Genie</strong>
+    <span class="grow"></span>
+    <span>Signed in as {{ app.user.name }}</span>
+    <a href="{{ path('app_home') }}">Back to the game</a>
+</header>
+
+<main id="review" class="review" data-hub-url="{{ hub_url }}" data-state="{{ state }}">
+    <h1>Approve the picture</h1>
+    {% if state == 'other_player' %}
+        <p id="status" role="status">This link is for {{ for }}. Sign out and sign in as {{ for }} to approve.</p>
+    {% elseif state == 'changed' %}
+        <p id="status" role="status">This picture changed. Ask your assistant for a new link, or approve in the game.</p>
+    {% else %}
+        <img class="frame" src="{{ path('app_frame', {revision: revision}) }}" alt="The picture to approve">
+        {% if state == 'ready' %}
+            <p id="status" role="status">Any later change cancels this approval.</p>
+            <form id="approve" method="post" action="{{ path('app_approve') }}">
+                <input type="hidden" name="hash" value="{{ hash }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('regions') }}">
+                <button disabled>I approve this picture</button>
+            </form>
+        {% elseif state == 'approved' %}
+            <p id="status" role="status">You approved this picture. Still waiting for: {{ export.waiting_for|join(', ') }}.</p>
+        {% else %}
+            <p id="status" role="status">Everyone approved this picture.</p>
+        {% endif %}
+    {% endif %}
+</main>
+{% endblock %}

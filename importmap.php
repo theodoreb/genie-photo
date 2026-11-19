@@ -16,4 +16,8 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'review' => [
+        'path' => './assets/review.js',
+        'entrypoint' => true,
+    ],
 ];

@@ -18,6 +18,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
+use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpException;
 
 /**
@@ -25,6 +26,8 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpException;
  */
 final class DrupalAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
+    use TargetPathTrait;
+
     public const PENDING_KEY = 'oauth_pending';
 
     private ?TokenSet $tokens = null;
@@ -67,7 +70,12 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
     {
         $this->playerTokens->keep($this->tokens);
 
-        return new RedirectResponse($this->urls->generate('app_home'));
+        // The firewall saved the page that asked for the sign-in, such as an approval link.
+        $target = $this->getTargetPath($request->getSession(), $firewallName);
+        $this->removeTargetPath($request->getSession(), $firewallName);
+        $ownPage = null !== $target && str_starts_with($target, $request->getSchemeAndHttpHost().'/');
+
+        return new RedirectResponse($ownPage ? $target : $this->urls->generate('app_home'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response

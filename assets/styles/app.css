@@ -41,3 +41,6 @@ header.bar { border-bottom: 1px solid var(--line); }
 .region[data-mine="true"] { border-width: 3px; }
 .region.proposal { padding: 0; border: 2px dotted #1f9d8f; background: #0f3d3866; cursor: pointer; pointer-events: auto; }
 .objects { margin: 0; padding: 0; list-style: none; display: grid; gap: .4rem; }
+
+.review { max-width: 60rem; margin: 1rem auto; padding: 0 1rem; }
+.review .frame { margin: 1rem 0; }

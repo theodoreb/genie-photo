@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Drupal\DrupalPhotos;
 use App\Drupal\DrupalToolFailed;
 use App\Drupal\McpDrupalTools;
+use App\Security\Player;
 use App\Security\PlayerTokens;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
 
 final class GameController extends AbstractController
@@ -24,22 +26,53 @@ final class GameController extends AbstractController
         private readonly McpDrupalTools $tools,
         private readonly DrupalPhotos $photos,
         private readonly PlayerTokens $tokens,
+        #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure?match=genie/session')]
+        private readonly string $hubUrl,
     ) {
     }
 
     #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function home(Request $request, #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure?match=genie/session')] string $hubUrl): Response
+    public function home(Request $request): Response
     {
         try {
             $session = $this->tools->call($this->tokens->accessToken(), 'session_get');
         } catch (DrupalToolFailed) {
-            // Drupal no longer knows this sign-in, for instance after a reinstall.
-            $request->getSession()->invalidate();
-
-            return $this->redirectToRoute('app_login');
+            return $this->signInAgain($request);
         }
 
-        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $hubUrl]);
+        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl]);
+    }
+
+    /**
+     * Shows one picture for approval. The address says which picture and for whom, and grants nothing.
+     */
+    #[Route('/review/{revision}/{hash}', name: 'app_review', requirements: ['revision' => '\d+', 'hash' => '[0-9a-f]{64}'], methods: ['GET'])]
+    public function review(int $revision, string $hash, Request $request, #[CurrentUser] Player $player): Response
+    {
+        try {
+            $session = $this->tools->call($this->tokens->accessToken(), 'session_get');
+        } catch (DrupalToolFailed) {
+            return $this->signInAgain($request);
+        }
+
+        $export = $session['export'] ?? null;
+        $for = $request->query->getString('for', $player->name);
+        $current = $session['revision'] === $revision && $hash === ($export['hash'] ?? null);
+
+        return $this->render('game/review.html.twig', [
+            'revision' => $revision,
+            'hash' => $hash,
+            'for' => $for,
+            'export' => $export,
+            'hub_url' => $this->hubUrl,
+            'state' => match (true) {
+                $for !== $player->name => 'other_player',
+                !$current => 'changed',
+                $export['final'] => 'final',
+                $export['approved_by_you'] => 'approved',
+                default => 'ready',
+            },
+        ]);
     }
 
     #[Route('/session', name: 'app_session', methods: ['GET'])]
@@ -109,6 +142,16 @@ final class GameController extends AbstractController
     public function claim(Request $request): JsonResponse
     {
         return $this->callTool('claim_place', ['person' => $request->request->getString('person')]);
+    }
+
+    /**
+     * Drupal no longer knows this sign-in, for instance after a reinstall.
+     */
+    private function signInAgain(Request $request): RedirectResponse
+    {
+        $request->getSession()->invalidate();
+
+        return $this->redirectToRoute('app_login');
     }
 
     /**

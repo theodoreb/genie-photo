@@ -11,6 +11,7 @@ use Mcp\Client;
 use Mcp\Client\Transport\HttpTransport;
 use Mcp\Schema\Content\ImageContent;
 use Mcp\Schema\Content\TextContent;
+use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
@@ -74,6 +75,24 @@ final readonly class SmokeSite
     public function signInAsAssistant(string $player): string
     {
         return (new PlayerSession($this->drupalUrl.'/mcp', $this->webCallback()))->signIn($player);
+    }
+
+    /**
+     * Opens a page of the web view in a new browser, which signs in on the way.
+     */
+    public function openWebPage(string $player, string $path): HttpBrowser
+    {
+        $browser = new HttpBrowser(HttpClient::create(['timeout' => 60]));
+        $browser->request('GET', $_ENV['PUBLIC_URL'].$path);
+        for ($step = 0; $step < 5 && !str_starts_with($browser->getHistory()->current()->getUri(), $_ENV['PUBLIC_URL']); ++$step) {
+            $page = $browser->getCrawler();
+            $login = $page->filter('#user-login-form');
+            $browser->submit($login->count() > 0
+                ? $login->form(['name' => $player, 'pass' => 'genie'])
+                : $page->filter('form input[type=submit]')->first()->form());
+        }
+
+        return $browser;
     }
 
     private function webCallback(): string
