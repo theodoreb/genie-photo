@@ -1,0 +1,86 @@
+From 92d8fcf5602a8c6ca7f5e62936bf2fa63e974374 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Th=C3=A9odore=20BIADALA?= <theodore@biadala.net>
+Date: Thu, 19 Nov 2026 10:28:25 +0100
+Subject: [PATCH] Let FrankenPHP add threads under load
+
+---
+ launcher/internal/caddyfile/fragments/caddyfile.caddy          | 3 +++
+ launcher/internal/caddyfile/testdata/engine-none.caddyfile     | 3 +++
+ .../internal/caddyfile/testdata/engine-static-mkcert.caddyfile | 3 +++
+ .../internal/caddyfile/testdata/engine-static-open.caddyfile   | 3 +++
+ launcher/internal/caddyfile/testdata/site-everything.caddyfile | 3 +++
+ 5 files changed, 15 insertions(+)
+
+diff --git a/launcher/internal/caddyfile/fragments/caddyfile.caddy b/launcher/internal/caddyfile/fragments/caddyfile.caddy
+index 963f7b7..7d00d31 100644
+--- a/launcher/internal/caddyfile/fragments/caddyfile.caddy
++++ b/launcher/internal/caddyfile/fragments/caddyfile.caddy
+@@ -8,6 +8,9 @@
+ 	# platforms do not register the directive and ignore it.
+ 	frankenphp {
+ 		php_ini "opcache.cache_id" {{quote .ID}}
++		# Requests that wait, such as long polls and MCP listen streams, each hold a thread.
++		# FrankenPHP starts twice as many threads as CPUs and adds more under load.
++		max_threads auto
+ 	}
+ 	order php_server before file_server
+ {{- if .TrustedProxies}}
+diff --git a/launcher/internal/caddyfile/testdata/engine-none.caddyfile b/launcher/internal/caddyfile/testdata/engine-none.caddyfile
+index 4eee4be..aca6c2b 100644
+--- a/launcher/internal/caddyfile/testdata/engine-none.caddyfile
++++ b/launcher/internal/caddyfile/testdata/engine-none.caddyfile
+@@ -8,6 +8,9 @@
+ 	# platforms do not register the directive and ignore it.
+ 	frankenphp {
+ 		php_ini "opcache.cache_id" "f0123456789abcdef"
++		# Requests that wait, such as long polls and MCP listen streams, each hold a thread.
++		# FrankenPHP starts twice as many threads as CPUs and adds more under load.
++		max_threads auto
+ 	}
+ 	order php_server before file_server
+ 	log {
+diff --git a/launcher/internal/caddyfile/testdata/engine-static-mkcert.caddyfile b/launcher/internal/caddyfile/testdata/engine-static-mkcert.caddyfile
+index 5202b39..443ebaf 100644
+--- a/launcher/internal/caddyfile/testdata/engine-static-mkcert.caddyfile
++++ b/launcher/internal/caddyfile/testdata/engine-static-mkcert.caddyfile
+@@ -9,6 +9,9 @@
+ 	# platforms do not register the directive and ignore it.
+ 	frankenphp {
+ 		php_ini "opcache.cache_id" "f0123456789abcdef"
++		# Requests that wait, such as long polls and MCP listen streams, each hold a thread.
++		# FrankenPHP starts twice as many threads as CPUs and adds more under load.
++		max_threads auto
+ 	}
+ 	order php_server before file_server
+ 	log {
+diff --git a/launcher/internal/caddyfile/testdata/engine-static-open.caddyfile b/launcher/internal/caddyfile/testdata/engine-static-open.caddyfile
+index 844aa40..979e369 100644
+--- a/launcher/internal/caddyfile/testdata/engine-static-open.caddyfile
++++ b/launcher/internal/caddyfile/testdata/engine-static-open.caddyfile
+@@ -8,6 +8,9 @@
+ 	# platforms do not register the directive and ignore it.
+ 	frankenphp {
+ 		php_ini "opcache.cache_id" "f0123456789abcdef"
++		# Requests that wait, such as long polls and MCP listen streams, each hold a thread.
++		# FrankenPHP starts twice as many threads as CPUs and adds more under load.
++		max_threads auto
+ 	}
+ 	order php_server before file_server
+ 	log {
+diff --git a/launcher/internal/caddyfile/testdata/site-everything.caddyfile b/launcher/internal/caddyfile/testdata/site-everything.caddyfile
+index 1a47225..2b86711 100644
+--- a/launcher/internal/caddyfile/testdata/site-everything.caddyfile
++++ b/launcher/internal/caddyfile/testdata/site-everything.caddyfile
+@@ -20,6 +20,9 @@
+ 	# platforms do not register the directive and ignore it.
+ 	frankenphp {
+ 		php_ini "opcache.cache_id" "site-id"
++		# Requests that wait, such as long polls and MCP listen streams, each hold a thread.
++		# FrankenPHP starts twice as many threads as CPUs and adds more under load.
++		max_threads auto
+ 	}
+ 	order php_server before file_server
+ 	# client_ip and the access log take the client from a forwarded header these peers sent.
+-- 
+2.55.0
+
