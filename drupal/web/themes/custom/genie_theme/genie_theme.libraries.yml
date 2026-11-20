@@ -1,0 +1,5 @@
+global:
+  css:
+    theme:
+      css/tokens.css: {}
+      css/genie.css: {}

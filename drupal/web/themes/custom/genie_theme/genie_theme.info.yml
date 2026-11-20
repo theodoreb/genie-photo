@@ -1,0 +1,7 @@
+name: Genie
+type: theme
+description: 'The Drupal pages players reach, in the web view colours.'
+core_version_requirement: ^11
+base theme: stark
+libraries:
+  - genie_theme/global

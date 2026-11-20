@@ -1,0 +1,20 @@
+/* Colours and base elements shared by the web view and the Drupal theme. */
+:root {
+    color-scheme: light dark;
+    --ink: light-dark(#1d1b26, #f2f0f7);
+    --paper: light-dark(#faf8f3, #17151f);
+    --line: light-dark(#d9d4c7, #3a3648);
+    --accent: #7a3ff2;
+    --object: #d9770b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 16px/1.5 system-ui, sans-serif;
+}
+
+button, input { font: inherit; padding: .4rem .7rem; }

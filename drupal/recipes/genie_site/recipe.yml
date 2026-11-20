@@ -11,6 +11,7 @@ install:
   - simple_oauth_client_registration
   - ai
   - genie
+  - genie_theme
 config:
   import:
     simple_oauth: '*'
@@ -22,7 +23,11 @@ config:
     ai: '*'
     key: '*'
     genie: '*'
+    genie_theme: '*'
   actions:
+    system.theme:
+      simpleConfigUpdate:
+        default: genie_theme
     automated_cron.settings:
       simpleConfigUpdate:
         interval: 3600

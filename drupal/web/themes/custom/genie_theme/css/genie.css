@@ -1,0 +1,13 @@
+/* Start, join, sign-in and consent pages, laid out like the web view. */
+header { display: flex; align-items: center; padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
+header a { color: inherit; font-weight: bold; text-decoration: none; }
+
+main, [data-drupal-messages] { max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
+[data-drupal-messages] { margin-bottom: -2rem; }
+[data-drupal-messages] [aria-label="Error message"] { color: #c62828; }
+
+h1 { margin: 0 0 .75rem; }
+form { display: grid; gap: .75rem; }
+.form-item label { display: block; }
+.form-item input:not([type="checkbox"], [type="radio"]) { width: 100%; }
+.description { opacity: .7; font-size: .9rem; }
