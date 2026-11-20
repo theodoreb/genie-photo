@@ -40,7 +40,8 @@ final class PlayController extends ControllerBase {
       $player = $this->games->join((int) $game->id(), $request->request->getString('name'));
     }
     catch (\InvalidArgumentException $e) {
-      return new TrustedRedirectResponse($origin . '/games/' . $game->uuid() . '?' . http_build_query(['error' => $e->getMessage()]), 303);
+      $reason = array_search($e->getCode(), Games::REFUSED, TRUE);
+      return new TrustedRedirectResponse($origin . '/games/' . $game->uuid() . '?' . http_build_query(['refused' => $reason]), 303);
     }
     user_login_finalize($player);
     return new TrustedRedirectResponse($this->webView->signIn(), 303);

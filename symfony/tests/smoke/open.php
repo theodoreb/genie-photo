@@ -76,7 +76,7 @@ $checks = [
     'the visitor token cannot play' => $refused($visitor, 'session_get') && $refused($visitor, 'my_status'),
     'a player token cannot list' => $refused($alice, 'web_games_list'),
     'another site cannot seat a visitor' => 403 === $foreign->getStatusCode(),
-    'a refused name goes back to the game page' => str_contains($refusedName->getHeaders(false)['location'][0] ?? '', '/games/'.$first.'?error='),
+    'a refused name goes back to the game page' => str_contains($refusedName->getHeaders(false)['location'][0] ?? '', '/games/'.$first.'?refused=name'),
     'the name form seats the visitor and signs them in' => 303 === $seated->getStatusCode() && str_starts_with($seated->getHeaders(false)['location'][0], $_ENV['PUBLIC_URL'].'/login'),
 ];
 

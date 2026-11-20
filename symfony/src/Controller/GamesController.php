@@ -24,6 +24,14 @@ final class GamesController extends AbstractController
 
     private const TYPES = ['photo' => 'image/jpeg', 'frame' => 'image/png'];
 
+    // Drupal names why it refused a seat. Only these names show, so the address cannot put words on the page.
+    private const REFUSED = [
+        'over' => 'This game is over.',
+        'full' => 'This game is full.',
+        'name' => 'A name has 1 to 30 letters, digits, spaces, dots, dashes or apostrophes.',
+        'taken' => 'Someone in this game already has this name.',
+    ];
+
     public function __construct(
         private readonly McpDrupalTools $tools,
         private readonly VisitorToken $visitor,
@@ -54,8 +62,7 @@ final class GamesController extends AbstractController
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        // Drupal sends a visitor back here with the reason a seat was refused.
-        return $this->render('games/show.html.twig', ['game' => $view, 'error' => $request->query->getString('error')]);
+        return $this->render('games/show.html.twig', ['game' => $view, 'error' => self::REFUSED[$request->query->getString('refused')] ?? null]);
     }
 
     #[Route('/games/{game}/{view}', name: 'app_game_picture', requirements: ['game' => Requirement::UUID, 'view' => 'photo|frame'], methods: ['GET'])]

@@ -40,6 +40,11 @@ final class Games {
    */
   private const LISTED_OVER = 12;
 
+  /**
+   * Exception codes of a refused seat, by the name the web view shows.
+   */
+  public const REFUSED = ['over' => 1, 'full' => 2, 'name' => 3, 'taken' => 4];
+
   public function __construct(
     private readonly Ledger $ledger,
     private readonly CurrentGame $game,
@@ -128,10 +133,10 @@ final class Games {
     $this->game->enter($game);
     return $this->ledger->locked(function (NodeInterface $node) use ($game, $name): UserInterface {
       if (in_array($node->get('field_genie_state')->value, Ledger::OVER, TRUE)) {
-        throw new \InvalidArgumentException('This game is over.');
+        throw new \InvalidArgumentException('This game is over.', self::REFUSED['over']);
       }
       if ($this->players($game) >= self::SEATS) {
-        throw new \InvalidArgumentException(sprintf('This game is full: it takes %d players.', self::SEATS));
+        throw new \InvalidArgumentException(sprintf('This game is full: it takes %d players.', self::SEATS), self::REFUSED['full']);
       }
       return $this->seat($game, $name);
     });
@@ -181,7 +186,7 @@ final class Games {
     $name = trim($name);
     // Drupal account names take these characters, and the game id follows an @.
     if (!preg_match("/^[\\p{L}\\p{N}][\\p{L}\\p{N} ._'-]{0,29}$/u", $name)) {
-      throw new \InvalidArgumentException('A name has 1 to 30 letters, digits, spaces, dots, dashes or apostrophes.');
+      throw new \InvalidArgumentException('A name has 1 to 30 letters, digits, spaces, dots, dashes or apostrophes.', self::REFUSED['name']);
     }
     return $name;
   }
@@ -233,7 +238,7 @@ final class Games {
     $accountName = self::checkName($name) . '@' . $game;
     $users = $this->entityTypeManager->getStorage('user');
     if ($users->loadByProperties(['name' => $accountName]) !== []) {
-      throw new \InvalidArgumentException(sprintf('Someone in this game is already called %s.', trim($name)));
+      throw new \InvalidArgumentException(sprintf('Someone in this game is already called %s.', trim($name)), self::REFUSED['taken']);
     }
     /** @var \Drupal\user\UserInterface $account */
     $account = $users->create(['name' => $accountName, 'status' => 1, 'field_genie_game' => $game]);
