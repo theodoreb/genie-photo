@@ -20,6 +20,6 @@ security:
 
     access_control:
         - { path: ^/(login|oauth/callback)$, roles: PUBLIC_ACCESS }
-        # Anyone looks at the games. The home page sends a visitor to their list.
-        - { path: ^/(games(/|$)|$), roles: PUBLIC_ACCESS }
+        # Anyone looks at the games and reads the guide for agents. The home page sends a visitor to the list.
+        - { path: ^/(games(/|$)|llms\.txt$|$), roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_PLAYER }

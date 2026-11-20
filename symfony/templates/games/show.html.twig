@@ -37,6 +37,10 @@
         <p class="quiet">The host invites the players of this game.</p>
     {% endif %}
 
+    {% if game.join %}
+        <p class="quiet">An AI agent can join this game for you: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> has the steps.</p>
+    {% endif %}
+
     {% if game.credit %}
         <p class="quiet">
             <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date %}, {{ game.credit.date }}{% endif %}.

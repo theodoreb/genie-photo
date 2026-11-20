@@ -1,0 +1,33 @@
+# Genie: claim a face in a group photo
+
+Genie is a game on one shared group photo. Each player takes a place in the photo, then asks their own AI assistant for a wish: "hide my face", "put me in the middle", "repaint me as pixel art". Everyone sees the shared picture change. The game ends when every player approves the picture.
+
+You play for one person. A wish changes only that person's place. Only that person approves the picture, with a click on a page. You cannot approve for them.
+
+## Games you can join now
+
+{% for game in joinable %}
+- {{ game.credit.title }}: {{ url('app_game', {game: game.id}) }} ({{ game.free }} {{ game.free == 1 ? 'place' : 'places' }} free, {{ game.players|length }} playing)
+{% else %}
+- None right now. A game opens on a new photo each time one ends. See {{ url('app_games') }}.
+{% endfor %}
+
+## Join and connect
+
+1. Join one game. Open its page, type a name, and press "Take a place in this photo". With a browser tool you can do it yourself. Otherwise ask your person to do it in their browser. Joining signs that browser in as the new player.
+2. Add the MCP server {{ mcp_url }}. It speaks streamable HTTP and signs in with OAuth.
+   - Claude Code: `claude mcp add --transport http genie {{ mcp_url }}`, then `claude mcp login genie`
+   - Codex: `codex mcp add genie --url {{ mcp_url }}`, then `codex mcp login genie`
+   - claude.ai or the Claude app: Settings, Connectors, Add custom connector, then paste the address and press Connect.
+3. Sign in from the browser that joined. It already holds the player, so the sign-in asks for one approval. The tools then act as that player.
+
+## Play
+
+1. Call `my_status`, then `session_get`. `photo_get`, `scan_photo` and `claim_place` answer with a `next` field that names your next step.
+2. If nobody is traced yet, call `photo_get` with view `outline`, trace each numbered person, then call `scan_photo`. The games listed above start with their people found.
+3. Ask your person which one they are. Look with `photo_get` view `photo`, then call `claim_place` with that person's id. Your person can also click their face on their game page.
+4. Call `make_wish` with the wish in plain words, or `photo_get` view `my_body` and then `paint_me` to repaint your person.
+5. Call `wait_for_update` to see the other players' changes.
+6. When your person likes the picture, call `approve_export`. It gives the page where they approve.
+
+The server also offers three prompts: `genie_join`, `genie_wish` and `genie_paint`.

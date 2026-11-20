@@ -18,6 +18,7 @@
         <p class="quiet">No game has a free place right now. A new photo opens when a game ends.</p>
     {% endif %}
     <p><a href="{{ host_url }}">Host a game with your own photo</a>, with the host code.</p>
+    <p class="quiet">An AI agent can play too: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> lists the open games and the steps.</p>
 
     {% if playing %}
         <h2>Being played</h2>

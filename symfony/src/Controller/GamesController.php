@@ -37,6 +37,8 @@ final class GamesController extends AbstractController
         private readonly VisitorToken $visitor,
         #[Autowire('%env(DRUPAL_URL)%/genie/host')]
         private readonly string $hostUrl,
+        #[Autowire('%env(DRUPAL_URL)%/mcp')]
+        private readonly string $mcpUrl,
     ) {
     }
 
@@ -51,6 +53,22 @@ final class GamesController extends AbstractController
             'over' => array_filter($games, static fn (array $game): bool => 'open' !== $game['state']),
             'host_url' => $this->hostUrl,
         ]);
+    }
+
+    /**
+     * Tells an AI agent which games are open and how to join, connect and play.
+     */
+    #[Route('/llms.txt', name: 'app_agent_guide', methods: ['GET'])]
+    public function agentGuide(): Response
+    {
+        $games = $this->tools->call($this->visitor->accessToken(), 'web_games_list')['games'];
+        $response = $this->render('games/llms.txt.twig', [
+            'joinable' => array_filter($games, static fn (array $game): bool => null !== $game['join']),
+            'mcp_url' => $this->mcpUrl,
+        ]);
+        $response->headers->set('Content-Type', 'text/plain; charset=UTF-8');
+
+        return $response;
     }
 
     #[Route('/games/{game}', name: 'app_game', requirements: ['game' => Requirement::UUID], methods: ['GET'])]

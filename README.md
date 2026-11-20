@@ -78,6 +78,8 @@ If a box is wrong or someone is missing, tell your assistant. It looks again and
 
 ## Connect an assistant
 
+An agent pointed at the web view can read `/llms.txt`. It lists the games open now and the steps below, with this site's addresses.
+
 Add this MCP server to your assistant, which then opens the Drupal sign-in page.
 
 ```sh

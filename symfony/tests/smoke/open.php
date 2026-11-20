@@ -57,6 +57,7 @@ $home = $pages->request('GET', '/');
 $list = $pages->request('GET', '/games');
 $page = $pages->request('GET', '/games/'.$first);
 $picture = $pages->request('GET', '/games/'.$first.'/photo');
+$guide = $pages->request('GET', '/llms.txt');
 $drupal = HttpClient::create(['max_redirects' => 0]);
 $seat = static fn (string $origin, string $name) => $drupal->request('POST', (string) $open[$first]['join'], ['headers' => ['Origin' => $origin], 'body' => ['name' => $name]]);
 $foreign = $seat('https://elsewhere.example', 'mallory');
@@ -72,6 +73,8 @@ $checks = [
     'the home page sends a visitor to the list' => 302 === $home->getStatusCode() && str_ends_with($home->getHeaders(false)['location'][0], '/games'),
     'the list page links the game' => 200 === $list->getStatusCode() && str_contains($list->getContent(false), '/games/'.$first),
     'the game page offers a place' => 200 === $page->getStatusCode() && str_contains($page->getContent(false), $open[$first]['join']),
+    'the agent guide lists the game and the MCP address' => str_starts_with($guide->getHeaders(false)['content-type'][0] ?? '', 'text/plain')
+        && str_contains($guide->getContent(false), '/games/'.$first) && str_contains($guide->getContent(false), $site->drupalUrl.'/mcp'),
     'the picture page serves a JPEG' => 'image/jpeg' === ($picture->getHeaders(false)['content-type'][0] ?? ''),
     'the visitor token cannot play' => $refused($visitor, 'session_get') && $refused($visitor, 'my_status'),
     'a player token cannot list' => $refused($alice, 'web_games_list'),
