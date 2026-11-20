@@ -80,6 +80,8 @@ $sweep = <<<'PHP'
     foreach ($extra as $uuid) {
       $ids[] = $games->byUuid($uuid)->id();
     }
+    \Drupal::service(\Drupal\genie\Game\CurrentGame::class)->enter((int) $ids[0]);
+    echo count(\Drupal::service(\Drupal\genie\Game\Ledger::class)->read()->proposals);
     $games->join((int) $ids[0], 'smoke');
     \Drupal::database()->update('node_field_data')->fields(['changed' => 1])->condition('nid', $ids, 'IN')->execute();
     $nodes->resetCache();
@@ -87,8 +89,10 @@ $sweep = <<<'PHP'
     PHP;
 $script = tempnam(sys_get_temp_dir(), 'genie');
 file_put_contents($script, "<?php\n".$sweep);
-(new Process(['./drupack', 'drush', 'php:script', $script, '--', $first, $second], dirname(__DIR__, 3).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
+$sweeping = (new Process(['./drupack', 'drush', 'php:script', $script, '--', $first, $second], dirname(__DIR__, 3).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
 unlink($script);
+$clickable = (int) trim($sweeping->getOutput());
+$checks['each detected person can be clicked'] = $clickable > 0 && $clickable === $open[$first]['free'];
 
 $after = $listed();
 $checks += [

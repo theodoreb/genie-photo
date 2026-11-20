@@ -175,6 +175,36 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
       $session->transition = 'open';
       $session->pin($this->store->create($normal['jpeg'], 0, 'ready', $photo['boxes']));
     });
+    // A visitor without an assistant claims one of these on the page. An
+    // assistant's scan replaces each one whose head it finds again. A write
+    // keeps the people it adds only to a survey stored before it.
+    $this->ledger->write(static function (Session $session): void {
+      $detected = Places::detected($session);
+      Places::scan($session, 0, array_map(self::person(...), array_keys($detected), $detected), []);
+    });
+  }
+
+  /**
+   * Describes a detected person, with a head guessed from the body's top.
+   *
+   * @param string $label
+   *   The detector's label: P1, P2 and so on, from left to right.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The detector's box.
+   *
+   * @return array{detected: string, description: string, head: list<int>}
+   *   The person, as a scan reports one.
+   */
+  private static function person(string $label, array $body): array {
+    // A head is about an eighth of a standing body, a fifth of a seated one.
+    $side = (int) round(min($body['width'] * 0.42, $body['height'] * 0.2));
+    $left = $body['x'] + intdiv($body['width'] - $side, 2);
+    $top = $body['y'] + (int) round($body['height'] * 0.02);
+    return [
+      'detected' => $label,
+      'description' => 'Person ' . substr($label, 1),
+      'head' => [$left, $top, $side, $side],
+    ];
   }
 
   /**
