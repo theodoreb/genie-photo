@@ -126,6 +126,8 @@ final class GenieCommands extends DrushCommands {
       ->set('grant_types', ['authorization_code', 'refresh_token', 'client_credentials'])
       ->set('scopes', [['scope_id' => 'genie_view']])
       ->set('user_id', $this->visitor())
+      // The web view is this site's own page, so its sign-in asks no consent.
+      ->set('automatic_authorization', TRUE)
       ->set('secret', $secret)
       ->set('redirect', $callback)
       ->save();

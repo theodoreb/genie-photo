@@ -95,7 +95,7 @@ final class GameView {
       'free' => $free,
       'has_picture' => $this->framer->frame($session) instanceof Frame,
       'join' => $joinable
-        ? Url::fromRoute('genie.join', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString()
+        ? Url::fromRoute('genie.play', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString()
         : NULL,
       'credit' => $archive === NULL ? NULL : $this->archive->credit($archive),
     ];

@@ -57,10 +57,15 @@ $home = $pages->request('GET', '/');
 $list = $pages->request('GET', '/games');
 $page = $pages->request('GET', '/games/'.$first);
 $picture = $pages->request('GET', '/games/'.$first.'/photo');
+$drupal = HttpClient::create(['max_redirects' => 0]);
+$seat = static fn (string $origin, string $name) => $drupal->request('POST', (string) $open[$first]['join'], ['headers' => ['Origin' => $origin], 'body' => ['name' => $name]]);
+$foreign = $seat('https://elsewhere.example', 'mallory');
+$refusedName = $seat($_ENV['PUBLIC_URL'], '');
+$seated = $seat($_ENV['PUBLIC_URL'], 'carol');
 
 $checks = [
     'six prepared games are open' => 6 === count($open),
-    'a prepared game can be joined' => str_contains((string) $open[$first]['join'], '/join/'),
+    'a prepared game can be joined' => str_contains((string) $open[$first]['join'], '/play/'),
     'an uploaded game is listed without a join address' => 1 === count($hosted) && null === reset($hosted)['join'],
     'a game view names its source' => $first === $view['id'] && '' !== $view['credit']['page'],
     'a game picture is a JPEG' => str_starts_with($photo, "\xFF\xD8"),
@@ -70,6 +75,9 @@ $checks = [
     'the picture page serves a JPEG' => 'image/jpeg' === ($picture->getHeaders(false)['content-type'][0] ?? ''),
     'the visitor token cannot play' => $refused($visitor, 'session_get') && $refused($visitor, 'my_status'),
     'a player token cannot list' => $refused($alice, 'web_games_list'),
+    'another site cannot seat a visitor' => 403 === $foreign->getStatusCode(),
+    'a refused name goes back to the game page' => str_contains($refusedName->getHeaders(false)['location'][0] ?? '', '/games/'.$first.'?error='),
+    'the name form seats the visitor and signs them in' => 303 === $seated->getStatusCode() && str_starts_with($seated->getHeaders(false)['location'][0], $_ENV['PUBLIC_URL'].'/login'),
 ];
 
 // Seats a player in the first prepared game, ages it and an empty one by a day, then runs the idle sweep.

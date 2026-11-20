@@ -26,7 +26,13 @@
     </p>
 
     {% if game.join %}
-        <p><a class="button" href="{{ game.join }}">Take a place in this photo</a></p>
+        {# Drupal seats the player, signs them in, and sends them to their game. #}
+        <form class="join" method="post" action="{{ game.join }}">
+            <label for="name">Your name in the game</label>
+            <input id="name" name="name" maxlength="30" required autocomplete="nickname">
+            <button class="button">Take a place in this photo</button>
+        </form>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
     {% elseif game.state == 'open' and not game.credit %}
         <p class="quiet">The host invites the players of this game.</p>
     {% endif %}

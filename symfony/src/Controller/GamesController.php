@@ -9,6 +9,7 @@ use App\Drupal\McpDrupalTools;
 use App\Security\VisitorToken;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
@@ -45,7 +46,7 @@ final class GamesController extends AbstractController
     }
 
     #[Route('/games/{game}', name: 'app_game', requirements: ['game' => Requirement::UUID], methods: ['GET'])]
-    public function show(string $game): Response
+    public function show(string $game, Request $request): Response
     {
         try {
             $view = $this->tools->call($this->visitor->accessToken(), 'web_game_view', ['game' => $game]);
@@ -53,7 +54,8 @@ final class GamesController extends AbstractController
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        return $this->render('games/show.html.twig', ['game' => $view]);
+        // Drupal sends a visitor back here with the reason a seat was refused.
+        return $this->render('games/show.html.twig', ['game' => $view, 'error' => $request->query->getString('error')]);
     }
 
     #[Route('/games/{game}/{view}', name: 'app_game_picture', requirements: ['game' => Requirement::UUID, 'view' => 'photo|frame'], methods: ['GET'])]

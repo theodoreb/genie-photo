@@ -72,7 +72,7 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 
 A game with no change for a day is abandoned and turns read-only. Nothing is deleted.
 
-To play without a photo of your own, pick a prepared game on the list and take a place. Anyone can join a prepared game. A game on an uploaded photo takes only the people its host invites. When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned. Its people are ready to claim on the page from the start, with a head box guessed from the detector's box. An assistant that traces the photo replaces those guesses.
+To play without a photo of your own, pick a prepared game on the list, type a name and take a place. Drupal seats you, signs you in and opens your game without a consent screen, since the web view is its own client. Your game page lists the steps, with the address to add to your assistant. Anyone can join a prepared game. A game on an uploaded photo takes only the people its host invites. When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned. Its people are ready to claim on the page from the start, with a head box guessed from the detector's box. An assistant that traces the photo replaces those guesses.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
 

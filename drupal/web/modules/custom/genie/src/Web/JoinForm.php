@@ -19,12 +19,12 @@ final class JoinForm extends FormBase {
 
   use AutowireTrait;
 
-  private const FLOOD = 'genie.join';
+  public const FLOOD = 'genie.join';
 
   /**
    * Unknown codes one address may try per hour.
    */
-  private const TRIES = 20;
+  public const TRIES = 20;
 
   public function __construct(
     protected readonly Games $games,

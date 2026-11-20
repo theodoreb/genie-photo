@@ -20,6 +20,18 @@ genie.host:
   options:
     no_cache: TRUE
 
+genie.play:
+  path: '/play/{code}'
+  defaults:
+    _controller: Drupal\genie\Web\PlayController::play
+  methods: [POST]
+  requirements:
+    # Open to visitors: the invite code, the web view's origin and a flood limit guard it.
+    _access: 'TRUE'
+    code: '[a-z0-9]{10}'
+  options:
+    no_cache: TRUE
+
 genie.join:
   path: '/join/{code}'
   defaults:

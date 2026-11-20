@@ -31,6 +31,8 @@ final class GameController extends AbstractController
         private readonly PlayerTokens $tokens,
         #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure')]
         private readonly string $hubUrl,
+        #[Autowire('%env(DRUPAL_URL)%/mcp')]
+        private readonly string $mcpUrl,
     ) {
     }
 
@@ -47,7 +49,7 @@ final class GameController extends AbstractController
             return $this->signInAgain($request);
         }
 
-        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl($session)]);
+        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl($session), 'mcp_url' => $this->mcpUrl]);
     }
 
     /**

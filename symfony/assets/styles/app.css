@@ -32,3 +32,8 @@ header.bar { border-bottom: 1px solid var(--line); }
 .card { display: grid; gap: .4rem; color: inherit; text-decoration: none; }
 .card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--line); }
 .button { display: inline-block; padding: .5rem 1rem; border: 1px solid var(--accent); color: inherit; text-decoration: none; }
+.join { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.join input { font: inherit; padding: .4rem .6rem; }
+.steps { padding-left: 1.5rem; line-height: 1.6; }
+.steps details { margin: .25rem 0; }
+.steps code { overflow-wrap: anywhere; }
