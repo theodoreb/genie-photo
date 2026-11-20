@@ -150,7 +150,7 @@ final class Places {
         throw new \InvalidArgumentException(sprintf('%s already holds this place.', $region['label']));
       }
     }
-    // The person this player gave up goes back on offer, covered.
+    // The person this player gave up goes back on offer.
     $session->claims[$uid] = $place;
     $session->players[$uid] = $name;
     self::dropUnclaimedOn($session, $placeHead);

@@ -320,14 +320,14 @@ final class Darkroom {
   }
 
   /**
-   * Lists the heads that must not show: covers, excluded, unclaimed people.
+   * Lists the heads of the players who asked to be covered or excluded.
    *
    * @return list<array{x: int, y: int, width: int, height: int}>
    *   The head boxes.
    */
   private function hiddenHeads(Session $session): array {
     $private = [Operation::Cover->value, Operation::Exclude->value];
-    $hidden = array_column($session->proposals, 'head');
+    $hidden = [];
     foreach ($session->regions as $region) {
       if ($region['kind'] === 'person' && in_array($session->wishes[$region['owner']] ?? NULL, $private, TRUE)) {
         $hidden[] = $region['head'];

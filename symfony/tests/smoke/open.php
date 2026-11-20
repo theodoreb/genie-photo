@@ -81,7 +81,8 @@ $sweep = <<<'PHP'
       $ids[] = $games->byUuid($uuid)->id();
     }
     \Drupal::service(\Drupal\genie\Game\CurrentGame::class)->enter((int) $ids[0]);
-    echo count(\Drupal::service(\Drupal\genie\Game\Ledger::class)->read()->proposals);
+    $proposals = \Drupal::service(\Drupal\genie\Game\Ledger::class)->read()->proposals;
+    echo json_encode([count($proposals), reset($proposals)['head']]);
     $games->join((int) $ids[0], 'smoke');
     \Drupal::database()->update('node_field_data')->fields(['changed' => 1])->condition('nid', $ids, 'IN')->execute();
     $nodes->resetCache();
@@ -91,8 +92,12 @@ $script = tempnam(sys_get_temp_dir(), 'genie');
 file_put_contents($script, "<?php\n".$sweep);
 $sweeping = (new Process(['./drupack', 'drush', 'php:script', $script, '--', $first, $second], dirname(__DIR__, 3).'/drupal', ['DRUPACK_NO_UPDATE_CHECK' => '1']))->mustRun();
 unlink($script);
-$clickable = (int) trim($sweeping->getOutput());
+[$clickable, $head] = json_decode(trim($sweeping->getOutput()), true, flags: \JSON_THROW_ON_ERROR);
 $checks['each detected person can be clicked'] = $clickable > 0 && $clickable === $open[$first]['free'];
+// Nobody wished anything yet, so the shared picture is the whole photo, and the cover colour would be 43, 33, 64.
+$frame = imagecreatefromstring($site->tools->image($visitor, 'web_game_picture', ['game' => $first, 'view' => 'frame']));
+$pixel = imagecolorat($frame, $head['x'] + intdiv($head['width'], 2), $head['y'] + intdiv($head['height'], 2));
+$checks['an unclaimed face shows in the picture'] = (43 << 16 | 33 << 8 | 64) !== $pixel;
 
 $after = $listed();
 $checks += [
