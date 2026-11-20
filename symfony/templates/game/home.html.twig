@@ -19,6 +19,7 @@
 <main id="game"
       data-hub-url="{{ hub_url }}"
       data-session-url="{{ path('app_session') }}"
+      data-photo-url="{{ path('app_photo') }}"
       data-frame-url="{{ path('app_frame', {revision: 0})|replace({'/0': '/'}) }}"
       data-claim-url="{{ path('app_claim') }}"
       data-protect-url="{{ path('app_protect') }}"
@@ -32,30 +33,22 @@
     {% endif %}
     {% if session.photo %}
         <p class="hint invite">Invite the others in the photo: <a href="{{ session.invite }}">{{ session.invite }}</a></p>
-        <div class="panels">
-            <section>
-                <h2>The shared photo</h2>
-                <img id="frame" class="frame" alt="The photo as every wish leaves it">
-                <p id="blocked" class="hint" hidden></p>
-                <p class="hint">Ask your assistant for a wish, or to repaint you, as pixel art if you like.</p>
-                <div class="bar approval">
-                    <button id="approve" type="button" hidden>I approve this picture</button>
-                    <a id="download" download="genie-photo.png" hidden>Download the final photo</a>
-                    <span id="approval"></span>
-                </div>
-            </section>
-            <section>
-                <h2>Who is who</h2>
-                <div id="stage" class="stage">
-                    <img id="photo" src="{{ path('app_photo') }}" alt="The original group photo">
-                    <div id="regions"></div>
-                </div>
-                <p id="guide" class="hint">Ask your assistant to find everyone in the photo.</p>
-                <p class="hint">Tell your assistant which person you are, or click your face.</p>
-                <ul id="proposals" class="objects"></ul>
-                <ul id="objects" class="objects"></ul>
-            </section>
-        </div>
+        <section class="picture">
+            <div id="stage" class="stage">
+                <img id="frame" alt="The photo as every wish leaves it">
+                <div id="regions"></div>
+            </div>
+            <p id="blocked" class="hint" hidden></p>
+            <p id="guide" class="hint">Ask your assistant to find everyone in the photo.</p>
+            <p class="hint">Click your face, or tell your assistant which person you are. Then ask it for a wish, or to repaint you, as pixel art if you like.</p>
+            <div class="bar approval">
+                <button id="approve" type="button" hidden>I approve this picture</button>
+                <a id="download" download="genie-photo.png" hidden>Download the final photo</a>
+                <span id="approval"></span>
+            </div>
+            <ul id="proposals" class="objects"></ul>
+            <ul id="objects" class="objects"></ul>
+        </section>
     {% elseif not session.is_uploader %}
         <p class="hint">The host has not added the group photo yet. This page updates when they do.</p>
     {% else %}

@@ -20,10 +20,15 @@ function percent(value, total) {
     return `${(100 * value) / total}%`;
 }
 
+// The part of the photo the picture shows: the crop, or the whole photo when no crop fits.
+function view() {
+    return session.frame.ready ? session.frame : { x: 0, y: 0, ...session.photo };
+}
+
 function place(element, box) {
-    const { width, height } = session.photo;
-    element.style.left = percent(box.x, width);
-    element.style.top = percent(box.y, height);
+    const { x, y, width, height } = view();
+    element.style.left = percent(box.x - x, width);
+    element.style.top = percent(box.y - y, height);
     element.style.width = percent(box.width, width);
     element.style.height = percent(box.height, height);
     return element;
@@ -52,11 +57,11 @@ function render() {
     if (!stage) {
         return;
     }
-    frame.hidden = !session.frame.ready;
     blocked.hidden = session.frame.ready;
     if (session.frame.ready) {
         frame.src = game.dataset.frameUrl + session.revision;
     } else {
+        frame.src = game.dataset.photoUrl;
         blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
     renderApproval();

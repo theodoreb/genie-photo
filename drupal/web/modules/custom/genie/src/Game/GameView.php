@@ -122,7 +122,7 @@ final class GameView {
    */
   private static function describe(Frame|Collision $result): array {
     return $result instanceof Frame
-      ? ['ready' => TRUE, 'width' => $result->width, 'height' => $result->height]
+      ? ['ready' => TRUE, 'x' => $result->x, 'y' => $result->y, 'width' => $result->width, 'height' => $result->height]
       : ['ready' => FALSE, 'players' => $result->players];
   }
 
