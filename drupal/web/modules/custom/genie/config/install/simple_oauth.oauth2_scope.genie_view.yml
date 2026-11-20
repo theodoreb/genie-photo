@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.genie_visitor
+id: genie_view
+name: genie_view
+description: 'Look at genie games without taking part'
+grant_types:
+  client_credentials:
+    status: true
+umbrella: false
+parent: null
+granularity_id: role
+granularity_configuration:
+  role: genie_visitor

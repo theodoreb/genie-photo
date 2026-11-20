@@ -87,7 +87,7 @@ final class JoinForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     user_login_finalize($form_state->get('player'));
-    $form_state->setResponse(new TrustedRedirectResponse($this->webView->origin() . '/'));
+    $form_state->setResponse(new TrustedRedirectResponse($this->webView->signIn()));
   }
 
 }

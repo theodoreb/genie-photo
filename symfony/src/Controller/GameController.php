@@ -37,6 +37,10 @@ final class GameController extends AbstractController
     #[Route('/', name: 'app_home', methods: ['GET'])]
     public function home(Request $request): Response
     {
+        if (null === $this->getUser()) {
+            return $this->redirectToRoute('app_games');
+        }
+
         try {
             $session = $this->tools->call($this->tokens->accessToken(), 'session_get');
         } catch (DrupalToolFailed) {

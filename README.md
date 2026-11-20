@@ -16,6 +16,8 @@ bin/start
 
 `bin/start` prints a host code. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
 
+http://127.0.0.1:8000/games lists every game, and anyone can look at one without an account. Six games on historical group photos are ready to join there.
+
 `bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie.2) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
 The build is Drupack 1.0.0-rc6 with four patches in `fork/drupack/`:
@@ -69,6 +71,8 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 8. When everyone has approved, the game closes for good and the page offers the download.
 
 A game with no change for a day is abandoned and turns read-only. Nothing is deleted.
+
+To play without a photo of your own, pick a prepared game on the list and take a place. Anyone can join a prepared game. A game on an uploaded photo takes only the people its host invites. When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
 
@@ -133,6 +137,8 @@ The site works without one. Wishes then go through a keyword reader. `GENIE_MODE
 - Each player is an account named `NAME@NID` that references its game, so two games can each have an Alice.
 - A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game points to one revision.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
+- The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
+- Six prepared games stay open: `Archive.php`. The first six photos ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in `archive/manifest.json`.
 - Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Features used
@@ -200,6 +206,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
+| `bin/smoke open` | The public list and pages, what the web view's own token cannot do, and the next prepared game |
 | `bin/smoke cache` | The caching hints on discover, tool lists and resource reads, and a second connect that sends no request |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
@@ -211,3 +218,5 @@ Each line names a library feature and links to the code that uses it.
 GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
 
 `demo/holiday-party.jpg` is "Holiday Coronavirus" by PS Imaging, from [StockSnap](https://stocksnap.io/photo/holiday-coronavirus-OWPQGSY7C6), under CC0. It is enlarged to 1600 pixels wide.
+
+The photos of the prepared games are in the public domain. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each one's page on Wikimedia Commons, and each game page shows that credit.

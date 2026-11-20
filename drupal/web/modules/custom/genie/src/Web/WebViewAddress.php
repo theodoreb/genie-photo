@@ -23,4 +23,13 @@ final class WebViewAddress {
     return implode('/', array_slice(explode('/', $client->get('redirect')->value), 0, 3));
   }
 
+  /**
+   * Returns the page that signs this browser's Drupal account in.
+   *
+   * A browser that played another game holds that game's sign-in until then.
+   */
+  public function signIn(): string {
+    return $this->origin() . '/login';
+  }
+
 }

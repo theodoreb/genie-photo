@@ -19,6 +19,10 @@ services:
     tags:
       - { name: event_subscriber }
   Drupal\genie\Game\Approvals: ~
+  Drupal\genie\Photo\Archive:
+    tags:
+      - { name: event_subscriber }
+      - { name: needs_destruction }
   Drupal\genie\Game\CurrentGame: ~
   Drupal\genie\Photo\Darkroom: ~
   Drupal\genie\Game\Exports: ~

@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block importmap %}{{ importmap('games') }}{% endblock %}
+
+{% block body %}
+{{ include('games/_header.html.twig') }}
+
+<main class="games">
+    <h1>Claim a face in a group photo</h1>
+    <p>Take a free place in a photo, then tell your AI assistant how you want to look. Everyone in the photo approves the final picture.</p>
+
+    <h2>Join a game</h2>
+    {% if joinable %}
+        <ul class="cards">
+            {% for game in joinable %}{{ include('games/_card.html.twig') }}{% endfor %}
+        </ul>
+    {% else %}
+        <p class="quiet">No game has a free place right now. A new photo opens when a game ends.</p>
+    {% endif %}
+    <p><a href="{{ host_url }}">Host a game with your own photo</a>, with the host code.</p>
+
+    {% if playing %}
+        <h2>Being played</h2>
+        <ul class="cards">
+            {% for game in playing %}{{ include('games/_card.html.twig') }}{% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if over %}
+        <h2>Finished</h2>
+        <ul class="cards">
+            {% for game in over %}{{ include('games/_card.html.twig') }}{% endfor %}
+        </ul>
+    {% endif %}
+</main>
+{% endblock %}

@@ -6,9 +6,10 @@ namespace Drupal\genie\Drush\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\genie\Web\WebViewAccess;
 use Drupal\genie\Game\Games;
+use Drupal\genie\Photo\Archive;
 use Drupal\genie\Photo\PersonDetector;
+use Drupal\genie\Web\WebViewAccess;
 use Drupal\genie\Wish\WishInterpreter;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
@@ -21,12 +22,18 @@ final class GenieCommands extends DrushCommands {
 
   use AutowireTrait;
 
+  /**
+   * Name of the account that looks at games for the web view.
+   */
+  private const VISITOR = 'genie visitor';
+
   public function __construct(
     private readonly Games $games,
     private readonly WishInterpreter $interpreter,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly PersonDetector $detector,
     private readonly FileSystemInterface $fileSystem,
+    private readonly Archive $archive,
   ) {
     parent::__construct();
   }
@@ -89,7 +96,18 @@ final class GenieCommands extends DrushCommands {
   }
 
   /**
+   * Opens games on prepared photos until enough of them are open.
+   */
+  #[CLI\Command(name: 'genie:archive-fill')]
+  public function fillArchive(): void {
+    $this->logger()->success(sprintf('%d prepared games opened.', $this->archive->fill()));
+  }
+
+  /**
    * Gives the web view's OAuth client a new secret and prints it.
+   *
+   * Players sign in through the client. With its own token, the web view
+   * acts as the visitor account, which only looks at games.
    */
   #[CLI\Command(name: 'genie:web-client')]
   #[CLI\Argument(name: 'callback', description: 'The OAuth callback address of the web view.')]
@@ -102,11 +120,32 @@ final class GenieCommands extends DrushCommands {
       'label' => 'Genie web view',
       'confidential' => TRUE,
       'pkce' => TRUE,
-      'grant_types' => ['authorization_code', 'refresh_token'],
     ]);
     $secret = bin2hex(random_bytes(32));
-    $client->set('secret', $secret)->set('redirect', $callback)->save();
+    $client
+      ->set('grant_types', ['authorization_code', 'refresh_token', 'client_credentials'])
+      ->set('scopes', [['scope_id' => 'genie_view']])
+      ->set('user_id', $this->visitor())
+      ->set('secret', $secret)
+      ->set('redirect', $callback)
+      ->save();
     $this->output()->writeln($secret);
+  }
+
+  /**
+   * Returns the id of the account the web view's own token acts as.
+   */
+  private function visitor(): int {
+    $users = $this->entityTypeManager->getStorage('user');
+    $found = $users->loadByProperties(['name' => self::VISITOR]);
+    $visitor = reset($found) ?: $users->create(['name' => self::VISITOR, 'status' => 1]);
+    if ($visitor->isNew()) {
+      // Nobody signs in as the visitor, so nobody learns this password.
+      $visitor->setPassword(bin2hex(random_bytes(24)));
+      $visitor->addRole('genie_visitor');
+      $visitor->save();
+    }
+    return (int) $visitor->id();
   }
 
 }

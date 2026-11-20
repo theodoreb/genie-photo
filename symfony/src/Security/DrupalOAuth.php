@@ -69,15 +69,37 @@ final readonly class DrupalOAuth
     }
 
     /**
+     * Asks for a token of the web view's own. It belongs to no player and only looks at games.
+     *
+     * @return array{token: string, expires_in: int}
+     */
+    public function visitorToken(): array
+    {
+        $body = $this->grant(['grant_type' => 'client_credentials']);
+
+        return ['token' => $body['access_token'], 'expires_in' => $body['expires_in']];
+    }
+
+    /**
      * @param array<string, string> $grant
      */
     private function tokens(array $grant): TokenSet
     {
-        $body = $this->http->request('POST', $this->server()['token_endpoint'], [
-            'body' => ['client_id' => self::CLIENT_ID, 'client_secret' => $this->clientSecret] + $grant,
-        ])->toArray();
+        $body = $this->grant($grant);
 
         return new TokenSet($body['access_token'], $body['refresh_token'], time() + $body['expires_in']);
+    }
+
+    /**
+     * @param array<string, string> $grant
+     *
+     * @return array<string, mixed>
+     */
+    private function grant(array $grant): array
+    {
+        return $this->http->request('POST', $this->server()['token_endpoint'], [
+            'body' => ['client_id' => self::CLIENT_ID, 'client_secret' => $this->clientSecret] + $grant,
+        ])->toArray();
     }
 
     /**

@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - genie
+    - mcp_server
+id: genie_visitor
+label: 'Genie visitor'
+weight: 3
+is_admin: false
+permissions:
+  - 'access mcp server'
+  - 'view genie games'

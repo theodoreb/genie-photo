@@ -4,6 +4,7 @@
 <header class="bar">
     <strong>Genie</strong>
     <span class="grow" id="status" role="status"></span>
+    <a href="{{ path('app_games') }}">All games</a>
     <span>{{ app.user.name }}</span>
     <form method="post" action="{{ path('app_logout') }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
@@ -61,6 +62,7 @@
         <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>
             <p>Every player's AI assistant receives this photo, and may send it to its provider.</p>
+            <p>Anyone can look at this game and its photo. Only the people you invite can take a place in it.</p>
             <input type="hidden" name="_token" value="{{ csrf_token('photo') }}">
             <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
             <button>Upload</button>

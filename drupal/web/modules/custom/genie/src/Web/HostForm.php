@@ -89,7 +89,7 @@ final class HostForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     user_login_finalize($this->games->start($form_state->getValue('name')));
-    $form_state->setResponse(new TrustedRedirectResponse($this->webView->origin() . '/'));
+    $form_state->setResponse(new TrustedRedirectResponse($this->webView->signIn()));
   }
 
 }

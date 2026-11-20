@@ -1,2 +1,4 @@
 play genie:
   title: 'Take part in the genie photo'
+view genie games:
+  title: 'Look at every genie game'

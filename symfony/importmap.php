@@ -20,4 +20,8 @@ return [
         'path' => './assets/review.js',
         'entrypoint' => true,
     ],
+    'games' => [
+        'path' => './assets/games.js',
+        'entrypoint' => true,
+    ],
 ];

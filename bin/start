@@ -42,6 +42,7 @@ umask 077
     echo "GENIE_WEB_SECRET=$secret"
 } >symfony/.env.new.local
 mv symfony/.env.new.local symfony/.env.local
+(cd drupal && ./drupack drush genie:archive-fill)
 
 echo "Start a game at $drupal_url/genie/host with host code $(cat drupal/private/host-code)."
 # Drupack's FrankenPHP serves the web view. Its php.ini caps an upload and a form at 64 MB.

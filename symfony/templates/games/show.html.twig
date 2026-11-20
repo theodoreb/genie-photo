@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ game.credit ? game.credit.title : 'A group photo' }} - Genie{% endblock %}
+
+{% block importmap %}{{ importmap('games') }}{% endblock %}
+
+{% block body %}
+{{ include('games/_header.html.twig') }}
+
+<main class="games">
+    <p><a href="{{ path('app_games') }}">All games</a></p>
+    <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
+         src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
+
+    {% if game.state == 'closed' %}
+        <p>Everyone approved. This picture is final.</p>
+    {% elseif game.state == 'abandoned' %}
+        <p>This game saw no change for a day. It stays as it was.</p>
+    {% elseif not game.has_picture %}
+        <p>The wishes collide right now, so this is the original photo.</p>
+    {% endif %}
+
+    <p>
+        {% if game.players %}Playing: {{ game.players|join(', ') }}.{% else %}Nobody plays yet.{% endif %}
+        {% if game.state == 'open' %}{{ game.free }} {{ game.free == 1 ? 'person is' : 'people are' }} left to claim.{% endif %}
+    </p>
+
+    {% if game.join %}
+        <p><a class="button" href="{{ game.join }}">Take a place in this photo</a></p>
+    {% elseif game.state == 'open' and not game.credit %}
+        <p class="quiet">The host invites the players of this game.</p>
+    {% endif %}
+
+    {% if game.credit %}
+        <p class="quiet">
+            <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date %}, {{ game.credit.date }}{% endif %}.
+            {{ game.credit.licence }}, from Wikimedia Commons.
+        </p>
+    {% endif %}
+</main>
+{% endblock %}

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Drupal\genie\Game;
 
 use Drupal\Core\Url;
+use Drupal\genie\Photo\Archive;
 use Drupal\genie\Wish\Collision;
 use Drupal\genie\Wish\Frame;
 use Drupal\genie\Wish\Framer;
 use Drupal\genie\Wish\Operation;
 
 /**
- * Describes a game to one player, for session_get and the game resource.
+ * Describes a game without image data.
+ *
+ * A player gets their own view, for session_get and the game resource. The
+ * public pages get the view anyone may read.
  */
 final class GameView {
 
@@ -24,6 +28,7 @@ final class GameView {
     private readonly Ledger $ledger,
     private readonly Exports $exports,
     private readonly Framer $framer,
+    private readonly Archive $archive,
   ) {}
 
   /**
@@ -62,6 +67,37 @@ final class GameView {
       'centered' => isset($session->centered[$uid]),
       'frame' => $session->photo === NULL ? NULL : self::describe($this->framer->frame($session)),
       'export' => $export === NULL ? NULL : $session->receipt($uid, $export->hash),
+    ];
+  }
+
+  /**
+   * Describes the current game for anyone, without image data.
+   *
+   * It leaves out the wishes, the boxes and the approvals.
+   *
+   * @return array<string, mixed>
+   *   The state, the players, the people left to claim and the photo's source.
+   */
+  public function publicView(): array {
+    $session = $this->ledger->read();
+    $game = $this->ledger->game();
+    $state = $game->get('field_genie_state')->value;
+    $archive = $game->get('field_genie_archive')->value;
+    // Before an assistant traces the people, the detector's count stands in.
+    $free = $session->survey->people === [] ? count($session->detection['boxes']) : count($session->proposals);
+    $joinable = $archive !== NULL && $state === 'open' && $free > 0 && count($session->seated) < Games::SEATS;
+    return [
+      'id' => $game->uuid(),
+      'state' => $state,
+      'revision' => $session->revision,
+      'photo' => $session->photo,
+      'players' => array_values(array_intersect_key($session->players, $session->claims)),
+      'free' => $free,
+      'has_picture' => $this->framer->frame($session) instanceof Frame,
+      'join' => $joinable
+        ? Url::fromRoute('genie.join', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString()
+        : NULL,
+      'credit' => $archive === NULL ? NULL : $this->archive->credit($archive),
     ];
   }
 

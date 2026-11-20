@@ -10,14 +10,14 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\genie\Game\Ledger;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
-use Mcp\Schema\Content\ImageContent;
-use Mcp\Schema\Content\TextContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base for ledger tools: only signed-in players see or call them.
  */
 abstract class LedgerToolBase extends ToolPluginBase {
+
+  use ImageResultTrait;
 
   /**
    * The game states in which the tool is listed.
@@ -62,25 +62,6 @@ abstract class LedgerToolBase extends ToolPluginBase {
     return AccessResult::allowedIf($account->isAuthenticated()
       && $account->hasPermission('play genie')
       && in_array($this->ledger->state(), static::STATES, TRUE));
-  }
-
-  /**
-   * Builds a result holding a description and an image.
-   *
-   * It carries no structured content, because some clients show only that and
-   * would drop the image.
-   *
-   * @param array{bytes: string, mime: string, info: array<string, mixed>} $image
-   *   The image and what to say about it.
-   *
-   * @return list<\Mcp\Schema\Content\Content>
-   *   The content of the result.
-   */
-  protected function imageResult(array $image): array {
-    return [
-      new TextContent(json_encode($image['info'], JSON_THROW_ON_ERROR)),
-      new ImageContent(base64_encode($image['bytes']), $image['mime']),
-    ];
   }
 
 }

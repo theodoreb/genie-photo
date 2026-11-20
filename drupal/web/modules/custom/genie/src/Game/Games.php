@@ -6,6 +6,7 @@ namespace Drupal\genie\Game;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
 
@@ -34,6 +35,11 @@ final class Games {
 
   private const INVITE_LENGTH = 10;
 
+  /**
+   * Most finished games the public list shows.
+   */
+  private const LISTED_OVER = 12;
+
   public function __construct(
     private readonly Ledger $ledger,
     private readonly CurrentGame $game,
@@ -45,31 +51,71 @@ final class Games {
    * Starts a game hosted by a new player, who uploads its photo.
    */
   public function start(string $name): UserInterface {
-    $invite = '';
-    for ($i = 0; $i < self::INVITE_LENGTH; $i++) {
-      $invite .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
-    }
-    $node = $this->entityTypeManager->getStorage('node')->create([
-      'type' => 'genie_game',
-      'title' => 'Genie game ' . $invite,
-      'status' => 0,
-      'field_genie_invite' => $invite,
-    ]);
-    $node->save();
+    $node = $this->create([]);
     $host = $this->seat((int) $node->id(), $name);
     $node->setOwner($host)->save();
     return $host;
   }
 
   /**
+   * Creates the game of a prepared photo, which nobody hosts.
+   *
+   * @param string $archive
+   *   The id of the photo in the archive manifest.
+   *
+   * @return int
+   *   The game's node id.
+   */
+  public function prepare(string $archive): int {
+    return (int) $this->create(['field_genie_archive' => $archive, 'uid' => 0])->id();
+  }
+
+  /**
    * Finds the game an invite code opens, NULL for an unknown code.
    */
   public function byInvite(string $code): ?NodeInterface {
-    $found = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => 'genie_game',
-      'field_genie_invite' => $code,
-    ]);
-    return $found === [] ? NULL : reset($found);
+    return $this->one(['field_genie_invite' => $code]);
+  }
+
+  /**
+   * Finds a game by its UUID, NULL for an unknown one.
+   */
+  public function byUuid(string $uuid): ?NodeInterface {
+    return $this->one(['uuid' => $uuid]);
+  }
+
+  /**
+   * Lists the games that have a photo: the open ones, then the latest over.
+   *
+   * @return list<int>
+   *   Node ids, each group from the latest change.
+   */
+  public function listed(): array {
+    $games = fn (): QueryInterface => $this->entityTypeManager->getStorage('node')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'genie_game')
+      ->sort('changed', 'DESC');
+    $open = $games()->condition('field_genie_state', 'open')->execute();
+    // A game abandoned before its photo arrived has nothing to show.
+    $over = $games()
+      ->condition('field_genie_state', Ledger::OVER, 'IN')
+      ->exists('field_genie_photo')
+      ->range(0, self::LISTED_OVER)
+      ->execute();
+    return array_map(intval(...), [...array_values($open), ...array_values($over)]);
+  }
+
+  /**
+   * Counts the open games of prepared photos.
+   */
+  public function openPrepared(): int {
+    return (int) $this->entityTypeManager->getStorage('node')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'genie_game')
+      ->condition('field_genie_state', 'open')
+      ->exists('field_genie_archive')
+      ->count()
+      ->execute();
   }
 
   /**
@@ -104,7 +150,12 @@ final class Games {
       ->condition('field_genie_state', Ledger::OVER, 'NOT IN')
       ->condition('changed', $this->time->getRequestTime() - self::IDLE, '<')
       ->execute();
-    foreach ($idle as $game) {
+    $abandoned = 0;
+    foreach ($this->entityTypeManager->getStorage('node')->loadMultiple($idle) as $game => $stored) {
+      // A prepared game waits for its first player as long as it takes.
+      if (!$stored->get('field_genie_archive')->isEmpty() && $this->players((int) $game) === 0) {
+        continue;
+      }
       $this->game->enter((int) $game);
       $this->ledger->locked(static function (NodeInterface $node): void {
         /** @var \Drupal\state_machine\Plugin\Field\FieldType\StateItemInterface $state */
@@ -112,8 +163,9 @@ final class Games {
         $state->applyTransitionById('abandon');
         $node->save();
       });
+      $abandoned++;
     }
-    return count($idle);
+    return $abandoned;
   }
 
   /**
@@ -139,6 +191,39 @@ final class Games {
    */
   public static function displayName(string $accountName): string {
     return preg_replace('/@\d+$/', '', $accountName);
+  }
+
+  /**
+   * Creates a game node with a new invite code.
+   *
+   * @param array<string, mixed> $values
+   *   Field values on top of the ones every game gets.
+   */
+  private function create(array $values): NodeInterface {
+    $invite = '';
+    for ($i = 0; $i < self::INVITE_LENGTH; $i++) {
+      $invite .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
+    }
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $this->entityTypeManager->getStorage('node')->create($values + [
+      'type' => 'genie_game',
+      'title' => 'Genie game ' . $invite,
+      'status' => 0,
+      'field_genie_invite' => $invite,
+    ]);
+    $node->save();
+    return $node;
+  }
+
+  /**
+   * Finds the one game with these values, NULL when there is none.
+   *
+   * @param array<string, string> $properties
+   *   Field values the game has.
+   */
+  private function one(array $properties): ?NodeInterface {
+    $found = $this->entityTypeManager->getStorage('node')->loadByProperties(['type' => 'genie_game'] + $properties);
+    return $found === [] ? NULL : reset($found);
   }
 
   /**

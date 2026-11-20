@@ -15,9 +15,11 @@ security:
             entry_point: App\Security\DrupalAuthenticator
             logout:
                 path: app_logout
-                target: app_login
+                target: app_games
                 enable_csrf: true
 
     access_control:
         - { path: ^/(login|oauth/callback)$, roles: PUBLIC_ACCESS }
+        # Anyone looks at the games. The home page sends a visitor to their list.
+        - { path: ^/(games(/|$)|$), roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_PLAYER }

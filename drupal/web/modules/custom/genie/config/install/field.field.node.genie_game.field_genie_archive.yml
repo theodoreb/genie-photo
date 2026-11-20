@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_genie_archive
+    - node.type.genie_game
+id: node.genie_game.field_genie_archive
+field_name: field_genie_archive
+entity_type: node
+bundle: genie_game
+label: 'Archive photo'
+description: 'The id of the prepared photo this game opened with. Empty for an uploaded photo.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
