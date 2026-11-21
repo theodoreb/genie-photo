@@ -1,8 +1,11 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}Your game - Genie{% endblock %}
+
 {% block body %}
+<a class="skip" href="#game">Skip to the game</a>
 <header class="bar">
-    <strong>Genie</strong>
+    <a class="brand" href="{{ path('app_games') }}">Genie</a>
     <span class="grow" id="status" role="status"></span>
     <a href="{{ path('app_games') }}">All games</a>
     <span>{{ app.user.name }}</span>
@@ -12,11 +15,7 @@
     </form>
 </header>
 
-{% for message in app.flashes('error') %}
-    <p class="error">{{ message }}</p>
-{% endfor %}
-
-<main id="game"
+<main id="game" class="wrap"
       data-hub-url="{{ hub_url }}"
       data-session-url="{{ path('app_session') }}"
       data-photo-url="{{ path('app_photo') }}"
@@ -28,52 +27,69 @@
       data-region-token="{{ csrf_token('regions') }}"
       data-session="{{ session|json_encode }}"
       data-player="{{ app.user.uid }}">
+    {% for message in app.flashes('error') %}
+        <p class="error" role="alert">{{ message }}</p>
+    {% endfor %}
     {% if session.state in ['closed', 'abandoned'] %}
-        <p class="hint">{{ session.state == 'closed' ? 'Everyone approved. This picture is final.' : 'This game saw no change for a day. It stays as it was.' }}</p>
+        <p class="notice">{{ session.state == 'closed' ? 'Everyone approved. This picture is final.' : 'This game saw no change for a day. It stays as it was.' }}</p>
     {% endif %}
     {% if session.photo %}
-        <p class="hint invite">Invite the others in the photo: <a href="{{ session.invite }}">{{ session.invite }}</a></p>
-        <section class="picture">
-            <ol class="steps">
-                <li>Click your face in the photo.</li>
-                <li>
-                    Connect your AI assistant. It signs in from this browser and plays as you.
-                    <details>
-                        <summary>How to connect</summary>
-                        <p>Add this MCP server: <code>{{ mcp_url }}</code></p>
-                        <ul>
-                            <li>Claude on claude.ai or in the app: Settings, Connectors, Add custom connector. Paste the address, then Connect.</li>
-                            <li>Claude Code: <code>claude mcp add --transport http genie {{ mcp_url }}</code>, then <code>claude mcp login genie</code>.</li>
-                            <li>Codex: <code>codex mcp add genie --url {{ mcp_url }}</code>, then <code>codex mcp login genie</code>.</li>
-                        </ul>
-                    </details>
-                </li>
-                <li>Tell it your wish: "hide my face", "put me in the middle", "disguise me", "turn me to gold", "make me a cartoon", or "repaint me as pixel art". Everyone sees the picture change.</li>
-                <li>When the picture suits you, click "I approve this picture". The game ends when every player approves.</li>
-            </ol>
-            <div id="stage" class="stage">
-                <img id="frame" alt="The photo as every wish leaves it">
-                <div id="regions"></div>
+        <div class="game-layout">
+            <section class="stage-wrap" aria-labelledby="picture-title">
+                <h1 id="picture-title">Your game</h1>
+                <div id="stage" class="stage shade">
+                    <img id="frame" alt="The photo as every wish leaves it">
+                    <div id="regions"></div>
+                </div>
+                <p id="blocked" class="notice" hidden></p>
+                <p id="guide" class="hint">Ask your assistant to find everyone in the photo.</p>
+                <div class="approval">
+                    <button id="approve" type="button" hidden>I approve this picture</button>
+                    <a id="download" class="button secondary" download="genie-photo.png" hidden>Download the final photo</a>
+                    <span id="approval"></span>
+                </div>
+                <ul id="proposals" class="objects" aria-label="People found in the photo"></ul>
+                <ul id="objects" class="objects" aria-label="Things in the photo"></ul>
+            </section>
+
+            <div class="side">
+                <section class="panel shade" aria-labelledby="steps-title">
+                    <h2 id="steps-title">How to play</h2>
+                    <ol class="steps">
+                        <li>Click your face in the photo.</li>
+                        <li>
+                            Connect your AI assistant. It signs in from this browser and plays as you.
+                            <details>
+                                <summary>How to connect</summary>
+                                <p>Add this MCP server: <code>{{ mcp_url }}</code></p>
+                                <ul>
+                                    <li>Claude on claude.ai or in the app: Settings, Connectors, Add custom connector. Paste the address, then Connect.</li>
+                                    <li>Claude Code: <code>claude mcp add --transport http genie {{ mcp_url }}</code>, then <code>claude mcp login genie</code>.</li>
+                                    <li>Codex: <code>codex mcp add genie --url {{ mcp_url }}</code>, then <code>codex mcp login genie</code>.</li>
+                                </ul>
+                            </details>
+                        </li>
+                        <li>Tell it your wish: "hide my face", "put me in the middle", "disguise me", "turn me to gold", "make me a cartoon", or "repaint me as pixel art". Everyone sees the picture change.</li>
+                        <li>When the picture suits you, click "I approve this picture". The game ends when every player approves.</li>
+                    </ol>
+                </section>
+                <section class="panel invite" aria-labelledby="invite-title">
+                    <h2 id="invite-title">Invite the others</h2>
+                    <p>Send this link to the other people in the photo:</p>
+                    <p><a href="{{ session.invite }}"><code>{{ session.invite }}</code></a></p>
+                </section>
             </div>
-            <p id="blocked" class="hint" hidden></p>
-            <p id="guide" class="hint">Ask your assistant to find everyone in the photo.</p>
-            <div class="bar approval">
-                <button id="approve" type="button" hidden>I approve this picture</button>
-                <a id="download" download="genie-photo.png" hidden>Download the final photo</a>
-                <span id="approval"></span>
-            </div>
-            <ul id="proposals" class="objects"></ul>
-            <ul id="objects" class="objects"></ul>
-        </section>
+        </div>
     {% elseif not session.is_uploader %}
-        <p class="hint">The host has not added the group photo yet. This page updates when they do.</p>
+        <p class="notice">The host has not added the group photo yet. This page updates when they do.</p>
     {% else %}
-        <form class="upload" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
+        <form class="upload panel shade" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>
             <p>Every player's AI assistant receives this photo, and may send it to its provider.</p>
             <p>Anyone can look at this game and its photo. Only the people you invite can take a place in it.</p>
             <input type="hidden" name="_token" value="{{ csrf_token('photo') }}">
-            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+            <label for="photo">The photo, as JPEG, PNG or WebP</label>
+            <input id="photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
             <button>Upload</button>
         </form>
     {% endif %}

@@ -1,11 +1,54 @@
-/* Colours and base elements shared by the web view and the Drupal theme. */
+/* Colours, type and the halftone shade, shared by the web view and the Drupal theme. */
+@font-face {
+    font-family: 'Bricolage Grotesque';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('../fonts/bricolage-grotesque.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Figtree';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('../fonts/figtree.woff2') format('woff2');
+}
+
 :root {
     color-scheme: light dark;
-    --ink: light-dark(#1d1b26, #f2f0f7);
-    --paper: light-dark(#faf8f3, #17151f);
-    --line: light-dark(#d9d4c7, #3a3648);
-    --accent: #7a3ff2;
-    --object: #d9770b;
+    --ink: light-dark(#1e1030, #f4eefb);
+    --paper: light-dark(#fdf8ef, #1a1026);
+    --card: light-dark(#ffffff, #2a1a40);
+    --line: light-dark(#1e1030, #0b0612);
+    --quiet: light-dark(#5b4d6b, #c9bcd9);
+    --link: light-dark(#612f9d, #d7b8ff);
+    /* The tresbien.tech colours. The logo purple is every shade. */
+    --shade: #492376;
+    --purple: #612f9d;
+    --action: #bb4499;
+    --others: #2f9d98;
+    --alert: #d0262b;
+    --light: #fdf8ef;
+    --dark: #1e1030;
+    --display: 'Bricolage Grotesque', 'Arial Black', system-ui, sans-serif;
+    --text: 'Figtree', system-ui, sans-serif;
+    /*
+     * White dots 7px apart on a lattice turned by atan(1/2), about 27 degrees.
+     * The lattice repeats every 5 x 7px / sqrt(5) = 15.65px with five dots per
+     * tile. The corner dot is drawn at all four corners.
+     */
+    --dot: #fff 1.1px, #fff0 1.6px;
+    --halftone:
+        radial-gradient(circle at 0 0, var(--dot)),
+        radial-gradient(circle at 15.65px 0, var(--dot)),
+        radial-gradient(circle at 0 15.65px, var(--dot)),
+        radial-gradient(circle at 15.65px 15.65px, var(--dot)),
+        radial-gradient(circle at 6.26px 3.13px, var(--dot)),
+        radial-gradient(circle at 12.52px 6.26px, var(--dot)),
+        radial-gradient(circle at 3.13px 9.39px, var(--dot)),
+        radial-gradient(circle at 9.39px 12.52px, var(--dot));
+    --halftone-size: 15.65px 15.65px;
 }
 
 * { box-sizing: border-box; }
@@ -14,7 +57,49 @@ body {
     margin: 0;
     color: var(--ink);
     background: var(--paper);
-    font: 16px/1.5 system-ui, sans-serif;
+    font: 17px/1.55 var(--text);
 }
 
-button, input { font: inherit; padding: .4rem .7rem; }
+a { color: var(--link); }
+:focus-visible { outline: 3px solid var(--others); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+
+/*
+ * A hard offset shade in halftone. Its element needs no transform or opacity, which would lift the shade above its fill.
+ * Drupal's content wrapper, .layout-content, takes it too, since Drupal pages carry no .shade class.
+ */
+.shade, .layout-content { position: relative; }
+.shade::before, .layout-content::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    translate: var(--lift, 8px) var(--lift, 8px);
+    border: 3px solid var(--line);
+    background-color: var(--shade);
+    background-image: var(--halftone);
+    background-size: var(--halftone-size);
+}
+
+.button, button, input[type="submit"] {
+    display: inline-block;
+    font: 700 1rem/1.2 var(--text);
+    padding: .75rem 1.2rem;
+    color: var(--light);
+    background: var(--action);
+    border: 3px solid var(--line);
+    box-shadow: 4px 4px 0 var(--shade);
+    text-decoration: none;
+    cursor: pointer;
+}
+.button:active, button:active, input[type="submit"]:active { translate: 2px 2px; box-shadow: 2px 2px 0 var(--shade); }
+.button.secondary { color: var(--ink); background: var(--card); }
+button:disabled { cursor: not-allowed; background: var(--quiet); }
+
+input:not([type="checkbox"], [type="radio"], [type="submit"], [type="hidden"]) {
+    font: inherit;
+    padding: .7rem .9rem;
+    color: var(--dark);
+    background: var(--light);
+    border: 3px solid var(--line);
+}

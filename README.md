@@ -260,3 +260,5 @@ GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
 `demo/holiday-party.jpg` is "Holiday Coronavirus" by PS Imaging, from [StockSnap](https://stocksnap.io/photo/holiday-coronavirus-OWPQGSY7C6), under CC0. It is enlarged to 1600 pixels wide.
 
 The photos of the prepared games are in the public domain. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each one's page on Wikimedia Commons, and each game page shows that credit.
+
+The fonts in `symfony/assets/fonts/`, Bricolage Grotesque and Figtree, are under the SIL Open Font License 1.1. Their licence files sit beside them.

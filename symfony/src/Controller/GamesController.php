@@ -47,11 +47,17 @@ final class GamesController extends AbstractController
     {
         $games = $this->tools->call($this->visitor->accessToken(), 'web_games_list')['games'];
 
+        $over = array_filter($games, static fn (array $game): bool => 'open' !== $game['state']);
+        // Drupal lists finished games newest first. A withheld picture has no picture to show.
+        $pictured = array_filter($over, static fn (array $game): bool => $game['has_picture']);
+
         return $this->render('games/index.html.twig', [
             'joinable' => array_filter($games, static fn (array $game): bool => null !== $game['join']),
             'playing' => array_filter($games, static fn (array $game): bool => null === $game['join'] && 'open' === $game['state']),
-            'over' => array_filter($games, static fn (array $game): bool => 'open' !== $game['state']),
+            'over' => $over,
+            'latest' => reset($pictured) ?: null,
             'host_url' => $this->hostUrl,
+            'mcp_url' => $this->mcpUrl,
         ]);
     }
 

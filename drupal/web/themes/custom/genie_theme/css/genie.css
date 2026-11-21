@@ -1,13 +1,15 @@
 /* Start, join, sign-in and consent pages, laid out like the web view. */
-header { display: flex; align-items: center; padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
-header a { color: inherit; font-weight: bold; text-decoration: none; }
+header { display: flex; align-items: center; padding: .8rem max(1rem, 4vw); background: var(--purple); border-bottom: 4px solid var(--line); }
+header a { color: var(--light); font: 800 1.9rem/1 var(--display); text-decoration: none; text-shadow: 3px 3px 0 var(--shade); }
 
-main, [data-drupal-messages] { max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
-[data-drupal-messages] { margin-bottom: -2rem; }
-[data-drupal-messages] [aria-label="Error message"] { color: #c62828; }
+main { isolation: isolate; max-width: 32rem; margin: 3rem auto; padding: 0 calc(1rem + 8px) 0 1rem; }
+.layout-content { padding: 1.5rem; background: var(--card); border: 3px solid var(--line); }
+[data-drupal-messages] { max-width: 32rem; margin: 2rem auto -1rem; padding: 0 1rem; }
+[data-drupal-messages] [aria-label="Error message"] { padding: .75rem 1rem; color: var(--light); background: var(--alert); border: 3px solid var(--line); font-weight: 700; }
 
-h1 { margin: 0 0 .75rem; }
-form { display: grid; gap: .75rem; }
-.form-item label { display: block; }
+h1 { margin: 0 0 1rem; font-size: 2rem; }
+form { display: grid; gap: .9rem; }
+.form-item label { display: block; font-weight: 700; margin-bottom: .3rem; }
 .form-item input:not([type="checkbox"], [type="radio"]) { width: 100%; }
-.description { opacity: .7; font-size: .9rem; }
+.description { color: var(--quiet); font-size: .9rem; }
+.visually-hidden:not(:focus) { position: absolute; left: -100vw; }

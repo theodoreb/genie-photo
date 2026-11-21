@@ -1,12 +1,20 @@
 <li>
-    <a class="card" href="{{ path('app_game', {game: game.id}) }}">
-        {# A finished game shows its last picture. An open one shows its photo, which never changes. #}
-        <img loading="lazy" alt="{{ game.credit ? game.credit.title : 'A group photo' }}"
+    <a class="card shade" href="{{ path('app_game', {game: game.id}) }}">
+        {# A finished game shows its last picture. An open one shows its photo, which never changes. The title below names it. #}
+        <img loading="lazy" alt=""
              src="{{ path('app_game_picture', {game: game.id, view: game.state != 'open' and game.has_picture ? 'frame' : 'photo'}) }}">
-        {% if game.state == 'open' %}
-            <span>{{ game.players|length }} playing, {{ game.free }} to claim</span>
-        {% else %}
-            <span>{{ game.withheld ?: (game.state == 'closed' ? 'Approved by everyone' : 'Left as it was') }}</span>
-        {% endif %}
+        <span class="card-body">
+            <span class="card-title">{{ game.credit ? game.credit.title : 'A group photo' }}</span>
+            {% if game.state == 'open' %}
+                <span class="badge open">{{ game.free }} {{ game.free == 1 ? 'place' : 'places' }} free</span>
+                <span class="quiet">{{ game.players ? game.players|length ~ ' playing' : 'Nobody playing yet' }}</span>
+            {% elseif game.withheld %}
+                <span class="badge withheld">{{ game.withheld }}</span>
+            {% elseif game.state == 'closed' %}
+                <span class="badge closed">Approved by everyone</span>
+            {% else %}
+                <span class="badge abandoned">Left as it was</span>
+            {% endif %}
+        </span>
     </a>
 </li>

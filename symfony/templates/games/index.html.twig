@@ -5,32 +5,93 @@
 {% block body %}
 {{ include('games/_header.html.twig') }}
 
-<main class="games">
-    <h1>Claim a face in a group photo</h1>
-    <p>Take a free place in a photo, then tell your AI assistant how you want to look. Everyone in the photo approves the final picture.</p>
+<main id="main" class="wrap">
+    <section class="hero" aria-labelledby="title">
+        <div>
+            <h1 id="title">Claim a <span class="mark shade">face</span> in a group photo</h1>
+            <p class="lead">Take a free place in an old group photo, then tell your AI assistant how you want to look. The picture is done when everyone in it approves.</p>
+            <p class="actions">
+                <a class="button" href="#join">Join a game</a>
+                <a class="button secondary" href="{{ host_url }}">Host a game with your photo</a>
+            </p>
+            <p class="quiet">Hosting asks for the host code.</p>
+        </div>
+        {% if latest %}
+            <figure class="shade">
+                <a href="{{ path('app_game', {game: latest.id}) }}">
+                    <img src="{{ path('app_game_picture', {game: latest.id, view: 'frame'}) }}" alt="The final picture of {{ latest.credit ? latest.credit.title : 'a group photo' }}">
+                </a>
+                <figcaption>Approved by everyone{% if latest.credit %}: {{ latest.credit.title }}{% endif %}</figcaption>
+            </figure>
+        {% endif %}
+    </section>
 
-    <h2>Join a game</h2>
-    {% if joinable %}
-        <ul class="cards">
-            {% for game in joinable %}{{ include('games/_card.html.twig') }}{% endfor %}
-        </ul>
-    {% else %}
-        <p class="quiet">No game has a free place right now. A new photo opens when a game ends.</p>
-    {% endif %}
-    <p><a href="{{ host_url }}">Host a game with your own photo</a>, with the host code.</p>
-    <p class="quiet">An AI agent can play too: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> lists the open games and the steps.</p>
+    <section id="join" aria-labelledby="join-title">
+        <h2 id="join-title">Join a game</h2>
+        {% if joinable %}
+            <p>Each photo below has a free place. Open one, type a name, and take your place.</p>
+            <ul class="cards">
+                {% for game in joinable %}{{ include('games/_card.html.twig') }}{% endfor %}
+            </ul>
+        {% else %}
+            <p class="quiet">No game has a free place right now. A new photo opens when a game ends.</p>
+        {% endif %}
+    </section>
 
-    <section class="how">
-        <h2>How a game works</h2>
-        <ol>
-            <li>Pick a photo and type a name. Drupal gives you a seat in that game and signs your browser in.</li>
-            <li>Click your face. A detector boxed each person when the photo arrived.</li>
-            <li>Connect your AI assistant to the game's MCP server. It signs in as you, from the same browser.</li>
-            <li>Ask it for a wish: "hide my face", "put me in the middle", "disguise me", "turn me to gold", "make me a cartoon", "repaint me as pixel art". A wish changes only your own place, and every player's page shows the new picture.</li>
-            <li>When the picture suits you, approve it with a click. Once every player has approved, the game closes for good and a new photo opens.</li>
+    <section id="how" aria-labelledby="how-title">
+        <h2 id="how-title">How to play</h2>
+        <ol class="steps-grid">
+            <li>
+                <h3>Take a place</h3>
+                <p>Open a game, type a name, then click your face in the photo.</p>
+            </li>
+            <li>
+                <h3>Connect your assistant</h3>
+                <p>Add the Genie MCP server to Claude, Codex or another MCP client. It signs in as you, from the same browser.</p>
+            </li>
+            <li>
+                <h3>Make a wish</h3>
+                <p>"Hide my face", "turn me to gold", "make me a cartoon". A wish changes only your place, and everyone sees the picture change.</p>
+            </li>
+            <li>
+                <h3>Approve</h3>
+                <p>When the picture suits you, approve it with a click. Once everyone has, the picture is final and a new photo opens.</p>
+            </li>
         </ol>
+    </section>
 
-        <h3>Under the hood</h3>
+    {% if playing %}
+        <section aria-labelledby="playing-title">
+            <h2 id="playing-title">Being played</h2>
+            <ul class="cards">
+                {% for game in playing %}{{ include('games/_card.html.twig') }}{% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if over %}
+        <section aria-labelledby="over-title">
+            <h2 id="over-title">Finished</h2>
+            <ul class="cards">
+                {% for game in over %}{{ include('games/_card.html.twig') }}{% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    <section id="agents" class="panel shade agents" aria-labelledby="agents-title">
+        <h2 id="agents-title">For AI agents</h2>
+        <p>An agent plays for one person. It joins a game, claims that person's place and makes their wishes.</p>
+        <dl>
+            <dt>Agent guide</dt>
+            <dd><a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a>, plain text</dd>
+            <dt>MCP server</dt>
+            <dd><code>{{ mcp_url }}</code>, streamable HTTP with OAuth</dd>
+        </dl>
+        <p>Only the person approves the final picture, with a click on a page the agent hands them.</p>
+    </section>
+
+    <details class="under">
+        <summary>Under the hood</summary>
         <ul>
             <li>This page is a Symfony 8 app that keeps no game data. It reads the games from Drupal through the PHP MCP SDK, with a read-only token of its own from the OAuth client-credentials grant.</li>
             <li>Drupal 11, run by Drupack, holds the rules. Each game is a node with a state machine: open, then closed, or abandoned after a day without change.</li>
@@ -42,20 +103,8 @@
             <li>A Mercure hub tells every open page when the picture changes.</li>
             <li>The prepared photos are public domain, from Wikimedia Commons. Each one is checked against its SHA-1 when it opens.</li>
         </ul>
-    </section>
-
-    {% if playing %}
-        <h2>Being played</h2>
-        <ul class="cards">
-            {% for game in playing %}{{ include('games/_card.html.twig') }}{% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if over %}
-        <h2>Finished</h2>
-        <ul class="cards">
-            {% for game in over %}{{ include('games/_card.html.twig') }}{% endfor %}
-        </ul>
-    {% endif %}
+    </details>
 </main>
+
+{{ include('games/_footer.html.twig') }}
 {% endblock %}

@@ -1,53 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ game.credit ? game.credit.title : 'A group photo' }} - Genie{% endblock %}
+{% set title = game.credit ? game.credit.title : 'A group photo' %}
+
+{% block title %}{{ title }} - Genie{% endblock %}
 
 {% block importmap %}{{ importmap('games') }}{% endblock %}
 
 {% block body %}
 {{ include('games/_header.html.twig') }}
 
-<main class="games">
-    <p><a href="{{ path('app_games') }}">All games</a></p>
-    <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
-         src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
+<main id="main" class="wrap">
+    <p class="crumb"><a href="{{ path('app_games') }}">All games</a></p>
 
-    {% if game.withheld %}
-        <p>{{ game.withheld }}</p>
-    {% elseif game.state == 'closed' %}
-        <p>Everyone approved. This picture is final.</p>
-    {% elseif game.state == 'abandoned' %}
-        <p>This game saw no change for a day. It stays as it was.</p>
-    {% elseif not game.has_picture %}
-        <p>The wishes collide right now, so this is the original photo.</p>
-    {% endif %}
+    <div class="game-layout">
+        <figure class="picture-frame shade">
+            <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
+                 src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
+        </figure>
 
-    <p>
-        {% if game.players %}Playing: {{ game.players|join(', ') }}.{% else %}Nobody plays yet.{% endif %}
-        {% if game.state == 'open' %}{{ game.free }} {{ game.free == 1 ? 'person is' : 'people are' }} left to claim.{% endif %}
-    </p>
+        <div class="side">
+            <h1>{{ title }}</h1>
 
-    {% if game.join %}
-        {# Drupal seats the player, signs them in, and sends them to their game. #}
-        <form class="join" method="post" action="{{ game.join }}">
-            <label for="name">Your name in the game</label>
-            <input id="name" name="name" maxlength="30" required autocomplete="nickname">
-            <button class="button">Take a place in this photo</button>
-        </form>
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    {% elseif game.state == 'open' and not game.credit %}
-        <p class="quiet">The host invites the players of this game.</p>
-    {% endif %}
+            {% if game.withheld %}
+                <p><span class="badge withheld">Withheld</span> {{ game.withheld }}</p>
+            {% elseif game.state == 'closed' %}
+                <p><span class="badge closed">Final</span> Everyone approved. This picture is final.</p>
+            {% elseif game.state == 'abandoned' %}
+                <p><span class="badge abandoned">Left as it was</span> This game saw no change for a day.</p>
+            {% else %}
+                <p><span class="badge open">Open</span> {{ game.free }} {{ game.free == 1 ? 'person is' : 'people are' }} left to claim.</p>
+                {% if not game.has_picture %}
+                    <p class="quiet">The wishes collide right now, so this is the original photo.</p>
+                {% endif %}
+            {% endif %}
 
-    {% if game.join %}
-        <p class="quiet">An AI agent can join this game for you: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> has the steps.</p>
-    {% endif %}
+            <p>{% if game.players %}Playing: {{ game.players|join(', ') }}.{% else %}Nobody plays yet.{% endif %}</p>
 
-    {% if game.credit %}
-        <p class="quiet">
-            <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date %}, {{ game.credit.date }}{% endif %}.
-            {{ game.credit.licence }}, from Wikimedia Commons.
-        </p>
-    {% endif %}
+            {% if game.join %}
+                {# Drupal seats the player, signs them in, and sends them to their game. #}
+                <section class="panel shade" aria-labelledby="join-title">
+                    <h2 id="join-title">Take a place</h2>
+                    <form class="join" method="post" action="{{ game.join }}">
+                        <label for="name">Your name in the game</label>
+                        <input id="name" name="name" maxlength="30" required autocomplete="nickname">
+                        <button>Take a place in this photo</button>
+                    </form>
+                    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+                    <p class="quiet">An AI agent can join for you: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> has the steps.</p>
+                </section>
+            {% elseif game.state == 'open' and not game.credit %}
+                <p class="quiet">The host invites the players of this game.</p>
+            {% endif %}
+
+            {% if game.credit %}
+                <p class="quiet">
+                    <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date %}, {{ game.credit.date }}{% endif %}.
+                    {{ game.credit.licence }}, from Wikimedia Commons.
+                </p>
+            {% endif %}
+        </div>
+    </div>
 </main>
+
+{{ include('games/_footer.html.twig') }}
 {% endblock %}

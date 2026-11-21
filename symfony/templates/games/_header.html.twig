@@ -1,7 +1,14 @@
+<a class="skip" href="#main">Skip to the content</a>
 <header class="bar">
     <a class="brand" href="{{ path('app_games') }}">Genie</a>
-    <span class="grow"></span>
-    {% if app.user %}
-        <a href="{{ path('app_home') }}">Your game</a>
-    {% endif %}
+    <nav aria-label="Main">
+        <ul>
+            <li><a href="{{ path('app_games') }}#join">Games</a></li>
+            <li><a href="{{ path('app_games') }}#how">How to play</a></li>
+            <li><a href="{{ path('app_games') }}#agents">For AI agents</a></li>
+            {% if app.user %}
+                <li><a class="pill" href="{{ path('app_home') }}">Your game</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 </header>

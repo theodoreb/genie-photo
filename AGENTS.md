@@ -16,6 +16,7 @@ Genie photo: players share one group photo and make wishes through their own AI 
 - Game rules and data: the Drupal module `drupal/web/modules/custom/genie`.
 - Prepared games: `archive/manifest.json` and `src/Photo/Archive.php` in that module.
 - The guide for AI agents: `symfony/templates/games/llms.txt.twig`, served at `/llms.txt`.
+- Colours, fonts and the halftone shade: `symfony/assets/styles/tokens.css`. The Drupal theme `genie_theme` links it and the fonts folder.
 - Smoke scripts: `symfony/tests/smoke/<name>.php`, sharing `symfony/tests/smoke/lib/`.
 - The Drupack build: patches and the build script in `fork/drupack/`. `bin/lib/get-drupack` downloads it.
 
