@@ -20,6 +20,29 @@
     <p><a href="{{ host_url }}">Host a game with your own photo</a>, with the host code.</p>
     <p class="quiet">An AI agent can play too: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> lists the open games and the steps.</p>
 
+    <section class="how">
+        <h2>How a game works</h2>
+        <ol>
+            <li>Pick a photo and type a name. Drupal gives you a seat in that game and signs your browser in.</li>
+            <li>Click your face. A detector boxed each person when the photo arrived.</li>
+            <li>Connect your AI assistant to the game's MCP server. It signs in as you, from the same browser.</li>
+            <li>Ask it for a wish: "hide my face", "put me in the middle", "repaint me as pixel art". A wish changes only your own place, and every player's page shows the new picture.</li>
+            <li>When the picture suits you, approve it with a click. Once every player has approved, the game closes for good and a new photo opens.</li>
+        </ol>
+
+        <h3>Under the hood</h3>
+        <ul>
+            <li>This page is a Symfony 8 app that keeps no game data. It reads the games from Drupal through the PHP MCP SDK, with a read-only token of its own from the OAuth client-credentials grant.</li>
+            <li>Drupal 11, run by Drupack, holds the rules. Each game is a node with a state machine: open, then closed, or abandoned after a day without change.</li>
+            <li>Your assistant talks to Drupal's MCP server directly, with tools such as <code>photo_get</code>, <code>claim_place</code>, <code>make_wish</code> and <code>paint_me</code>. It signs in with OAuth as your player account, so it can only change your place.</li>
+            <li>A DETR model runs in PHP through Symfony AI's TransformersPhp bridge and finds the people in a new photo.</li>
+            <li>A small local model reads each wish through Symfony AI, which turns its answer into a validated PHP object. Plain PHP code then crops, covers or repaints the photo.</li>
+            <li>Only your own click approves a picture. Your assistant gets the approval page as a link, through MCP URL elicitation where the client supports it.</li>
+            <li>A Mercure hub tells every open page when the picture changes.</li>
+            <li>The prepared photos are public domain, from Wikimedia Commons. Each one is checked against its SHA-1 when it opens.</li>
+        </ul>
+    </section>
+
     {% if playing %}
         <h2>Being played</h2>
         <ul class="cards">

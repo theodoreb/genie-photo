@@ -46,3 +46,6 @@ header.bar { border-bottom: 1px solid var(--line); }
     /* A face box on a phone is too small for its text. Its button says who it is. */
     .region.proposal { font-size: 0; }
 }
+.how { max-width: 48rem; line-height: 1.6; }
+.how h3 { margin: 1.5rem 0 .5rem; font-size: 1rem; }
+.how ol, .how ul { padding-left: 1.5rem; }
