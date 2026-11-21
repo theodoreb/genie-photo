@@ -172,7 +172,7 @@ A withheld picture stays on disk. The public pages show the original photo and "
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
 - The web view serves the public pages `/games`, `/games/{uuid}` and `/llms.txt`, and the player page at `/`.
-- Six prepared games stay open: `Archive.php`. `drush genie:archive-fill` opens them, and `bin/start` runs it. The first six photos ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in `archive/manifest.json`.
+- Six prepared games stay open: `Archive.php`. `drush genie:archive-fill` opens them, and `bin/start` runs it. The first six pictures ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in `archive/manifest.json`.
 - Assistants and the web view get images through MCP tools. Symfony keeps no game data. The upload is the web view's only HTTP call with a token. The join form posts to Drupal's `/play/{code}`, which checks the Origin header. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Features used
@@ -259,6 +259,6 @@ GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
 
 `demo/holiday-party.jpg` is "Holiday Coronavirus" by PS Imaging, from [StockSnap](https://stocksnap.io/photo/holiday-coronavirus-OWPQGSY7C6), under CC0. It is enlarged to 1600 pixels wide.
 
-The photos of the prepared games are in the public domain. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each one's page on Wikimedia Commons, and each game page shows that credit.
+The pictures of the prepared games are in the public domain: 15 paintings first, then 81 photos. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each one's page on Wikimedia Commons, and each game page shows that credit.
 
 The fonts in `symfony/assets/fonts/`, Bricolage Grotesque and Figtree, are under the SIL Open Font License 1.1. Their licence files sit beside them.
