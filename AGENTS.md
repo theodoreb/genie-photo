@@ -8,12 +8,14 @@ Genie photo: players share one group photo and make wishes through their own AI 
 - Elsewhere, `docker compose up` runs the same start in a container.
 - `drupal/drupack` runs PHP, Composer and Drush, such as `cd symfony && ../drupal/drupack composer install`.
 - `bin/replay codex` or `bin/replay claude` plays the demo story with one assistant for all four players. The steps are in `demo/replay.md`.
-- `bin/start` prints a host code. A host starts a game at `/genie/host`, and guests join from its invite link. `drush genie:seats alice bob` seats test players and prints their passwords.
+- `bin/start` prints a host code and opens six prepared games. A host starts a game at `/genie/host`, and guests join from its invite link. Anyone joins a prepared game from `/games`. `drush genie:seats alice bob` seats test players and prints their passwords.
 
 ## Where things are
 
-- Symfony 8 web view: `symfony/`. It reaches Drupal only through MCP, in `symfony/src/Drupal/McpDrupalTools.php`.
+- Symfony 8 web view: `symfony/`. It calls Drupal through MCP, in `symfony/src/Drupal/McpDrupalTools.php`, except for the OAuth sign-in, the photo upload and the join form.
 - Game rules and data: the Drupal module `drupal/web/modules/custom/genie`.
+- Prepared games: `archive/manifest.json` and `src/Photo/Archive.php` in that module.
+- The guide for AI agents: `symfony/templates/games/llms.txt.twig`, served at `/llms.txt`.
 - Smoke scripts: `symfony/tests/smoke/<name>.php`, sharing `symfony/tests/smoke/lib/`.
 - The Drupack build: patches and the build script in `fork/drupack/`. `bin/lib/get-drupack` downloads it.
 

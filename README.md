@@ -64,21 +64,30 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 1. The host starts the game and uploads a photo. `demo/holiday-party.jpg` is ready to use. A photo where the detector finds nobody is refused.
 2. The others join from the invite link with a name only. A game takes 12 players.
 3. A local detector boxes the people in the photo. One player asks their assistant to trace them.
-4. Each player tells their assistant which person they are, or clicks their face on the web view.
+4. Each player tells their assistant which person they are, or clicks their face on the web view. The page shows one picture, the shared one, with a box on each unclaimed face.
 5. Players make wishes and repaint their whole person, as pixel art if they like.
-6. If two wishes cannot both hold, the page names the players in the way.
+6. If two wishes cannot both hold, the page names the players in the way and shows the original photo.
 7. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
 8. When everyone has approved, the game closes for good and the page offers the download.
 
-A game with no change for a day is abandoned and turns read-only. Nothing is deleted.
+The picture hides a head only when its player asked to be covered or cut out. People nobody has claimed stay visible.
 
-To play without a photo of your own, pick a prepared game on the list, type a name and take a place. Drupal seats you, signs you in and opens your game without a consent screen, since the web view is its own client. Your game page lists the steps, with the address to add to your assistant. Anyone can join a prepared game. A game on an uploaded photo takes only the people its host invites. When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned. Its people are ready to claim on the page from the start, with a head box guessed from the detector's box. An assistant that traces the photo replaces those guesses.
+A game with a player and no change for a day is abandoned and turns read-only. Nothing is deleted.
+
+To play without a photo of your own, pick a prepared game on `/games`, type a name and take a place.
+
+- Anyone can join a prepared game while it has a free person and a free seat. A game on an uploaded photo takes only the people its host invites.
+- The name form posts to Drupal's `/play/{code}`. Drupal seats you, signs you in and opens your game without a consent screen, since the web view is its own client.
+- Drupal refuses a finished or full game and a bad or taken name. It sends you back to the game page with the reason. A form from another site gets a 403.
+- Your game page lists the steps, with the address to add to your assistant.
+- Its people are ready to claim from the start, with a head box guessed from the detector's box. An assistant that traces the photo replaces those guesses.
+- When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
 
 ## Connect an assistant
 
-An agent pointed at the web view can read `/llms.txt`. It lists the games open now and the steps below, with this site's addresses.
+An agent pointed at the web view can read `/llms.txt`. It lists the prepared games with a free place, and the steps to join, connect and play.
 
 Add this MCP server to your assistant, which then opens the Drupal sign-in page.
 
@@ -111,7 +120,7 @@ To play several players from one machine, add the server once per player under a
 
 The server also offers three prompts, which clients such as claude.ai list in their prompt menu: `genie_join`, `genie_paint` and `genie_wish`. Each takes one line of text and asks the assistant to use the tools above. They are config entities of `mcp_server`, in the module's `config/install`.
 
-Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `web_picture_get`, which returns its images. Assistants cannot call it.
+Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `web_picture_get`, which returns its images, and three tools for visitors: `web_games_list`, `web_game_view` and `web_game_picture`. Assistants cannot call them.
 
 Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.
 
@@ -140,8 +149,9 @@ The site works without one. Wishes then go through a keyword reader. `GENIE_MODE
 - A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game points to one revision.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
-- Six prepared games stay open: `Archive.php`. The first six photos ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in `archive/manifest.json`.
-- Assistants and the web view get images through MCP tools. Symfony keeps no game data. Only the upload uses an HTTP route, which accepts only the web view's token. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
+- The web view serves the public pages `/games`, `/games/{uuid}` and `/llms.txt`, and the player page at `/`.
+- Six prepared games stay open: `Archive.php`. `drush genie:archive-fill` opens them, and `bin/start` runs it. The first six photos ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in `archive/manifest.json`.
+- Assistants and the web view get images through MCP tools. Symfony keeps no game data. The upload is the web view's only HTTP call with a token. The join form posts to Drupal's `/play/{code}`, which checks the Origin header. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
 
 ## Features used
 
@@ -177,9 +187,11 @@ Each line names a library feature and links to the code that uses it.
 ### Drupal and Drupack
 
 - `mcp_server` serves the tools at `/mcp`. `mcp_server_oauth`, `simple_oauth` and `simple_oauth_21` sign each assistant in as its player: [`McpRouteSubscriber.php`](drupal/web/modules/custom/genie/src/Web/McpRouteSubscriber.php).
+- The MCP resource metadata lists only the `genie` scope, so a client never asks for the web view's `genie_view`: [`PlayerScope.php`](drupal/web/modules/custom/genie/src/Web/PlayerScope.php).
+- The web view's own client skips the consent screen through simple_oauth's `automatic_authorization`: [`GenieCommands.php`](drupal/web/modules/custom/genie/src/Drush/Commands/GenieCommands.php).
 - A patch lets native clients use `http://localhost` redirect URIs: [`simple_oauth_21-localhost-redirect.patch`](drupal/patches/simple_oauth_21-localhost-redirect.patch).
 - Each game is a `genie_game` node with a `state_machine` workflow: [`genie.workflows.yml`](drupal/web/modules/custom/genie/genie.workflows.yml), [`Games.php`](drupal/web/modules/custom/genie/src/Game/Games.php).
-- The host code is a Key entity read from a file. Core's flood service limits wrong host codes and invite links: [`HostForm.php`](drupal/web/modules/custom/genie/src/Web/HostForm.php), [`JoinForm.php`](drupal/web/modules/custom/genie/src/Web/JoinForm.php).
+- The host code is a Key entity read from a file. Core's flood service limits wrong host codes and invite codes: [`HostForm.php`](drupal/web/modules/custom/genie/src/Web/HostForm.php), [`JoinForm.php`](drupal/web/modules/custom/genie/src/Web/JoinForm.php), [`PlayController.php`](drupal/web/modules/custom/genie/src/Web/PlayController.php).
 - Cron abandons idle games, and `hook_user_format_name_alter` shows players without their game id: [`GenieHooks.php`](drupal/web/modules/custom/genie/src/Hook/GenieHooks.php).
 - The site runs on the `main` branches of Symfony AI and the MCP SDK, with patches for what broke: [`docs/upstream-breaks.md`](docs/upstream-breaks.md).
 - Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie/config/install/ai.platform.genie.yml).
@@ -208,7 +220,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
-| `bin/smoke open` | The public list and pages, what the web view's own token cannot do, and the next prepared game |
+| `bin/smoke open` | The public list, pages and `/llms.txt`, the visitor token's limits, joining from the game page, the player scope, and the next prepared game |
 | `bin/smoke cache` | The caching hints on discover, tool lists and resource reads, and a second connect that sends no request |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |
