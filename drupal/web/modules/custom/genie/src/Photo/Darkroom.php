@@ -82,7 +82,12 @@ final class Darkroom {
   /**
    * How far the blur scales a person down. The size is divided by this.
    */
-  private const BLUR_SCALE = 12;
+  private const BLUR_SCALE = 24;
+
+  /**
+   * Gaussian passes that smooth the blocks the scaling leaves.
+   */
+  private const BLUR_PASSES = 8;
 
   /**
    * Pixels between two cross-hatch lines.
@@ -519,7 +524,8 @@ final class Darkroom {
   /**
    * Blurs the areas until no feature is left, from the picture before.
    *
-   * The box around the areas goes down to a twelfth of its size and back up.
+   * The box around the areas goes down to a 24th of its size and back up,
+   * then takes gaussian passes.
    * Only the pixels inside the areas take the result.
    *
    * @param \GdImage $image
@@ -534,13 +540,14 @@ final class Darkroom {
     $top = min(array_column($areas, 'y'));
     $width = max(array_map(static fn (array $area): int => $area['x'] + $area['width'], $areas)) - $left;
     $height = max(array_map(static fn (array $area): int => $area['y'] + $area['height'], $areas)) - $top;
-    $small = imagescale(
-      $this->copyOf($before, ['x' => $left, 'y' => $top, 'width' => $width, 'height' => $height]),
-      max(1, intdiv($width, self::BLUR_SCALE)),
-      max(1, intdiv($height, self::BLUR_SCALE)),
-      IMG_BILINEAR_FIXED,
-    );
+    // Resampling averages every pixel of the box. imagescale() samples a few
+    // and leaves a mosaic where a face stays readable.
+    $small = imagecreatetruecolor(max(1, intdiv($width, self::BLUR_SCALE)), max(1, intdiv($height, self::BLUR_SCALE)));
+    imagecopyresampled($small, $before, 0, 0, $left, $top, imagesx($small), imagesy($small), $width, $height);
     $blurred = imagescale($small, $width, $height, IMG_BILINEAR_FIXED);
+    for ($pass = 0; $pass < self::BLUR_PASSES; $pass++) {
+      imagefilter($blurred, IMG_FILTER_GAUSSIAN_BLUR);
+    }
     foreach ($areas as $area) {
       imagecopy($image, $blurred, $area['x'], $area['y'], $area['x'] - $left, $area['y'] - $top, $area['width'], $area['height']);
     }
