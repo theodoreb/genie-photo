@@ -9,7 +9,9 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\genie\Game\Ledger;
+use Drupal\genie\Web\WebViewAccess;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
+use Mcp\Server\Exception\ToolCallException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -62,6 +64,25 @@ abstract class LedgerToolBase extends ToolPluginBase {
     return AccessResult::allowedIf($account->isAuthenticated()
       && $account->hasPermission('play genie')
       && in_array($this->ledger->state(), static::STATES, TRUE));
+  }
+
+  /**
+   * Refuses an assistant while someone in the photo has no outline.
+   *
+   * The web view's own client claims for a visitor on the page, where nobody
+   * can trace, so it passes.
+   *
+   * @throws \Mcp\Server\Exception\ToolCallException
+   *   When someone is untraced.
+   */
+  protected function requireTraced(): void {
+    if ((new WebViewAccess())->access($this->currentUser)->isAllowed()) {
+      return;
+    }
+    $session = $this->ledger->read();
+    if ($session->untraced() !== []) {
+      throw new ToolCallException($session->next((int) $this->currentUser->id()));
+    }
   }
 
 }

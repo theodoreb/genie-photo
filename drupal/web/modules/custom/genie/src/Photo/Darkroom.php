@@ -374,7 +374,7 @@ final class Darkroom {
       if (!$look->isLook()) {
         continue;
       }
-      $own = array_keys($owners, $id, TRUE);
+      $own = $region['cells'] === [] ? Outlines::untracedBox($session, $id) : array_keys($owners, $id, TRUE);
       // A person hidden behind others owns no cell: the look keeps to the head.
       $areas = $own === [] ? [$region['head']] : array_map(
         static fn (int $cell): array => Outlines::area($cell, $session->photo),
@@ -512,6 +512,10 @@ final class Darkroom {
   /**
    * Smooths a picture, then gives the cartoon band of each pixel.
    *
+   * The bands span the picture's own darkest to lightest pixel, so a light or
+   * dark photo still gets all four fills. A picture whose range is narrower
+   * than one band keeps its levels.
+   *
    * @return string
    *   One digit per pixel, row by row, from 0 for the darkest band.
    */
@@ -522,17 +526,25 @@ final class Darkroom {
     $small = imagescale($picture, max(1, intdiv($width, self::CARTOON_SMOOTH)), -1, IMG_BILINEAR_FIXED);
     $picture = imagescale($small, $width, $height, IMG_BILINEAR_FIXED);
     imagefilter($picture, IMG_FILTER_GAUSSIAN_BLUR);
-    $band = [];
-    foreach (range(0, 255) as $level) {
-      $band[] = (string) count(array_filter(self::CARTOON_BANDS, static fn (int $start): bool => $level >= $start));
-    }
-    $bands = '';
-    for ($y = 0; $y < imagesy($picture); $y++) {
-      for ($x = 0; $x < imagesx($picture); $x++) {
-        $bands .= $band[self::brightness(imagecolorat($picture, $x, $y))];
+    $levels = '';
+    for ($y = 0; $y < $height; $y++) {
+      for ($x = 0; $x < $width; $x++) {
+        $levels .= chr(self::brightness(imagecolorat($picture, $x, $y)));
       }
     }
-    return $bands;
+    $present = array_keys(count_chars($levels, 1));
+    [$low, $span] = [min($present), max($present) - min($present)];
+    if ($span < self::CARTOON_BANDS[0]) {
+      [$low, $span] = [0, 255];
+    }
+    $from = '';
+    $to = '';
+    foreach (range(0, 255) as $level) {
+      $stretched = intdiv(max(0, $level - $low) * 255, $span);
+      $from .= chr($level);
+      $to .= count(array_filter(self::CARTOON_BANDS, static fn (int $start): bool => $stretched >= $start));
+    }
+    return strtr($levels, $from, $to);
   }
 
   /**

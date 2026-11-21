@@ -58,6 +58,33 @@ final class PlacesTest extends UnitTestCase {
   }
 
   /**
+   * A scan traces a claimed place that has no outline, and keeps its boxes.
+   */
+  public function testScanTracesClaimedPlace(): void {
+    $session = $this->scanned();
+    $this->assertSame(['red shirt', 'blue shirt'], $session->untraced());
+    $blue = array_keys($session->proposals)[1];
+    Places::claim($session, 2, 'bob', $blue, NULL, NULL);
+    $this->assertStringStartsWith('Trace every person', $session->next(2));
+
+    $trace = [
+      'description' => 'blue',
+      'head' => [600, 50, 80, 80],
+      'body' => [560, 50, 160, 400],
+      'outline' => [[2, 14, 17]],
+    ];
+    Places::scan($session, 1, [$trace], []);
+    $region = $session->regions['person-2'];
+    $this->assertNotSame([], $region['cells'], 'The claimed place is traced.');
+    $this->assertSame([$blue, 160, 400], [$region['person'], $region['width'], $region['height']], 'The place keeps its id and body.');
+    $this->assertSame(['red shirt'], $session->untraced());
+
+    $cells = $region['cells'];
+    Places::scan($session, 1, [['outline' => [[3, 14, 17]]] + $trace], []);
+    $this->assertSame($cells, $session->regions['person-2']['cells'], 'A traced place keeps its outline.');
+  }
+
+  /**
    * Builds a session after one scan.
    */
   private function scanned(): Session {

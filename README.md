@@ -63,7 +63,7 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 
 1. The host starts the game and uploads a photo. `demo/holiday-party.jpg` is ready to use. A photo where the detector finds nobody is refused.
 2. The others join from the invite link with a name only. A game takes 12 players.
-3. A local detector boxes the people in the photo. One player asks their assistant to trace them.
+3. A local detector boxes the people in the photo. One player asks their assistant to trace them. An assistant cannot claim, wish or paint until every person is traced.
 4. Each player tells their assistant which person they are, or clicks their face on the web view. The page shows one picture, the shared one, with a box on each unclaimed face.
 5. Players make wishes and repaint their whole person, as pixel art if they like. Three looks need no painting, and they show on black-and-white photos too:
    - "disguise me" adds sunglasses and a moustache;
@@ -83,7 +83,7 @@ To play without a photo of your own, pick a prepared game on `/games`, type a na
 - The name form posts to Drupal's `/play/{code}`. Drupal seats you, signs you in and opens your game without a consent screen, since the web view is its own client.
 - Drupal refuses a finished or full game and a bad or taken name. It sends you back to the game page with the reason. A form from another site gets a 403.
 - Your game page lists the steps, with the address to add to your assistant.
-- Its people are ready to claim from the start, with a head box guessed from the detector's box. An assistant that traces the photo replaces those guesses.
+- Its people can be clicked on the page from the start, with a head box guessed from the detector's box. An assistant traces the photo before anyone plays, and the trace replaces those guesses.
 - When a prepared game ends, the next archive photo opens. A prepared game with no player yet is never abandoned.
 
 If a box is wrong or someone is missing, tell your assistant. It looks again and sends a corrected box.
@@ -152,7 +152,7 @@ Wishes are capped before they reach a model:
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
 - Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
 - Every photo is scaled to a 1600-pixel long side, so blocks look the same on every photo.
-- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A player with no outline can paint everything except other people.
+- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A place claimed on the page gets its outline from the next trace.
 - Each game is a node. A `state_machine` field moves it from start to open, then closed or abandoned. A JSON field holds the play state.
 - Each player is an account named `NAME@NID` that references its game, so two games can each have an Alice.
 - A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game points to one revision.
@@ -225,7 +225,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke live` | Upload, a live update and the picture over MCP |
 | `bin/smoke wish alice` | A wish changes the picture, and oversized, blank and eleventh wishes are refused |
 | `bin/smoke collision` | Two wishes that cannot both hold |
-| `bin/smoke scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
+| `bin/smoke scan` | A claim is refused while someone is untraced, then an assistant traces, claims one person and paints, and ids survive a new scan |
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |

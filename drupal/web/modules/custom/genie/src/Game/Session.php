@@ -235,9 +235,30 @@ final class Session {
   }
 
   /**
+   * Lists the people nobody has traced yet, by description.
+   *
+   * @return list<string>
+   *   The descriptions.
+   */
+  public function untraced(): array {
+    $people = array_merge(
+      array_values($this->proposals),
+      array_values(array_filter($this->regions, static fn (array $region): bool => $region['kind'] === 'person')),
+    );
+    return array_values(array_map(
+      static fn (array $person): string => $person['description'] ?? $person['label'],
+      array_filter($people, static fn (array $person): bool => $person['cells'] === []),
+    ));
+  }
+
+  /**
    * Tells an assistant what to do next.
    */
   public function next(int $uid): string {
+    $untraced = $this->untraced();
+    if ($untraced !== [] && ($this->detection['status'] ?? NULL) !== 'pending') {
+      return 'Trace every person before playing: call photo_get with view outline, then scan_photo with an outline for each person, front to back. Untraced: ' . implode(', ', $untraced) . '.';
+    }
     if (isset($this->regions["person-$uid"])) {
       return 'Your place is claimed. Make a wish, or call photo_get with view my_body before paint_me.';
     }

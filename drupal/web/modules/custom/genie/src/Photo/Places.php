@@ -83,9 +83,18 @@ final class Places {
       $body = self::bodyOf($person, $session);
       $cells = Outlines::parse($person['outline'] ?? [], $body, $session->photo);
       $label = self::label($person['description'] ?? NULL);
-      if (self::claimedHead($session, $head) === NULL) {
+      $claimed = self::claimedHead($session, $head);
+      if ($claimed === NULL) {
         self::dropUnclaimedOn($session, $head);
         $survey->people[] = self::person($label, $head, $body, $cells);
+        continue;
+      }
+      // A place claimed on a page has no outline until an assistant traces
+      // it. The trace fills the cells and keeps the player's head and body.
+      foreach ($survey->people as $index => $known) {
+        if ($known['id'] === $claimed && $known['cells'] === []) {
+          $survey->people[$index]['cells'] = $cells;
+        }
       }
     }
     foreach ($objects as $object) {
@@ -295,7 +304,7 @@ final class Places {
   }
 
   /**
-   * Names the player whose head a box stands for.
+   * Gives the claimed person whose head a box stands for.
    *
    * @param \Drupal\genie\Game\Session $session
    *   The session.
@@ -305,7 +314,7 @@ final class Places {
   private static function claimedHead(Session $session, array $head): ?string {
     foreach ($session->regions as $region) {
       if ($region['kind'] === 'person' && (self::sameHead($head, $region['head']))) {
-        return $region['label'];
+        return $region['person'];
       }
     }
     return NULL;

@@ -1,11 +1,12 @@
 #!/usr/bin/env php
 <?php
 
-// Critical path of detection: an assistant sees the photo, reports who is in it, claims
-// a person and paints on what it can reach.
+// Critical path of detection: an assistant sees the photo, traces who is in it, claims
+// a person and paints on what it can reach. Nobody plays while someone is untraced.
 
 declare(strict_types=1);
 
+use App\Drupal\DrupalToolFailed;
 use App\Tests\Smoke\SmokeSite;
 
 require dirname(__DIR__, 2).'/vendor/autoload.php';
@@ -20,16 +21,26 @@ if (null === $photo['image'] || false === imagecreatefromstring($photo['image'])
     SmokeSite::fail('The assistant received no image.');
 }
 
-$site->tools->call($assistant, 'scan_photo', [
-    'people' => [['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]]],
-    'objects' => [['label' => 'cake', 'box' => [700, 500, 200, 200]]],
-]);
+$yellow = ['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]];
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => [['label' => 'cake', 'box' => [700, 500, 200, 200]]]]);
+$person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
+try {
+    $site->tools->call($assistant, 'claim_place', ['person' => $person]);
+    SmokeSite::fail('A claim went through while a person was untraced.');
+} catch (DrupalToolFailed $e) {
+    if (!str_contains($e->getMessage(), 'Trace every person')) {
+        SmokeSite::fail('The refused claim did not say to trace: '.$e->getMessage());
+    }
+}
+
+$yellow['outline'] = [[5, 2, 7], [6, 2, 7], [7, 2, 7]];
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => []]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
 $site->tools->call($assistant, 'scan_photo', [
     'people' => [
-        ['description' => 'yellow sweater again', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]],
-        ['description' => 'green coat', 'head' => [900, 100, 200, 200], 'body' => [850, 100, 300, 700]],
+        ['description' => 'yellow sweater again'] + $yellow,
+        ['description' => 'green coat', 'head' => [900, 100, 200, 200], 'body' => [850, 100, 300, 700], 'outline' => [[5, 22, 27], [6, 22, 27]]],
     ],
     'objects' => [],
 ]);
@@ -47,14 +58,7 @@ if ([$person] !== array_column($offered, 'id')) {
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
 $before = $site->frame($web, $claim['revision']);
 
-$body = $site->imageTool($assistant, 'photo_get', ['view' => 'my_body']);
-$size = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info'];
-$sheet = imagecreatefromstring((string) $body['image']);
-if ($size['width'] + 40 !== imagesx($sheet) || $size['height'] + 40 !== imagesy($sheet)) {
-    SmokeSite::fail('A person with no outline did not receive the whole photo.');
-}
-
-$painted = $site->imageTool($assistant, 'paint_me', ['palette' => ['#ff00aa'], 'spans' => [[20, 15, 30, '0']]]);
+$painted = $site->imageTool($assistant, 'paint_me', ['palette' => ['#ff00aa'], 'spans' => [[27, 12, 30, '0']]]);
 if (null === $painted['image'] || !$painted['info']['granted']) {
     SmokeSite::fail('The paint result did not show the person.');
 }

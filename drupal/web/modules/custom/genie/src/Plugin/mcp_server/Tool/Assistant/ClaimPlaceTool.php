@@ -53,6 +53,7 @@ final class ClaimPlaceTool extends LedgerToolBase {
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
+    $this->requireTraced();
     try {
       return $this->people->claim(
         (int) $this->currentUser->id(),

@@ -85,6 +85,7 @@ final class MakeWishTool extends LedgerToolBase {
     if (mb_strlen($wish) > self::MAX_LENGTH) {
       throw new ToolCallException(sprintf('Keep a wish to %d characters.', self::MAX_LENGTH));
     }
+    $this->requireTraced();
     $uid = (int) $this->currentUser->id();
     if (!$this->flood->isAllowed(self::FLOOD, self::WISHES, self::WINDOW, "player:$uid")) {
       throw new ToolCallException(sprintf('The genie grants %d wishes every %d minutes. Wait a little.', self::WISHES, self::WINDOW / 60));

@@ -24,7 +24,7 @@ You play for one person. A wish changes only that person's place. Only that pers
 ## Play
 
 1. Call `my_status`, then `session_get`. `photo_get`, `scan_photo` and `claim_place` answer with a `next` field that names your next step.
-2. If nobody is traced yet, call `photo_get` with view `outline`, trace each numbered person, then call `scan_photo`. The games listed above start with their people found.
+2. If anyone is untraced, call `photo_get` with view `outline`, trace each numbered person, then call `scan_photo`. `claim_place`, `make_wish` and `paint_me` refuse until everyone is traced. The games listed above start with guessed boxes, which still need a trace.
 3. Ask your person which one they are. Look with `photo_get` view `photo`, then call `claim_place` with that person's id. Your person can also click their face on their game page.
 4. Call `make_wish` with the wish in plain words, or `photo_get` view `my_body` and then `paint_me` to repaint your person.
 5. Call `wait_for_update` to see the other players' changes.

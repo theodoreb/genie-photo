@@ -68,6 +68,7 @@ final class PaintMeTool extends LedgerToolBase {
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
+    $this->requireTraced();
     try {
       $paint = BodyPaint::fromInput($arguments['pixelate'] ?? NULL, $arguments['palette'] ?? NULL, $arguments['spans'] ?? NULL);
     }

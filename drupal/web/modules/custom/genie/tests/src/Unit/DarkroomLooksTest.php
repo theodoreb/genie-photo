@@ -213,6 +213,64 @@ final class DarkroomLooksTest extends UnitTestCase {
   }
 
   /**
+   * A guessed box in front of an untraced person takes none of their cells.
+   */
+  public function testGuessedBoxTakesNoCell(): void {
+    $session = new Session();
+    $session->pin(new Survey(1, 1, 1600, 800, 'off'));
+    Places::scan($session, 1, [
+      ['description' => 'dan', 'head' => [900, 210, 30, 30], 'body' => [880, 200, 80, 300]],
+    ], []);
+    Places::claim($session, 1, 'cy', NULL, [850, 245, 30, 30], [800, 200, 200, 300]);
+    $session->wishes = [1 => 'gold'];
+    $result = $this->develop($session, [[0, 1599, 128]]);
+    $color = imagecolorat($result, 920, 350);
+    $this->assertGreaterThan($color & 255, $color >> 16 & 255, 'The middle of the box under the guess turns gold.');
+  }
+
+  /**
+   * The cartoon spreads a light photo's own range over the four bands.
+   */
+  public function testCartoonStretchesLightPhoto(): void {
+    $session = new Session();
+    $session->pin(new Survey(1, 1, 1600, 800, 'off'));
+    Places::scan($session, 1, [
+      [
+        'description' => 'eve',
+        'head' => [740, 40, 120, 120],
+        'body' => [720, 0, 160, 400],
+        'outline' => [[5, 18, 21], [6, 18, 21]],
+      ],
+    ], []);
+    Places::claim($session, 1, 'eve', array_key_first($session->proposals), NULL, NULL);
+    $session->wishes = [1 => 'cartoon'];
+    $result = $this->develop($session, [[0, 799, 170], [800, 1599, 240]]);
+    foreach (range(730, 790, 10) as $x) {
+      foreach (range(210, 270, 10) as $y) {
+        $this->assertSame(0x000000, imagecolorat($result, $x, $y), "The darkest grey of the photo is solid black at $x, $y.");
+      }
+    }
+  }
+
+  /**
+   * Renders a session on a photo of grey stripes.
+   *
+   * @param \Drupal\genie\Game\Session $session
+   *   The session.
+   * @param list<array{int, int, int}> $stripes
+   *   The first column, last column and grey of each stripe.
+   */
+  private function develop(Session $session, array $stripes): \GdImage {
+    $photo = imagecreatetruecolor(1600, 800);
+    foreach ($stripes as [$left, $right, $grey]) {
+      imagefilledrectangle($photo, $left, 0, $right, 799, imagecolorallocate($photo, $grey, $grey, $grey));
+    }
+    ob_start();
+    imagejpeg($photo, NULL, 100);
+    return imagecreatefromstring((new Darkroom())->render(ob_get_clean(), $session, new Frame(0, 0, 1600, 800)));
+  }
+
+  /**
    * A person who owns no cell gets the look on the head only.
    */
   public function testLookOnHeadAlone(): void {

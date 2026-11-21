@@ -108,9 +108,21 @@ final readonly class SmokeSite
         $this->photos->put($token, ob_get_clean());
     }
 
+    /**
+     * Traces a person in a 100 px box at $x, then claims it: assistants trace before they play.
+     */
     public function markPlace(string $token, int $x = 10): int
     {
-        return $this->tools->call($token, 'claim_place', ['head' => [$x, 350, 100, 100], 'body' => [$x, 350, 100, 100]])['revision'];
+        $box = [$x, 350, 100, 100];
+        $run = static fn (int $row): array => [$row, intdiv($x, 40), intdiv($x + 99, 40)];
+        $this->tools->call($token, 'scan_photo', [
+            'people' => [['description' => "person at $x", 'head' => $box, 'body' => $box, 'outline' => [$run(9), $run(10)]]],
+            'objects' => [],
+        ]);
+        $people = $this->imageTool($token, 'photo_get', ['view' => 'photo'])['info']['people'];
+        $person = $people[array_search($box, array_column($people, 'head'), true)]['id'];
+
+        return $this->tools->call($token, 'claim_place', ['person' => $person])['revision'];
     }
 
     /**

@@ -104,6 +104,33 @@ final class Outlines {
   }
 
   /**
+   * Gives an untraced person's box cells, less those of traced people.
+   *
+   * Another untraced box is a guess, so it takes no cell away.
+   *
+   * @param \Drupal\genie\Game\Session $session
+   *   The session, which has a photo.
+   * @param string $id
+   *   The region or proposal id of an untraced person.
+   *
+   * @return list<int>
+   *   Cell indexes.
+   */
+  public static function untracedBox(Session $session, string $id): array {
+    $people = self::people($session);
+    $traced = [];
+    foreach ($people as $person) {
+      if ($person['cells'] !== []) {
+        $traced += array_fill_keys(self::cellsOf($person, $session->photo), TRUE);
+      }
+    }
+    return array_values(array_filter(
+      self::cellsOf($people[$id], $session->photo),
+      static fn (int $cell): bool => !isset($traced[$cell]),
+    ));
+  }
+
+  /**
    * Finds the cells each person's assistant may paint.
    *
    * A traced person gets their cells and a ring of one cell of background. The
