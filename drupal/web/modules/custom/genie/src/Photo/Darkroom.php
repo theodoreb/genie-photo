@@ -380,9 +380,10 @@ final class Darkroom {
         static fn (int $cell): array => Outlines::area($cell, $session->photo),
         $own,
       );
-      // Untraced cells fill the detector box, background included.
+      // Untraced cells fill the detector box, background included. When
+      // people in front own the middle, no row is left and the head stays.
       if ($own !== [] && $region['cells'] === []) {
-        $areas = self::ellipse($areas, $region);
+        $areas = self::ellipse($areas, $region) ?: [$region['head']];
       }
       $looks[] = [$look, $areas, $region['head']];
     }

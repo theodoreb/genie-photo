@@ -184,6 +184,35 @@ final class DarkroomLooksTest extends UnitTestCase {
   }
 
   /**
+   * An untraced person left with the corners of the box keeps the head.
+   */
+  public function testEllipseWithNoRowLeft(): void {
+    $session = new Session();
+    $box = ['x' => 600, 'y' => 0, 'width' => 400, 'height' => 800];
+    $session->pin(new Survey(1, 1, 1600, 800, 'ready', [$box]));
+    // The front person covers the whole box but its four corner cells.
+    $outline = array_map(
+      static fn (int $row): array => in_array($row, [0, 1, 18, 19], TRUE) ? [$row, 16, 23] : [$row, 15, 24],
+      range(0, 19),
+    );
+    Places::scan($session, 1, [
+      ['description' => 'front', 'head' => [740, 0, 120, 120], 'detected' => 'P1', 'outline' => $outline],
+    ], []);
+    Places::claim($session, 1, 'ann', array_key_first($session->proposals), NULL, NULL);
+    Places::claim($session, 2, 'cy', NULL, [610, 10, 20, 20], [600, 0, 400, 800]);
+    $corners = [15, 24, 55, 64, 735, 744, 775, 784];
+    $this->assertSame($corners, array_keys(Outlines::owners($session), 'person-2', TRUE), 'Cy owns only the corners.');
+    $session->wishes = [2 => 'cartoon'];
+    $photo = imagecreatetruecolor(1600, 800);
+    imagefill($photo, 0, 0, imagecolorallocate($photo, 220, 220, 220));
+    ob_start();
+    imagejpeg($photo, NULL, 100);
+    $jpeg = ob_get_clean();
+    $result = imagecreatefromstring((new Darkroom())->render($jpeg, $session, new Frame(0, 0, 1600, 800)));
+    $this->assertSame(0xFFFFFF, imagecolorat($result, 620, 20), 'The head is drawn.');
+  }
+
+  /**
    * A person who owns no cell gets the look on the head only.
    */
   public function testLookOnHeadAlone(): void {
