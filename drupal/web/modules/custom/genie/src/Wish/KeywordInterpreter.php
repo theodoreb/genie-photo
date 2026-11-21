@@ -20,7 +20,9 @@ final class KeywordInterpreter {
 
   private const CARTOON = 'cartoon|comic|manga';
 
-  private const LOOK = '(?:' . self::GOLD . '|' . self::DISGUISE . '|' . self::CARTOON . ')';
+  private const BLUR = 'blur|blurred|blurry|blurring';
+
+  private const LOOK = '(?:' . self::GOLD . '|' . self::DISGUISE . '|' . self::CARTOON . '|' . self::BLUR . ')';
 
   /**
    * Patterns by operation, where NULL marks a wish with no clear meaning.
@@ -33,18 +35,19 @@ final class KeywordInterpreter {
       Operation::Show,
       '/\b(?:stop|no more|no longer) (?:[a-z\']+ ){0,3}' . self::LOOK . '\b'
       . '|\b(?:don\'t|do not|never) (?:make|turn|draw|give|put) (?:me|myself) (?:[a-z]+ ){0,3}' . self::LOOK . '\b'
-      . '|\b(?:don\'t|do not|never) disguise me\b'
+      . '|\b(?:don\'t|do not|never) (?:disguise|blur) (?:me|myself)\b'
       . '|\btake off (?:[a-z]+ ){0,2}' . self::LOOK . '\b'
       . '|\b(?:take|get|remove) (?:[a-z]+ ){0,3}' . self::LOOK . '(?: [a-z]+){0,2} (?:off|away|from me)\b'
       . '|\bremove (?:my|the) ' . self::LOOK . '\b/',
     ],
+    [Operation::Blur, '/\bblur (?:me|myself|my [a-z]+)\b|\b(?:me|myself) (?:[a-z]+ ){0,3}(?:blurred|blurry)\b/'],
     [Operation::Gold, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::GOLD . ')\b|\bgild me\b/'],
     [Operation::Disguise, '/\bdisguise (?:me|myself)\b|\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::DISGUISE . ')\b/'],
     [Operation::Cartoon, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::CARTOON . ')\b/'],
     [Operation::Cover, '/' . self::NOT . '\b(?:show|reveal)\b[a-z\' ]*\b(?:me|my|myself)\b/'],
     [NULL, '/' . self::NOT . '\b(?:put|bring) me back\b/'],
     [Operation::Show, '/' . self::NOT . '\b(?:hide|hiding|cover|covering|mask)\b[a-z\' ]*\b(?:me|my|myself)\b/'],
-    [Operation::Show, '/\b(?:show me|put me back|bring me back|unhide|uncover)\b/'],
+    [Operation::Show, '/\b(?:show me|put me back|bring me back|unhide|unblur|uncover)\b/'],
     [Operation::Cover, '/\b(?:hide|cover|mask)\b[a-z\' ]*\b(?:me|my|myself)\b/'],
   ];
 

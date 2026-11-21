@@ -39,12 +39,19 @@ final class KeywordInterpreterTest extends UnitTestCase {
       'draw me like a comic' => Operation::Cartoon,
       'no more cartoon' => Operation::Show,
       "don't make me a cartoon" => Operation::Show,
+      'blur me' => Operation::Blur,
+      'please blur my face' => Operation::Blur,
+      'make me blurry' => Operation::Blur,
+      'stop blurring me' => Operation::Show,
+      "don't blur me" => Operation::Show,
+      'unblur me' => Operation::Show,
     ];
     $interpreter = new KeywordInterpreter();
     foreach ($expected as $text => $operation) {
       $this->assertSame($operation, $interpreter->interpret($text)?->operation, $text);
     }
-    $this->assertNull($interpreter->interpret('hide my face and make me gold'));
+    $this->assertNull($interpreter->interpret('hide my face and blur me'));
+    $this->assertNull($interpreter->interpret('blur me and make me gold'));
     $this->assertNull($interpreter->interpret("don't disguise me, make me a cartoon"));
     $this->assertNull($interpreter->interpret('put me in the middle'));
   }

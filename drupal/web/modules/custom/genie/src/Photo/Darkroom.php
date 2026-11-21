@@ -80,6 +80,11 @@ final class Darkroom {
   private const CARTOON_SMOOTH = 3;
 
   /**
+   * How far the blur scales a person down. The size is divided by this.
+   */
+  private const BLUR_SCALE = 12;
+
+  /**
    * Pixels between two cross-hatch lines.
    */
   private const HATCH = 6;
@@ -380,9 +385,10 @@ final class Darkroom {
       }
       $looks[] = [$look, $areas, $region['head']];
     }
-    // The cartoon reads the picture as it was before any look, so the order
-    // of the people does not change it.
-    $before = in_array(Operation::Cartoon, array_column($looks, 0), TRUE)
+    // The cartoon and the blur read the picture as it was before any look, so
+    // the order of the people does not change them.
+    $reading = static fn (array $look): bool => in_array($look[0], [Operation::Cartoon, Operation::Blur], TRUE);
+    $before = array_filter($looks, $reading) !== []
       ? $this->copyOf($image, ['x' => 0, 'y' => 0, 'width' => imagesx($image), 'height' => imagesy($image)])
       : NULL;
     foreach ($looks as [$look, $areas, $head]) {
@@ -390,6 +396,7 @@ final class Darkroom {
         Operation::Disguise => $this->disguise($image, $head),
         Operation::Gold => $this->gild($image, $areas),
         Operation::Cartoon => $this->cartoon($image, $before, $areas),
+        Operation::Blur => $this->blur($image, $before, $areas),
       };
     }
   }
@@ -506,6 +513,36 @@ final class Darkroom {
           imagesetpixel($image, $x, $y, $ink ? 0x000000 : 0xFFFFFF);
         }
       }
+    }
+  }
+
+  /**
+   * Blurs the areas until no feature is left, from the picture before.
+   *
+   * The box around the areas goes down to a twelfth of its size and back up.
+   * Only the pixels inside the areas take the result.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param \GdImage $before
+   *   The photo before any look.
+   * @param list<array{x: int, y: int, width: int, height: int}> $areas
+   *   The areas to blur.
+   */
+  private function blur(\GdImage $image, \GdImage $before, array $areas): void {
+    $left = min(array_column($areas, 'x'));
+    $top = min(array_column($areas, 'y'));
+    $width = max(array_map(static fn (array $area): int => $area['x'] + $area['width'], $areas)) - $left;
+    $height = max(array_map(static fn (array $area): int => $area['y'] + $area['height'], $areas)) - $top;
+    $small = imagescale(
+      $this->copyOf($before, ['x' => $left, 'y' => $top, 'width' => $width, 'height' => $height]),
+      max(1, intdiv($width, self::BLUR_SCALE)),
+      max(1, intdiv($height, self::BLUR_SCALE)),
+      IMG_BILINEAR_FIXED,
+    );
+    $blurred = imagescale($small, $width, $height, IMG_BILINEAR_FIXED);
+    foreach ($areas as $area) {
+      imagecopy($image, $blurred, $area['x'], $area['y'], $area['x'] - $left, $area['y'] - $top, $area['width'], $area['height']);
     }
   }
 

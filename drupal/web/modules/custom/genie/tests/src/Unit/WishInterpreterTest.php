@@ -61,6 +61,9 @@ final class WishInterpreterTest extends UnitTestCase {
     $wish = $this->interpreter('{"target":"me","operation":"cartoon"}')->interpret('draw me');
     $this->assertEquals(new Wish(Operation::Cartoon, source: 'model'), $wish);
 
+    $wish = $this->interpreter('{"target":"me","operation":"blur"}')->interpret('make me unrecognizable');
+    $this->assertEquals(new Wish(Operation::Blur, source: 'model'), $wish);
+
     $this->assertNull($this->interpreter('{"target":"nothing","operation":null}')->interpret('hello'));
   }
 

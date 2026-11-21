@@ -14,12 +14,13 @@ enum Operation: string {
   case Disguise = 'disguise';
   case Gold = 'gold';
   case Cartoon = 'cartoon';
+  case Blur = 'blur';
 
   /**
    * Tells whether the wish changes how the player's own person looks.
    */
   public function isLook(): bool {
-    return in_array($this, [self::Disguise, self::Gold, self::Cartoon], TRUE);
+    return in_array($this, [self::Disguise, self::Gold, self::Cartoon, self::Blur], TRUE);
   }
 
 }

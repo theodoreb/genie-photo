@@ -108,6 +108,23 @@ final class DarkroomLooksTest extends UnitTestCase {
   }
 
   /**
+   * The blur smooths the player's own cells and nowhere else.
+   */
+  public function testBlur(): void {
+    $this->render('blur', 'visible');
+    $step = fn (array $at): int => abs($this->rgb($at[0], $at[1])[0] - $this->rgb($at[0] + 1, $at[1])[0]);
+    $this->assertLessThan(20, $step([759, 220]), 'The edge between two stripes is soft.');
+    $this->assertLessThan(20, $step([839, 220]), 'The other edge is soft too.');
+    $this->assertNotSame(imagecolorat($this->original, 755, 220), imagecolorat($this->result, 755, 220), 'An own pixel near an edge changes.');
+    $this->assertSame(0xFF0000, imagecolorat($this->result, 700, 220), 'Paint around the person stays.');
+    $this->assertUnchanged(500, 220, 'A pixel away from the person stays.');
+    $this->assertUnchanged(719, 260, 'The pixel next to the first own cell stays.');
+    $this->assertUnchanged(880, 260, 'The pixel after the last own cell stays.');
+    $this->assertUnchanged(950, 70, 'A player without the look stays.');
+    $this->assertSame([43, 33, 64], $this->rgb(860, 255), 'A cover wins over the look.');
+  }
+
+  /**
    * The disguise sits in the head box only.
    */
   public function testDisguise(): void {

@@ -21,6 +21,7 @@ final class Wishes {
     'disguise' => 'Granted, %s. Nobody will know you behind those sunglasses.',
     'gold' => 'Granted, %s. You are now a gold statue.',
     'cartoon' => 'Granted, %s. You are now a comic drawing.',
+    'blur' => 'Granted, %s. Nobody can tell who the blur is.',
   ];
 
   public function __construct(
@@ -38,7 +39,7 @@ final class Wishes {
     $current = $this->ledger->read();
     $wish = $this->interpreter->interpret($text);
     if ($wish === NULL) {
-      return $this->refusal('I did not understand. Try "hide me", "turn me to gold", "disguise me" or "make me a cartoon".');
+      return $this->refusal('I did not understand. Try "hide me", "blur me", "turn me to gold", "disguise me" or "make me a cartoon".');
     }
     if (!isset($current->regions["person-$uid"])) {
       return $this->refusal(Places::NO_PLACE);

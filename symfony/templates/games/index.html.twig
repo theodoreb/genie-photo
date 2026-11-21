@@ -51,7 +51,7 @@
             </li>
             <li>
                 <h3>Make a wish</h3>
-                <p>"Hide my face", "turn me to gold", "make me a cartoon". A wish changes only your place, and everyone sees the picture change.</p>
+                <p>"Hide my face", "blur me", "turn me to gold", "make me a cartoon". A wish changes only your place, and everyone sees the picture change.</p>
             </li>
             <li>
                 <h3>Approve</h3>
@@ -98,7 +98,7 @@
             <li>Your assistant talks to Drupal's MCP server directly, with tools such as <code>photo_get</code>, <code>claim_place</code>, <code>make_wish</code> and <code>paint_me</code>. It signs in with OAuth as your player account, so it can only change your place.</li>
             <li>A DETR model runs in PHP through Symfony AI's TransformersPhp bridge and finds the people in a new photo.</li>
             <li>Every hour, a second model on the same bridge checks each final picture for sexual content. A flagged picture leaves these pages, which then show the picture the game started from.</li>
-            <li>A small local model reads each wish through Symfony AI, which turns its answer into a validated PHP object. Plain PHP code then covers or repaints the picture.</li>
+            <li>A small local model reads each wish through Symfony AI, which turns its answer into a validated PHP object. Plain PHP code then covers, blurs or repaints the picture.</li>
             <li>Only your own click approves a picture. Your assistant gets the approval page as a link, through MCP URL elicitation where the client supports it.</li>
             <li>A Mercure hub tells every open page when the picture changes.</li>
             <li>The prepared paintings and photos are public domain, from Wikimedia Commons. Each one is checked against its SHA-1 when it opens.</li>
