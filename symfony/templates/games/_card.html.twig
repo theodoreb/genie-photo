@@ -6,7 +6,7 @@
         {% if game.state == 'open' %}
             <span>{{ game.players|length }} playing, {{ game.free }} to claim</span>
         {% else %}
-            <span>{{ game.state == 'closed' ? 'Approved by everyone' : 'Left as it was' }}</span>
+            <span>{{ game.withheld ?: (game.state == 'closed' ? 'Approved by everyone' : 'Left as it was') }}</span>
         {% endif %}
     </a>
 </li>

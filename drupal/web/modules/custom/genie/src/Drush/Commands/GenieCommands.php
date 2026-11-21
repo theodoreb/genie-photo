@@ -8,6 +8,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\genie\Game\Games;
 use Drupal\genie\Photo\Archive;
+use Drupal\genie\Photo\Moderation;
+use Drupal\genie\Photo\NsfwClassifier;
 use Drupal\genie\Photo\PersonDetector;
 use Drupal\genie\Web\WebViewAccess;
 use Drupal\genie\Wish\WishInterpreter;
@@ -34,6 +36,8 @@ final class GenieCommands extends DrushCommands {
     private readonly PersonDetector $detector,
     private readonly FileSystemInterface $fileSystem,
     private readonly Archive $archive,
+    private readonly NsfwClassifier $classifier,
+    private readonly Moderation $moderation,
   ) {
     parent::__construct();
   }
@@ -45,6 +49,32 @@ final class GenieCommands extends DrushCommands {
   #[CLI\Argument(name: 'file', description: 'The path of a JPEG.')]
   public function detectFile(string $file): void {
     $this->output()->writeln(json_encode($this->detector->detect($file), JSON_THROW_ON_ERROR));
+  }
+
+  /**
+   * Prints the NSFW score of each image as JSON. The moderation runs this.
+   */
+  #[CLI\Command(name: 'genie:classify-files')]
+  #[CLI\Argument(name: 'files', description: 'Paths of images.')]
+  public function classifyFiles(array $files): void {
+    $this->output()->writeln(json_encode($this->classifier->score($files), JSON_THROW_ON_ERROR));
+  }
+
+  /**
+   * Checks the final pictures no check has seen yet, as cron does.
+   */
+  #[CLI\Command(name: 'genie:moderate')]
+  public function moderate(): void {
+    $this->moderation->run();
+    $this->logger()->success(sprintf('%d final pictures withheld.', count($this->moderation->flagged())));
+  }
+
+  /**
+   * Lists the games whose final picture is withheld.
+   */
+  #[CLI\Command(name: 'genie:flagged')]
+  public function flagged(): void {
+    $this->output()->writeln(json_encode($this->moderation->flagged(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
   }
 
   /**

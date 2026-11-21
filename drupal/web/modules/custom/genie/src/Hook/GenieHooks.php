@@ -8,6 +8,7 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie\Game\Games;
+use Drupal\genie\Photo\Moderation;
 use Drupal\genie\Photo\PhotoStore;
 
 /**
@@ -18,6 +19,7 @@ final class GenieHooks {
   public function __construct(
     private readonly Games $games,
     private readonly PhotoStore $photos,
+    private readonly Moderation $moderation,
   ) {}
 
   /**
@@ -42,11 +44,12 @@ final class GenieHooks {
   }
 
   /**
-   * Abandons the games idle for a day.
+   * Abandons the games idle for a day, then checks the final pictures.
    */
   #[Hook('cron')]
   public function cron(): void {
     $this->games->abandonIdle();
+    $this->moderation->run();
   }
 
   /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\genie\Photo;
 
 use Drupal\genie\Game\Exports;
+use Drupal\genie\Game\GameView;
 use Drupal\genie\Game\Ledger;
 use Drupal\genie\Game\Session;
 
@@ -20,6 +21,7 @@ final class Pictures {
     private readonly PhotoStore $photos,
     private readonly Exports $exports,
     private readonly Darkroom $darkroom,
+    private readonly Moderation $moderation,
   ) {}
 
   /**
@@ -95,6 +97,9 @@ final class Pictures {
     }
     if ($revision !== $session->revision) {
       throw new \InvalidArgumentException('This picture is out of date.');
+    }
+    if ($this->moderation->withheld((int) $this->ledger->game()->id())) {
+      throw new \InvalidArgumentException(GameView::WITHHELD);
     }
     $export = $this->exports->current($session);
     if ($export === NULL) {

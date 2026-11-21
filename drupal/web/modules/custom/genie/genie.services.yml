@@ -36,6 +36,12 @@ services:
   Drupal\genie\Game\Ledger: ~
   Drupal\genie\Photo\People: ~
   Drupal\genie\Photo\PersonDetector: ~
+  Drupal\genie\Photo\LocalModels: ~
+  Drupal\genie\Photo\NsfwClassifier: ~
+  Drupal\genie\Photo\Moderation: ~
+  Drupal\genie\Photo\OpenAiReview:
+    autowire: false
+    factory: ['Drupal\genie\Photo\OpenAiReview', 'fromEnvironment']
   Drupal\genie\Photo\PhotoIntake: ~
   Drupal\genie\Photo\PhotoStore: ~
   Drupal\genie\Photo\Pictures: ~

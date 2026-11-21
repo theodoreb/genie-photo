@@ -12,7 +12,9 @@
     <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
          src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
 
-    {% if game.state == 'closed' %}
+    {% if game.withheld %}
+        <p>{{ game.withheld }}</p>
+    {% elseif game.state == 'closed' %}
         <p>Everyone approved. This picture is final.</p>
     {% elseif game.state == 'abandoned' %}
         <p>This game saw no change for a day. It stays as it was.</p>

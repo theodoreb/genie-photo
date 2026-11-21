@@ -6,6 +6,7 @@ namespace Drupal\genie\Game;
 
 use Drupal\Core\Url;
 use Drupal\genie\Photo\Archive;
+use Drupal\genie\Photo\Moderation;
 use Drupal\genie\Wish\Collision;
 use Drupal\genie\Wish\Frame;
 use Drupal\genie\Wish\Framer;
@@ -20,6 +21,11 @@ use Drupal\genie\Wish\Operation;
 final class GameView {
 
   /**
+   * What the public pages say in place of a withheld picture.
+   */
+  public const WITHHELD = 'The final picture was withheld.';
+
+  /**
    * What the web view may read about a place.
    */
   private const PLACE_KEYS = ['kind', 'owner', 'label', 'description', 'head', 'x', 'y', 'width', 'height'];
@@ -29,6 +35,7 @@ final class GameView {
     private readonly Exports $exports,
     private readonly Framer $framer,
     private readonly Archive $archive,
+    private readonly Moderation $moderation,
   ) {}
 
   /**
@@ -49,6 +56,7 @@ final class GameView {
       ];
     }
     $game = $this->ledger->game();
+    $withheld = $this->moderation->withheld((int) $game->id());
     return [
       'state' => $game->get('field_genie_state')->value,
       'topic' => RevisionPublisher::TOPIC . $game->uuid(),
@@ -65,7 +73,11 @@ final class GameView {
       ),
       'wish' => $session->wishes[$uid] ?? Operation::Show->value,
       'centered' => isset($session->centered[$uid]),
-      'frame' => $session->photo === NULL ? NULL : self::describe($this->framer->frame($session)),
+      'frame' => match (TRUE) {
+        $session->photo === NULL => NULL,
+        $withheld => ['ready' => FALSE, 'withheld' => self::WITHHELD],
+        default => self::describe($this->framer->frame($session)),
+      },
       'export' => $export === NULL ? NULL : $session->receipt($uid, $export->hash),
     ];
   }
@@ -85,6 +97,7 @@ final class GameView {
     $archive = $game->get('field_genie_archive')->value;
     // Before an assistant traces the people, the detector's count stands in.
     $free = $session->survey->people === [] ? count($session->detection['boxes']) : count($session->proposals);
+    $withheld = $this->moderation->withheld((int) $game->id());
     $joinable = $archive !== NULL && $state === 'open' && $free > 0 && count($session->seated) < Games::SEATS;
     return [
       'id' => $game->uuid(),
@@ -93,7 +106,8 @@ final class GameView {
       'photo' => $session->photo,
       'players' => array_values(array_intersect_key($session->players, $session->claims)),
       'free' => $free,
-      'has_picture' => $this->framer->frame($session) instanceof Frame,
+      'has_picture' => !$withheld && $this->framer->frame($session) instanceof Frame,
+      'withheld' => $withheld ? self::WITHHELD : NULL,
       'join' => $joinable
         ? Url::fromRoute('genie.play', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString()
         : NULL,

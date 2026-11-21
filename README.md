@@ -24,7 +24,7 @@ The build is Drupack 1.0.0-rc6 with four patches in `fork/drupack/`:
 
 - Drupack serves and runs Composer for a PHP project without Drupal, here the Symfony web view.
 - Composer's `@php` scripts run on Drupack's PHP.
-- PHP has the FFI extension, which the person detector needs.
+- PHP has the FFI extension, which the person detector and the moderation model need.
 - FrankenPHP adds threads under load, because MCP listen streams and `wait_for_update` each hold one.
 
 `fork/drupack/build` rebuilds the same file from the drupal.org tag with Docker.
@@ -54,6 +54,7 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 | `GENIE_REVERSE_PROXY` | the proxy's IP address |
 | `APP_ENV`, `APP_DEBUG`, `APP_SECRET` | `prod`, `0` and a random string |
 | `SYMFONY_TRUSTED_PROXIES` | the proxy's IP address |
+| `OPENAI_API_KEY` | optional, in Drupal's environment: OpenAI also checks the final pictures of prepared games |
 
 ## Replay the demo
 
@@ -145,6 +146,18 @@ Wishes are capped before they reach a model:
 - Each player makes at most 10 wishes in 10 minutes.
 - The site sends at most 200 wishes an hour to a model. Past that, the keyword reader answers.
 
+## Moderation
+
+Drupal cron checks the final picture of each finished game, once an hour. It shows on the public pages until then.
+
+- A local model scores each picture for sexual content: `AdamCodd/vit-base-nsfw-detector` (Apache-2.0, 85 MB), on the TransformersPhp bridge.
+- One run scores up to 20 pictures in one model call. A score of 0.5 or more withholds the picture.
+- With `OPENAI_API_KEY` set, the final pictures of prepared games also go to OpenAI as one Batch API job. A yes withholds the picture.
+- Uploaded photos never leave the server.
+- Without PHP FFI, pictures wait for the next run and the log counts them.
+
+A withheld picture stays on disk. The public pages show the original photo and "The final picture was withheld." `drush genie:moderate` runs the check at once. `drush genie:flagged` lists the withheld games with their scores.
+
 ## How it fits together
 
 - Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`.
@@ -174,6 +187,9 @@ Each line names a library feature and links to the code that uses it.
 - The `#[Schema]` attribute limits the generated JSON schema to the allowed operations: [`WishReading.php`](drupal/web/modules/custom/genie/src/Wish/WishReading.php).
 - `ValidatorSubscriber` checks the object with Symfony Validator constraints. A `ValidationException` makes the genie ask again: [`WishInterpreter.php`](drupal/web/modules/custom/genie/src/Wish/WishInterpreter.php).
 - The TransformersPhp bridge runs DETR object detection in PHP through FFI: [`PersonDetector.php`](drupal/web/modules/custom/genie/src/Photo/PersonDetector.php).
+- The same bridge runs an image classifier on a list of pictures in one call: [`NsfwClassifier.php`](drupal/web/modules/custom/genie/src/Photo/NsfwClassifier.php).
+- The OpenAI bridge's `batch` option sends many inputs as one Batch API job, and `Batch\JobClient` reads the answers: [`OpenAiReview.php`](drupal/web/modules/custom/genie/src/Photo/OpenAiReview.php).
+- `MockHttpClient` stands in for OpenAI in a unit test: [`OpenAiReviewTest.php`](drupal/web/modules/custom/genie/tests/src/Unit/OpenAiReviewTest.php).
 - `FailoverPlatform` tries the next model server when one fails, wrapped as a Drupal AI platform middleware: [`Failover.php`](drupal/web/modules/custom/genie/src/Plugin/ai/PlatformMiddleware/Failover.php), [`ai.platform.genie.yml`](drupal/web/modules/custom/genie/config/install/ai.platform.genie.yml).
 - `CachePlatform` answers a repeated wish without the model, under a `prompt_cache_key`: [`Cache.php`](drupal/web/modules/custom/genie/src/Plugin/ai/PlatformMiddleware/Cache.php), [`WishInterpreter.php`](drupal/web/modules/custom/genie/src/Wish/WishInterpreter.php).
 - `MockPlatformFactory` replaces the model in a unit test: [`WishInterpreterTest.php`](drupal/web/modules/custom/genie/tests/src/Unit/WishInterpreterTest.php).
@@ -230,6 +246,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |
 | `bin/smoke open` | The public list, pages and `/llms.txt`, the visitor token's limits, joining from the game page, the player scope, and the next prepared game |
+| `bin/smoke moderation` | The local model passes a closed game's picture, and a flagged one leaves the public pages |
 | `bin/smoke cache` | The caching hints on discover, tool lists and resource reads, and a second connect that sends no request |
 | `bin/verify-clone` | A fresh clone starts and grants a wish, with ports 7225 and 8000 free |
 | `bin/verify-loopback` | Both servers listen on loopback only |

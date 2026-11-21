@@ -5,24 +5,15 @@ declare(strict_types=1);
 namespace Drupal\genie\Photo;
 
 use Codewithkyrian\Transformers\Pipelines\Task;
-use Codewithkyrian\Transformers\Transformers;
-use Codewithkyrian\Transformers\Utils\ImageDriver;
 use Drupal\Core\File\FileSystemInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\AI\Platform\Bridge\TransformersPhp\Factory;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Process\Process;
 
 /**
  * Finds people in the photo with a local model, through Symfony AI.
- *
- * The model runs through PHP's FFI extension, which PHP allows on the command
- * line alone, so the upload runs a Drush command and waits for it.
  */
 final class PersonDetector {
 
   private const MODEL = 'Xenova/detr-resnet-50';
-  private const MODELS = 'private://genie-models';
   private const MIN_SCORE = 0.5;
 
   /**
@@ -47,15 +38,14 @@ final class PersonDetector {
 
   public function __construct(
     private readonly FileSystemInterface $fileSystem,
-    #[Autowire(service: 'logger.channel.genie')]
-    private readonly LoggerInterface $logger,
+    private readonly LocalModels $models,
   ) {}
 
   /**
    * Tells whether this PHP can run the model.
    */
   public function available(): bool {
-    return extension_loaded('FFI');
+    return $this->models->available();
   }
 
   /**
@@ -66,17 +56,13 @@ final class PersonDetector {
    */
   public function detectInCommand(string $jpeg): ?array {
     $file = $this->fileSystem->tempnam('temporary://', 'genie');
-    $path = $this->fileSystem->realpath($file);
-    file_put_contents($path, $jpeg);
-    // The first run downloads the model.
-    $command = new Process(['./drupack', 'drush', 'genie:detect-file', $path], dirname(DRUPAL_ROOT), ['DRUPACK_NO_UPDATE_CHECK' => '1'], timeout: 300);
-    $command->run();
-    $this->fileSystem->delete($file);
-    if (!$command->isSuccessful()) {
-      $this->logger->error('The person detector failed: @error', ['@error' => $command->getErrorOutput()]);
-      return NULL;
+    file_put_contents($this->fileSystem->realpath($file), $jpeg);
+    try {
+      return $this->models->runInCommand('genie:detect-file', [$this->fileSystem->realpath($file)]);
     }
-    return json_decode($command->getOutput(), TRUE, flags: JSON_THROW_ON_ERROR);
+    finally {
+      $this->fileSystem->delete($file);
+    }
   }
 
   /**
@@ -89,12 +75,7 @@ final class PersonDetector {
    *   One box per person in the image's pixels, from left to right.
    */
   public function detect(string $file): array {
-    $directory = self::MODELS;
-    $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    Transformers::setup()
-      ->setCacheDir($this->fileSystem->realpath($directory))
-      ->setImageDriver(ImageDriver::GD)
-      ->apply();
+    $this->models->setUp();
     [$width, $height] = getimagesize($file);
     $scale = self::DETECTION_SIDE / max($width, $height);
     $copy = $this->fileSystem->tempnam('temporary://', 'genie');

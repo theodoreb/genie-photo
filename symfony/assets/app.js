@@ -62,7 +62,7 @@ function render() {
         frame.src = game.dataset.frameUrl + session.revision;
     } else {
         frame.src = game.dataset.photoUrl;
-        blocked.textContent = `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
+        blocked.textContent = session.frame.withheld ?? `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
     }
     renderApproval();
     guide.hidden = session.proposals.length > 0 || session.regions.length > 0;

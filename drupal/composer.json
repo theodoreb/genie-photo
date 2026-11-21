@@ -60,6 +60,8 @@
         "symfony/ai-cache-platform": "dev-main",
         "symfony/ai-failover-platform": "dev-main",
         "symfony/ai-generic-platform": "dev-main as 1.0.0",
+        "symfony/ai-open-ai-platform": "dev-main",
+        "symfony/ai-open-responses-platform": "dev-main as 1.0.0",
         "symfony/ai-platform": "dev-main as 1.0.0"
     },
     "require-dev": {
