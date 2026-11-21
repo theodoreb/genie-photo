@@ -66,7 +66,7 @@ final class Darkroom {
   private const DISGUISE_COLORS = ['k' => [15, 15, 15], 'w' => [255, 255, 255], 'm' => [35, 25, 20]];
 
   /**
-   * Brightness where each cartoon band starts, after the first.
+   * Brightness where each cartoon band starts, for a person of one flat grey.
    */
   private const CARTOON_BANDS = [64, 128, 192];
 
@@ -474,7 +474,21 @@ final class Darkroom {
     $bottom = min(imagesy($image), max(array_map(static fn (array $area): int => $area['y'] + $area['height'], $areas)) + $margin);
     $width = $right - $left;
     $source = ['x' => $left, 'y' => $top, 'width' => $width, 'height' => $bottom - $top];
-    $bands = self::bands($this->copyOf($before, $source));
+    $levels = self::levels($this->copyOf($before, $source));
+    $own = '';
+    foreach ($areas as $area) {
+      for ($y = $area['y']; $y < $area['y'] + $area['height']; $y++) {
+        $own .= substr($levels, ($y - $top) * $width + $area['x'] - $left, $area['width']);
+      }
+    }
+    $starts = self::bandStarts($own);
+    $from = '';
+    $to = '';
+    foreach (range(0, 255) as $level) {
+      $from .= chr($level);
+      $to .= count(array_filter($starts, static fn (int $start): bool => $level >= $start));
+    }
+    $bands = strtr($levels, $from, $to);
     $half = intdiv(self::DOTS, 2);
     // Pairs of bands two or more apart. Smoothing spreads a step over a few
     // pixels, so bands are compared CARTOON_SMOOTH pixels apart. Only a steep
@@ -510,16 +524,12 @@ final class Darkroom {
   }
 
   /**
-   * Smooths a picture, then gives the cartoon band of each pixel.
-   *
-   * The bands span the picture's own darkest to lightest pixel, so a light or
-   * dark photo still gets all four fills. A picture whose range is narrower
-   * than one band keeps its levels.
+   * Smooths a picture, then gives the brightness of each pixel.
    *
    * @return string
-   *   One digit per pixel, row by row, from 0 for the darkest band.
+   *   One byte per pixel, row by row.
    */
-  private static function bands(\GdImage $picture): string {
+  private static function levels(\GdImage $picture): string {
     // Smoothing keeps grain and fabric from flickering between bands.
     $width = imagesx($picture);
     $height = imagesy($picture);
@@ -532,19 +542,36 @@ final class Darkroom {
         $levels .= chr(self::brightness(imagecolorat($picture, $x, $y)));
       }
     }
-    $present = array_keys(count_chars($levels, 1));
-    [$low, $span] = [min($present), max($present) - min($present)];
-    if ($span < self::CARTOON_BANDS[0]) {
-      [$low, $span] = [0, 255];
+    return $levels;
+  }
+
+  /**
+   * Gives the levels at which the cartoon bands start.
+   *
+   * The starts sit at the quartiles of the person's own levels, so each band
+   * takes about a quarter of the person on a light or dark photo. A person
+   * whose levels span less than one fixed band keeps the fixed bands.
+   *
+   * @param string $own
+   *   The smoothed levels of the person's own pixels, one byte each.
+   *
+   * @return list<int>
+   *   Three levels, lowest first.
+   */
+  private static function bandStarts(string $own): array {
+    $counts = count_chars($own, 1);
+    if (max(array_keys($counts)) - min(array_keys($counts)) < self::CARTOON_BANDS[0]) {
+      return self::CARTOON_BANDS;
     }
-    $from = '';
-    $to = '';
-    foreach (range(0, 255) as $level) {
-      $stretched = intdiv(max(0, $level - $low) * 255, $span);
-      $from .= chr($level);
-      $to .= count(array_filter(self::CARTOON_BANDS, static fn (int $start): bool => $stretched >= $start));
+    $starts = [];
+    $seen = 0;
+    foreach ($counts as $level => $count) {
+      $seen += $count;
+      while (count($starts) < 3 && $seen * 4 >= (count($starts) + 1) * strlen($own)) {
+        $starts[] = $level + 1;
+      }
     }
-    return strtr($levels, $from, $to);
+    return $starts;
   }
 
   /**

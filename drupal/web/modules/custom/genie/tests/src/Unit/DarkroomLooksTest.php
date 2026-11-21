@@ -241,9 +241,9 @@ final class DarkroomLooksTest extends UnitTestCase {
   }
 
   /**
-   * The cartoon spreads a light photo's own range over the four bands.
+   * On a light photo, each quarter of the person gets its own band.
    */
-  public function testCartoonStretchesLightPhoto(): void {
+  public function testCartoonSplitsLightPhotoInQuarters(): void {
     $session = new Session();
     $session->pin(new Survey(1, 1, 1600, 800, 'off'));
     Places::scan($session, 1, [
@@ -256,10 +256,14 @@ final class DarkroomLooksTest extends UnitTestCase {
     ], []);
     Places::claim($session, 1, 'eve', array_key_first($session->proposals), NULL, NULL);
     $session->wishes = [1 => 'cartoon'];
-    $result = $this->develop($session, [[0, 799, 170], [800, 1599, 240]]);
-    foreach (range(730, 790, 10) as $x) {
-      foreach (range(210, 270, 10) as $y) {
-        $this->assertSame(0x000000, imagecolorat($result, $x, $y), "The darkest grey of the photo is solid black at $x, $y.");
+    // Four light stripes, one under each quarter of eve.
+    $result = $this->develop($session, [[0, 759, 150], [760, 799, 175], [800, 839, 200], [840, 1599, 225]]);
+    foreach (range(210, 270, 10) as $y) {
+      foreach (range(730, 750, 10) as $x) {
+        $this->assertSame(0x000000, imagecolorat($result, $x, $y), "The darkest quarter is solid black at $x, $y.");
+      }
+      foreach (range(850, 870, 10) as $x) {
+        $this->assertSame(0xFFFFFF, imagecolorat($result, $x, $y), "The lightest quarter is white at $x, $y.");
       }
     }
   }
