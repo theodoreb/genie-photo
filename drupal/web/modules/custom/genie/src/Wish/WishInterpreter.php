@@ -6,6 +6,7 @@ namespace Drupal\genie\Wish;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Flood\FloodInterface;
 use Symfony\AI\Platform\Exception\ExceptionInterface as PlatformException;
 use Symfony\AI\Platform\Exception\ValidationException;
 use Symfony\AI\Platform\Message\Message;
@@ -21,6 +22,18 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpException;
  * The model gets no tools and names no player. It only picks an operation.
  */
 final class WishInterpreter {
+
+  /**
+   * Model calls the whole site makes in each window. Past it, keywords answer.
+   */
+  private const MODEL_CALLS = 200;
+
+  /**
+   * Seconds of the window, one hour.
+   */
+  private const WINDOW = 3600;
+
+  private const FLOOD = 'genie.wish_model';
 
   private const INSTRUCTIONS = <<<'TEXT'
     You read one sentence from a person who appears in a shared group photo.
@@ -68,6 +81,8 @@ final class WishInterpreter {
     private readonly FactoryInterface $platforms,
     private readonly ConfigFactoryInterface $configFactory,
     private readonly KeywordInterpreter $keywords,
+    #[Autowire(service: 'flood')]
+    private readonly FloodInterface $flood,
   ) {}
 
   /**
@@ -79,6 +94,11 @@ final class WishInterpreter {
    *   Object names by region id.
    */
   public function interpret(string $text, array $objects): ?Wish {
+    // Anyone can join a game, so the model's budget is counted for the site.
+    if (!$this->flood->isAllowed(self::FLOOD, self::MODEL_CALLS, self::WINDOW, 'site')) {
+      return $this->keywords->interpret($text, $objects);
+    }
+    $this->flood->register(self::FLOOD, self::WINDOW, 'site');
     try {
       $reading = $this->read($text);
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\genie\Unit;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;
+use Drupal\Core\Flood\FloodInterface;
 use Drupal\genie\Wish\KeywordInterpreter;
 use Drupal\genie\Wish\Operation;
 use Drupal\genie\Wish\Wish;
@@ -26,7 +27,7 @@ final class WishInterpreterTest extends UnitTestCase {
   /**
    * Builds an interpreter whose model gives one scripted answer.
    */
-  private function interpreter(\Closure|string $answer): WishInterpreter {
+  private function interpreter(\Closure|string $answer, bool $withinBudget = TRUE): WishInterpreter {
     $dispatcher = new EventDispatcher();
     $dispatcher->addSubscriber(new PlatformSubscriber());
     $dispatcher->addSubscriber(new ValidatorSubscriber());
@@ -34,10 +35,13 @@ final class WishInterpreterTest extends UnitTestCase {
     $platforms->method('createInstance')->willReturn(
       MockPlatformFactory::createPlatform($answer, eventDispatcher: $dispatcher),
     );
+    $flood = $this->createMock(FloodInterface::class);
+    $flood->method('isAllowed')->willReturn($withinBudget);
     return new WishInterpreter(
       $platforms,
       $this->getConfigFactoryStub(['genie.settings' => ['text_model' => 'test']]),
       new KeywordInterpreter(),
+      $flood,
     );
   }
 
@@ -85,6 +89,14 @@ final class WishInterpreterTest extends UnitTestCase {
    */
   public function testUnavailableModel(): void {
     $interpreter = $this->interpreter(static fn () => throw new RuntimeException('Connection refused.'));
+    $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face', []));
+  }
+
+  /**
+   * Leaves the model alone once the site spent its budget.
+   */
+  public function testSpentBudget(): void {
+    $interpreter = $this->interpreter(static fn () => throw new \LogicException('The model was called.'), FALSE);
     $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face', []));
   }
 

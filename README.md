@@ -136,6 +136,12 @@ Sign-in, the tools and the approval flow were tested with Claude Code and Codex.
 
 The site works without one. Wishes then go through a keyword reader. `GENIE_MODEL_URL` in Drupal's environment names another model server to try first, such as a GPU box. Ollama on this machine answers when it fails, then the keyword reader. With [Ollama](https://ollama.com) on its default port, `ollama pull gemma3:4b` (3.4 GB) lets a local model read free-form wishes such as "I deserve the spotlight". The model only picks an operation for the speaker. It refuses requests about other people. Symfony AI turns its answer into a validated PHP object. An invalid answer changes nothing, and the genie asks again.
 
+Wishes are capped before they reach a model:
+
+- A wish holds 1 to 120 characters. The tool's input schema states it.
+- Each player makes at most 10 wishes in 10 minutes.
+- The site sends at most 200 wishes an hour to a model. Past that, the keyword reader answers.
+
 ## How it fits together
 
 - Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`.
@@ -214,7 +220,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke host` | The host code, the upload on the web view, and a guest joining from the invite link |
 | `bin/smoke subscribe` | A resource update reaches a `subscriptions/listen` stream |
 | `bin/smoke live` | Upload, a live update and the picture over MCP |
-| `bin/smoke wish alice` | A wish changes the picture |
+| `bin/smoke wish alice` | A wish changes the picture, and oversized, blank and eleventh wishes are refused |
 | `bin/smoke collision` | Two wishes that cannot both hold |
 | `bin/smoke scan` | An assistant finds people, claims one and paints, and ids survive a new scan |
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
