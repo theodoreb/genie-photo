@@ -121,7 +121,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     try {
       $opened = 0;
       foreach (self::KINDS as $kind) {
-        $photos = array_values(array_filter($this->manifest(), static fn (array $photo): bool => $photo['kind'] === $kind));
+        $photos = array_values(array_filter($this->manifest(), static fn (array $photo): bool => $photo['kind'] === $kind && $photo['rotation']));
         for ($missing = self::OPEN - $this->games->openPrepared(array_column($photos, 'id')); $missing > 0; $missing--) {
           $position = (int) $this->state->get(self::NEXT . $kind, 0);
           $this->state->set(self::NEXT . $kind, $position + 1);
