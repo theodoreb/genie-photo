@@ -37,7 +37,7 @@
         <div class="game-layout">
             <section class="stage-wrap" aria-labelledby="picture-title">
                 <h1 id="picture-title">Your game</h1>
-                <div id="stage" class="stage shade">
+                <div id="stage" class="stage">
                     <img id="frame" alt="The photo as every wish leaves it">
                     <div id="regions"></div>
                 </div>
@@ -53,7 +53,7 @@
             </section>
 
             <div class="side">
-                <section class="panel shade" aria-labelledby="steps-title">
+                <section class="panel" aria-labelledby="steps-title">
                     <h2 id="steps-title">How to play</h2>
                     <ol class="steps">
                         <li>Click your face in the photo.</li>
@@ -83,7 +83,7 @@
     {% elseif not session.is_uploader %}
         <p class="notice">The host has not added the group photo yet. This page updates when they do.</p>
     {% else %}
-        <form class="upload panel shade" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
+        <form class="upload panel" method="post" action="{{ path('app_photo_upload') }}" enctype="multipart/form-data">
             <h1>Add the group photo</h1>
             <p>Every player's AI assistant receives this photo, and may send it to its provider.</p>
             <p>Anyone can look at this game and its photo. Only the people you invite can take a place in it.</p>

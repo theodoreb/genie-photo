@@ -13,7 +13,7 @@
     <p class="crumb"><a href="{{ path('app_games') }}">All games</a></p>
 
     <div class="game-layout">
-        <figure class="picture-frame shade">
+        <figure class="picture-frame">
             <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
                  src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
         </figure>
@@ -38,7 +38,7 @@
 
             {% if game.join %}
                 {# Drupal seats the player, signs them in, and sends them to their game. #}
-                <section class="panel shade" aria-labelledby="join-title">
+                <section class="panel" aria-labelledby="join-title">
                     <h2 id="join-title">Take a place</h2>
                     <form class="join" method="post" action="{{ game.join }}">
                         <label for="name">Your name in the game</label>

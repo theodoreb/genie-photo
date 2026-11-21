@@ -21,20 +21,19 @@ main { isolation: isolate; }
 section > h2 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 4vw, 2.6rem); }
 section > h2 + p { margin: 0 0 1.5rem; max-width: 40em; }
 .quiet { color: var(--quiet); }
-.error { margin: 0; padding: .75rem 1rem; color: var(--light); background: var(--alert); border: 3px solid var(--line); font-weight: 700; }
+.error { margin: 0; padding: .75rem 1rem; background: var(--card); border: 3px solid var(--alert); font-weight: 700; }
 code { font-size: .9em; overflow-wrap: anywhere; }
 
 /* Home: headline and the newest picture */
 .hero { display: flex; flex-wrap: wrap; gap: 2.5rem 3rem; align-items: center; }
 .hero > div { flex: 1 1 28rem; min-width: 0; display: grid; gap: 1.25rem; }
 .hero h1 { margin: 0; font-size: clamp(2.8rem, 7vw, 5.2rem); line-height: .98; }
-.mark { display: inline-block; padding: 0 .15em; color: var(--light); background: var(--action); border: 3px solid var(--line); --lift: 6px; }
+.mark { display: inline-block; padding: 0 .15em; color: var(--light); background: var(--purple); }
 .lead { margin: 0; font-size: 1.25rem; max-width: 32em; }
 .actions { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0; }
 .hero figure { flex: 1 1 22rem; min-width: 0; margin: 0 12px 12px 0; --lift: 12px; }
 .hero figure img { display: block; width: 100%; border: 4px solid var(--line); }
-.hero figcaption { padding: .5rem .9rem; color: var(--dark); background: var(--others); border: 4px solid var(--line); border-top: 0; font-weight: 700; }
-.hero figcaption a { color: inherit; }
+.hero figcaption { padding: .5rem .9rem; color: var(--quiet); background: var(--card); border: 4px solid var(--line); border-top: 0; }
 
 /* Game cards */
 .cards { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 2rem; }
@@ -44,18 +43,14 @@ code { font-size: .9em; overflow-wrap: anywhere; }
 .card-body { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .8rem 1rem 1rem; }
 .card-title { flex-basis: 100%; font-weight: 700; font-size: 1.05rem; }
 
-/* State labels, always in words */
-.badge { display: inline-block; padding: .1rem .6rem; font-weight: 700; font-size: .9rem; border: 2px solid var(--line); }
-.badge.open { color: var(--light); background: var(--action); }
-.badge.closed { color: var(--dark); background: var(--others); }
-.badge.abandoned { color: var(--dark); background: var(--light); }
-.badge.withheld { color: var(--light); background: var(--alert); }
+/* State labels: muted, in words. Bright colours belong to what a person can click. */
+.badge { display: inline-block; padding: 0 .5rem; color: var(--quiet); font-weight: 600; font-size: .85rem; border: 2px solid currentColor; }
 
 /* How to play */
 .steps-grid { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 2rem; }
 .steps-grid li { counter-increment: step; padding: 1.25rem; background: var(--card); border: 3px solid var(--line); }
 .steps-grid h3 { margin: 0 0 .5rem; font-size: 1.3rem; }
-.steps-grid h3::before { content: counter(step); display: inline-grid; place-items: center; width: 2rem; height: 2rem; margin-right: .5rem; color: var(--light); background: var(--purple); border: 2px solid var(--line); font-size: 1.1rem; }
+.steps-grid h3::before { content: counter(step); display: inline-grid; place-items: center; width: 2rem; height: 2rem; margin-right: .5rem; color: var(--quiet); border: 2px solid currentColor; font-size: 1.1rem; }
 .steps-grid p { margin: 0; }
 
 /* Panels */
@@ -65,7 +60,6 @@ code { font-size: .9em; overflow-wrap: anywhere; }
 .panel dl { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; }
 .panel dt { font-weight: 700; }
 .panel dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.agents { margin-right: 8px; }
 
 details.under summary { cursor: pointer; font: 800 1.4rem var(--display); }
 details.under ul { max-width: 48rem; padding-left: 1.5rem; }
@@ -76,26 +70,26 @@ footer p { max-width: 72rem; margin: 0 auto; overflow-wrap: anywhere; }
 /* Game page and player page: the picture, then a side column */
 .game-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(18rem, 2fr); gap: 2.5rem; align-items: start; }
 .game-layout > * { min-width: 0; }
-.side { display: grid; gap: 1.25rem; margin-right: 8px; }
+.side { display: grid; gap: 1.25rem; }
 .side h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); }
 .side > p { margin: 0; }
-.picture-frame { margin: 0 12px 12px 0; --lift: 12px; }
+.picture-frame { margin: 0; }
 .frame { display: block; max-width: 100%; max-height: 75vh; margin-inline: auto; border: 4px solid var(--line); }
 .join { display: grid; gap: .7rem; }
 .crumb { margin: 0 0 -2.5rem; }
 
-.stage { position: relative; width: fit-content; max-width: 100%; margin: 0 12px 12px 0; --lift: 12px; }
+.stage { position: relative; width: fit-content; max-width: 100%; }
 .stage img { display: block; max-width: 100%; max-height: 80vh; border: 4px solid var(--line); }
 .stage-wrap { display: grid; gap: 1rem; }
 .hint { margin: 0; color: var(--quiet); overflow-wrap: anywhere; }
 .notice { margin: 0; padding: .75rem 1rem; background: var(--card); border: 3px solid var(--line); font-weight: 700; }
 .approval { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; }
 
-/* Face boxes: magenta for the player's own place, teal for others, dashed for a free one */
-.region { position: absolute; border: 3px solid var(--others); color: #fff; font-size: .8rem; font-weight: 700; text-shadow: 0 0 3px #000; pointer-events: none; }
-.region[data-mine="true"] { border: 4px solid var(--action); box-shadow: 3px 3px 0 var(--shade); }
-.region.object { border-color: var(--alert); }
-.region.proposal { padding: 0; color: #fff; background: #49237666; border: 3px dashed var(--light); box-shadow: none; cursor: pointer; pointer-events: auto; font: 700 .8rem var(--text); }
+/* Face boxes: light outlines, thicker for the player's own place. A free place is a magenta button. */
+.region { position: absolute; border: 2px solid var(--light); color: #fff; font-size: .8rem; font-weight: 700; text-shadow: 0 0 3px #000; pointer-events: none; }
+.region[data-mine="true"] { border-width: 4px; box-shadow: 0 0 0 1px var(--dark); }
+.region.object { border-style: dotted; }
+.region.proposal { padding: 0; color: #fff; background: #bb449966; border: 3px dashed var(--action); box-shadow: none; cursor: pointer; pointer-events: auto; font: 700 .8rem var(--text); }
 .objects { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .5rem; }
 .objects:empty { display: none; }
 .objects li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem .75rem; background: var(--card); border: 2px solid var(--line); }

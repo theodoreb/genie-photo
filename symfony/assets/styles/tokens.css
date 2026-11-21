@@ -22,7 +22,7 @@
     --card: light-dark(#ffffff, #2a1a40);
     --line: light-dark(#1e1030, #0b0612);
     --quiet: light-dark(#5b4d6b, #c9bcd9);
-    --link: light-dark(#612f9d, #d7b8ff);
+    --link: light-dark(#a3307f, #f39ad6);
     /* The tresbien.tech colours. The logo purple is every shade. */
     --shade: #492376;
     --purple: #612f9d;
@@ -65,11 +65,11 @@ a { color: var(--link); }
 h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
 
 /*
- * A hard offset shade in halftone. Its element needs no transform or opacity, which would lift the shade above its fill.
- * Drupal's content wrapper, .layout-content, takes it too, since Drupal pages carry no .shade class.
+ * A hard offset shade in halftone, for what a person can click. Its element needs no transform or opacity,
+ * which would lift the shade above its fill.
  */
-.shade, .layout-content { position: relative; }
-.shade::before, .layout-content::before {
+.shade { position: relative; }
+.shade::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -93,7 +93,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.1; le
     cursor: pointer;
 }
 .button:active, button:active, input[type="submit"]:active { translate: 2px 2px; box-shadow: 2px 2px 0 var(--shade); }
-.button.secondary { color: var(--ink); background: var(--card); }
+.button.secondary { color: var(--dark); background: var(--others); }
 button:disabled { cursor: not-allowed; background: var(--quiet); }
 
 input:not([type="checkbox"], [type="radio"], [type="submit"], [type="hidden"]) {
