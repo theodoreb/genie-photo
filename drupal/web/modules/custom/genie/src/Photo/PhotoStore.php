@@ -12,6 +12,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\genie\Game\CurrentGame;
 use Drupal\genie\Game\Export;
+use Drupal\genie\Game\Ledger;
 use Drupal\media\MediaInterface;
 
 /**
@@ -106,6 +107,24 @@ final class PhotoStore {
   public function export(int $revision): ?Export {
     $base = $this->frames() . "/$revision";
     return file_exists("$base.sha256") ? new Export(file_get_contents("$base.png"), file_get_contents("$base.sha256")) : NULL;
+  }
+
+  /**
+   * Deletes the stored pictures of games still in play.
+   *
+   * The next request renders them with the code now deployed. A finished game
+   * keeps the picture its players approved.
+   */
+  public function clearOpenFrames(): void {
+    $open = $this->entityTypeManager->getStorage('node')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'genie_game')
+      ->condition('field_genie_state', Ledger::OVER, 'NOT IN')
+      ->execute();
+    foreach ($open as $game) {
+      $this->game->enter((int) $game);
+      $this->fileSystem->deleteRecursive($this->frames());
+    }
   }
 
   /**

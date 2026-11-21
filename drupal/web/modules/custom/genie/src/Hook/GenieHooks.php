@@ -8,13 +8,17 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie\Game\Games;
+use Drupal\genie\Photo\PhotoStore;
 
 /**
  * Hooks for the genie games.
  */
 final class GenieHooks {
 
-  public function __construct(private readonly Games $games) {}
+  public function __construct(
+    private readonly Games $games,
+    private readonly PhotoStore $photos,
+  ) {}
 
   /**
    * Shows a player by the name they chose, without their game's id.
@@ -43,6 +47,14 @@ final class GenieHooks {
   #[Hook('cron')]
   public function cron(): void {
     $this->games->abandonIdle();
+  }
+
+  /**
+   * Drops the stored pictures of games in play, so a deploy redraws them.
+   */
+  #[Hook('cache_flush')]
+  public function cacheFlush(): void {
+    $this->photos->clearOpenFrames();
   }
 
 }
