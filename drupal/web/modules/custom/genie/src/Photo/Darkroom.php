@@ -42,6 +42,11 @@ final class Darkroom {
 
   private const PIXEL_ART_COLORS = 16;
 
+  /**
+   * Gold at brightness 0, 128 and 255, mixed in a straight line between.
+   */
+  private const GOLD_RAMP = [[60, 35, 10], [200, 145, 35], [255, 240, 170]];
+
   private const BOX_COLORS = [
     [230, 90, 0],
     [210, 0, 60],
@@ -100,7 +105,8 @@ final class Darkroom {
         $this->paintPerson($image, $session->photo, array_keys($owners, $id, TRUE), $reach[$id], $session->paints[$region['owner']]);
       }
     }
-    // A cover wins over any paint on the same place.
+    $this->dress($image, $session, $owners);
+    // A cover wins over any paint or look on the same place.
     $this->paintOver($image, $hidden);
     return $image;
   }
@@ -300,6 +306,69 @@ final class Darkroom {
     foreach ($reach as $cell) {
       $area = Outlines::area($cell, $photo);
       imagecopy($image, $layer, $area['x'], $area['y'], $area['x'] - $bounds['x'], $area['y'] - $bounds['y'], $area['width'], $area['height']);
+    }
+  }
+
+  /**
+   * Draws each player's look on their own person.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param \Drupal\genie\Game\Session $session
+   *   The session.
+   * @param array<int, string> $owners
+   *   The region id that owns each cell.
+   */
+  private function dress(\GdImage $image, Session $session, array $owners): void {
+    foreach ($session->regions as $id => $region) {
+      if ($region['kind'] !== 'person' || !isset($session->wishes[$region['owner']])) {
+        continue;
+      }
+      $look = Operation::from($session->wishes[$region['owner']]);
+      if (!$look->isLook()) {
+        continue;
+      }
+      $own = array_keys($owners, $id, TRUE);
+      // A person hidden behind others owns no cell: the look keeps to the head.
+      $areas = $own === [] ? [$region['head']] : array_map(
+        static fn (int $cell): array => Outlines::area($cell, $session->photo),
+        $own,
+      );
+      match ($look) {
+        Operation::Gold => $this->gild($image, $areas),
+      };
+    }
+  }
+
+  /**
+   * Maps the brightness of each pixel in the areas onto the gold ramp.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param list<array{x: int, y: int, width: int, height: int}> $areas
+   *   The areas to gild.
+   */
+  private function gild(\GdImage $image, array $areas): void {
+    $ramp = [];
+    foreach (range(0, 255) as $level) {
+      [$low, $high, $share] = $level < 128
+        ? [self::GOLD_RAMP[0], self::GOLD_RAMP[1], $level / 128]
+        : [self::GOLD_RAMP[1], self::GOLD_RAMP[2], ($level - 128) / 127];
+      [$red, $green, $blue] = array_map(
+        static fn (int $from, int $to): int => (int) round($from + ($to - $from) * $share),
+        $low,
+        $high,
+      );
+      $ramp[] = $red << 16 | $green << 8 | $blue;
+    }
+    foreach ($areas as $area) {
+      for ($y = $area['y']; $y < $area['y'] + $area['height']; $y++) {
+        for ($x = $area['x']; $x < $area['x'] + $area['width']; $x++) {
+          $color = imagecolorat($image, $x, $y);
+          $level = intdiv(299 * ($color >> 16 & 255) + 587 * ($color >> 8 & 255) + 114 * ($color & 255), 1000);
+          imagesetpixel($image, $x, $y, $ramp[$level]);
+        }
+      }
     }
   }
 

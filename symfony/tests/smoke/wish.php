@@ -30,6 +30,20 @@ if (hash('sha256', $before) === hash('sha256', $after)) {
 }
 echo "revision {$outcome['revision']}\n";
 
+// Each look stores its value and changes the plain picture.
+$plain = $site->frame($token, $site->tools->call($token, 'make_wish', ['wish' => 'show me'])['revision']);
+$looks = ['gold' => 'turn me to gold'];
+foreach ($looks as $look => $phrase) {
+    $granted = $site->tools->call($token, 'make_wish', ['wish' => $phrase]);
+    if (!$granted['granted'] || $look !== $site->tools->call($token, 'session_get')['wish']) {
+        SmokeSite::fail("The wish \"$phrase\" did not store $look.");
+    }
+    if (hash('sha256', $plain) === hash('sha256', $site->frame($token, $granted['revision']))) {
+        SmokeSite::fail("The look $look did not change the picture.");
+    }
+}
+echo implode(', ', array_keys($looks)), " looks granted\n";
+
 // A wish is capped in size, and each player in pace.
 $refused = static function (array $arguments) use ($site, $token): bool {
     try {
@@ -43,7 +57,7 @@ $refused = static function (array $arguments) use ($site, $token): bool {
 if (!$refused(['wish' => str_repeat('a', 121)]) || !$refused(['wish' => '   '])) {
     SmokeSite::fail('An oversized or blank wish was granted.');
 }
-for ($wish = 2; $wish <= 10; ++$wish) {
+for ($wish = 3 + count($looks); $wish <= 10; ++$wish) {
     $site->tools->call($token, 'make_wish', ['wish' => 0 === $wish % 2 ? 'show me' : "wish $wish"]);
 }
 if (!$refused(['wish' => 'hide me'])) {

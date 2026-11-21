@@ -21,6 +21,7 @@ final class Wishes {
     'visible' => 'Granted, %s. You are back in the photo.',
     'center_on' => 'Granted, %s. The frame now keeps you in the middle.',
     'stop_center' => 'Granted, %s. You no longer need the middle.',
+    'gold' => 'Granted, %s. You are now a gold statue.',
   ];
 
   public function __construct(
@@ -39,7 +40,7 @@ final class Wishes {
     $current = $this->ledger->read();
     $wish = $this->interpreter->interpret($text, $current->objectNames());
     if ($wish === NULL) {
-      return $this->refusal('I did not understand. Try "hide me", "crop me out", "put me in the middle" or "protect the cake".');
+      return $this->refusal('I did not understand. Try "hide me", "crop me out", "put me in the middle", "turn me to gold" or "protect the cake".');
     }
     if ($wish->operation !== Operation::Protect && !isset($current->regions["person-$uid"])) {
       return $this->refusal(Places::NO_PLACE);

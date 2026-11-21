@@ -20,6 +20,13 @@ final class KeywordInterpreter {
    * Negated phrases come first, because each match is removed from the text.
    */
   private const PATTERNS = [
+    // Removal runs first, so its look words are gone before the look rows.
+    [
+      Operation::Show,
+      '/' . self::NOT . '\b(?:gold|golden|statue)\b|\b(?:take|get|remove)\b[a-z\' ]*\b(?:gold|golden|statue)\b[a-z\' ]*\b(?:off|away|from me)\b|\bno more (?:gold|golden|statue)\b/',
+    ],
+    // The speaker comes first, so "protect the gold cup" stays a protect wish.
+    [Operation::Gold, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:gold|golden|statue)\b|\bgild me\b/'],
     [Operation::Cover, '/' . self::NOT . '\b(?:show|reveal)\b[a-z\' ]*\b(?:me|my|myself)\b/'],
     [NULL, '/' . self::NOT . '\b(?:put|bring) me back\b/'],
     [

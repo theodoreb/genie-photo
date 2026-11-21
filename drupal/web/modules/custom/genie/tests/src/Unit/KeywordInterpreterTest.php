@@ -34,12 +34,18 @@ final class KeywordInterpreterTest extends UnitTestCase {
       'I no longer want to be in the middle' => Operation::StopCenter,
       "don't show me" => Operation::Cover,
       "I don't want to be seen, hide my face" => Operation::Cover,
+      'turn me to gold' => Operation::Gold,
+      'make me a golden statue' => Operation::Gold,
+      'stop the gold' => Operation::Show,
+      'take the gold off me' => Operation::Show,
     ];
     $interpreter = new KeywordInterpreter();
     foreach ($expected as $text => $operation) {
       $this->assertSame($operation, $interpreter->interpret($text, [])?->operation, $text);
     }
     $this->assertNull($interpreter->interpret("don't hide me, put me in the middle", []));
+    $this->assertNull($interpreter->interpret('put me in the middle and make me gold', []));
+    $this->assertSame('object-1', $interpreter->interpret('protect the gold cup', ['object-1' => 'gold cup'])?->object);
     $this->assertNull($interpreter->interpret("don't protect the cake", ['object-1' => 'cake']));
     $this->assertSame('object-1', $interpreter->interpret("don't crop the cake", ['object-1' => 'cake'])?->object);
   }

@@ -15,5 +15,13 @@ enum Operation: string {
   case Center = 'center_on';
   case StopCenter = 'stop_center';
   case Protect = 'protect';
+  case Gold = 'gold';
+
+  /**
+   * Tells whether the wish changes how the player's own person looks.
+   */
+  public function isLook(): bool {
+    return $this === self::Gold;
+  }
 
 }
