@@ -58,6 +58,7 @@ $list = $pages->request('GET', '/games');
 $page = $pages->request('GET', '/games/'.$first);
 $picture = $pages->request('GET', '/games/'.$first.'/photo');
 $guide = $pages->request('GET', '/llms.txt');
+$resource = json_decode(HttpClient::create()->request('GET', $site->drupalUrl.'/.well-known/oauth-protected-resource/mcp')->getContent(), true, flags: \JSON_THROW_ON_ERROR);
 $drupal = HttpClient::create(['max_redirects' => 0]);
 $seat = static fn (string $origin, string $name) => $drupal->request('POST', (string) $open[$first]['join'], ['headers' => ['Origin' => $origin], 'body' => ['name' => $name]]);
 $foreign = $seat('https://elsewhere.example', 'mallory');
@@ -75,6 +76,7 @@ $checks = [
     'the game page offers a place' => 200 === $page->getStatusCode() && str_contains($page->getContent(false), $open[$first]['join']),
     'the agent guide lists the game and the MCP address' => str_starts_with($guide->getHeaders(false)['content-type'][0] ?? '', 'text/plain')
         && str_contains($guide->getContent(false), '/games/'.$first) && str_contains($guide->getContent(false), $site->drupalUrl.'/mcp'),
+    'an assistant is told to ask for the player scope only' => ['genie'] === ($resource['scopes_supported'] ?? null),
     'the picture page serves a JPEG' => 'image/jpeg' === ($picture->getHeaders(false)['content-type'][0] ?? ''),
     'the visitor token cannot play' => $refused($visitor, 'session_get') && $refused($visitor, 'my_status'),
     'a player token cannot list' => $refused($alice, 'web_games_list'),

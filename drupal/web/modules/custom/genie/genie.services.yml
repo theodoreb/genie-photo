@@ -18,6 +18,9 @@ services:
     autowire: false
     tags:
       - { name: event_subscriber }
+  Drupal\genie\Web\PlayerScope:
+    tags:
+      - { name: event_subscriber }
   Drupal\genie\Game\Approvals: ~
   Drupal\genie\Photo\Archive:
     tags:
