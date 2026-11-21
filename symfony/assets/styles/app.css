@@ -92,6 +92,8 @@ footer p { max-width: 72rem; margin: 0 auto; overflow-wrap: anywhere; }
 .region.proposal { padding: 0; color: #fff; background: #bb449966; border: 3px dashed var(--action); box-shadow: none; cursor: pointer; pointer-events: auto; font: 700 .8rem var(--text); }
 .objects { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .5rem; }
 .objects:empty { display: none; }
+#wrong h2 { margin: 0; font-size: 1.3rem; }
+#wrong p { margin: 0; }
 .objects li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem .75rem; background: var(--card); border: 2px solid var(--line); }
 .objects button { padding: .35rem .8rem; font-size: .9rem; box-shadow: 2px 2px 0 var(--shade); }
 
@@ -113,6 +115,6 @@ footer p { max-width: 72rem; margin: 0 auto; overflow-wrap: anywhere; }
 @media (max-width: 40rem) {
     .wrap { gap: 3rem; padding-top: 1.5rem; }
     .region { font-size: .65rem; }
-    /* A face box on a phone is too small for its text. Its button says who it is. */
+    /* A face box on a phone is too small for its text. Its aria-label says who it is. */
     .region.proposal { font-size: 0; }
 }

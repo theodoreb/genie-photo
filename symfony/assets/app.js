@@ -8,6 +8,7 @@ const status = document.querySelector('#status');
 const frame = document.querySelector('#frame');
 const blocked = document.querySelector('#blocked');
 const objects = document.querySelector('#objects');
+const wrong = document.querySelector('#wrong');
 const proposals = document.querySelector('#proposals');
 const approve = document.querySelector('#approve');
 const approval = document.querySelector('#approval');
@@ -66,7 +67,10 @@ function render() {
     }
     renderApproval();
     guide.hidden = session.proposals.length > 0 || session.regions.length > 0;
-    proposals.replaceChildren(...session.proposals.map(proposalRow));
+    if (wrong) {
+        wrong.hidden = session.proposals.length === 0;
+        proposals.replaceChildren(...session.proposals.map(proposalRow));
+    }
     objects.replaceChildren(...session.regions.filter((region) => region.kind === 'object').map(objectRow));
     regions.replaceChildren(...session.regions.map(markElement), ...session.proposals.map(proposalElement));
 }
@@ -92,17 +96,15 @@ function button(label, action) {
     return element;
 }
 
+// Only the host's page has this list.
 function proposalRow(box) {
     const row = document.createElement('li');
     row.textContent = `${box.label} `;
-    row.append(button('This is me', () => claim(box)));
-    if (session.is_uploader) {
-        row.append(' ', button('Not playing', () => {
-            const body = new FormData();
-            body.set('proposal', box.id);
-            post(game.dataset.dismissUrl, body);
-        }));
-    }
+    row.append(button('Remove', () => {
+        const body = new FormData();
+        body.set('proposal', box.id);
+        post(game.dataset.dismissUrl, body);
+    }));
     return row;
 }
 

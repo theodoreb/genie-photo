@@ -48,7 +48,14 @@
                     <a id="download" class="button secondary" download="genie-photo.png" hidden>Download the final photo</a>
                     <span id="approval"></span>
                 </div>
-                <ul id="proposals" class="objects" aria-label="People found in the photo"></ul>
+                {% if session.is_uploader %}
+                    {# The boxes on the photo claim a face. Only the host removes a box that marks no one. #}
+                    <section id="wrong" class="stage-wrap" aria-labelledby="wrong-title" hidden>
+                        <h2 id="wrong-title">A box marks no one?</h2>
+                        <p class="hint">As the host, remove it, so nobody waits for that place.</p>
+                        <ul id="proposals" class="objects"></ul>
+                    </section>
+                {% endif %}
                 <ul id="objects" class="objects" aria-label="Things in the photo"></ul>
             </section>
 
