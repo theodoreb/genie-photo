@@ -6,7 +6,6 @@ namespace Drupal\genie\Game;
 
 use Drupal\genie\Photo\BodyPaint;
 use Drupal\genie\Photo\Survey;
-use Drupal\genie\Wish\Operation;
 use Drupal\node\NodeInterface;
 
 /**
@@ -194,12 +193,6 @@ final class Session {
       foreach (self::STORED as $name) {
         $session->$name = $data[$name];
       }
-      // Games stored before framing was removed hold wishes that no longer
-      // exist. The closed ones still render, so those wishes are dropped.
-      $session->wishes = array_filter(
-        $session->wishes,
-        static fn (string $wish): bool => Operation::tryFrom($wish) !== NULL,
-      );
       $session->paints = array_map(
         static fn (array $paint): BodyPaint => BodyPaint::fromInput($paint['pixelate'], $paint['palette'], $paint['spans']),
         $session->paints,
