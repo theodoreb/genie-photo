@@ -47,6 +47,51 @@ final class Darkroom {
    */
   private const GOLD_RAMP = [[60, 35, 10], [200, 145, 35], [255, 240, 170]];
 
+  /**
+   * Rows and columns of the disguise grid laid over the head box.
+   */
+  private const DISGUISE_GRID = 16;
+
+  /**
+   * The disguise by grid row: k frame and lens, w glint, m moustache.
+   */
+  private const DISGUISE = [
+    6 => '.kkkkkk..kkkkkk.',
+    7 => '.kwkkkkkkkwkkkk.',
+    8 => '..kkkk....kkkk..',
+    11 => '....mmmmmmmm....',
+    12 => '...mmm....mmm...',
+  ];
+
+  private const DISGUISE_COLORS = ['k' => [15, 15, 15], 'w' => [255, 255, 255], 'm' => [35, 25, 20]];
+
+  /**
+   * Brightness where each cartoon band starts, after the first.
+   */
+  private const CARTOON_BANDS = [64, 128, 192];
+
+  /**
+   * Pixels the cartoon reads around its areas, for smoothing and neighbours.
+   */
+  private const CARTOON_MARGIN = 8;
+
+  /**
+   * How far the cartoon scales a picture down and back up to smooth it.
+   */
+  private const CARTOON_SMOOTH = 3;
+
+  /**
+   * Pixels between two cross-hatch lines.
+   */
+  private const HATCH = 6;
+
+  /**
+   * Pixels between two halftone dots, and the squared radius of a dot.
+   */
+  private const DOTS = 8;
+
+  private const DOT_SIZE = 3;
+
   private const BOX_COLORS = [
     [230, 90, 0],
     [210, 0, 60],
@@ -320,6 +365,7 @@ final class Darkroom {
    *   The region id that owns each cell.
    */
   private function dress(\GdImage $image, Session $session, array $owners): void {
+    $looks = [];
     foreach ($session->regions as $id => $region) {
       if ($region['kind'] !== 'person' || !isset($session->wishes[$region['owner']])) {
         continue;
@@ -334,10 +380,158 @@ final class Darkroom {
         static fn (int $cell): array => Outlines::area($cell, $session->photo),
         $own,
       );
+      // Untraced cells fill the detector box, background included.
+      if ($own !== [] && $region['cells'] === []) {
+        $areas = self::ellipse($areas, $region);
+      }
+      $looks[] = [$look, $areas, $region['head']];
+    }
+    // The cartoon reads the picture as it was before any look, so the order
+    // of the people does not change it.
+    $before = in_array(Operation::Cartoon, array_column($looks, 0), TRUE)
+      ? $this->copyOf($image, ['x' => 0, 'y' => 0, 'width' => imagesx($image), 'height' => imagesy($image)])
+      : NULL;
+    foreach ($looks as [$look, $areas, $head]) {
       match ($look) {
+        Operation::Disguise => $this->disguise($image, $head),
         Operation::Gold => $this->gild($image, $areas),
+        Operation::Cartoon => $this->cartoon($image, $before, $areas),
       };
     }
+  }
+
+  /**
+   * Cuts areas down to the ellipse inside a box, one pixel row at a time.
+   *
+   * @param list<array{x: int, y: int, width: int, height: int}> $areas
+   *   The areas.
+   * @param array{x: int, y: int, width: int, height: int} $box
+   *   The box.
+   *
+   * @return list<array{x: int, y: int, width: int, height: int}>
+   *   Rows one pixel high.
+   */
+  private static function ellipse(array $areas, array $box): array {
+    $radiusX = $box['width'] / 2;
+    $radiusY = $box['height'] / 2;
+    $rows = [];
+    foreach ($areas as $area) {
+      for ($y = $area['y']; $y < $area['y'] + $area['height']; $y++) {
+        $share = 1 - (($y + 0.5 - $box['y'] - $radiusY) / $radiusY) ** 2;
+        $half = $share > 0 ? $radiusX * sqrt($share) : 0;
+        $left = max($area['x'], (int) ceil($box['x'] + $radiusX - $half));
+        $right = min($area['x'] + $area['width'], (int) floor($box['x'] + $radiusX + $half));
+        if ($left < $right) {
+          $rows[] = ['x' => $left, 'y' => $y, 'width' => $right - $left, 'height' => 1];
+        }
+      }
+    }
+    return $rows;
+  }
+
+  /**
+   * Draws sunglasses and a moustache over a head, in blocks of its grid.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param array{x: int, y: int, width: int, height: int} $head
+   *   The head box.
+   */
+  private function disguise(\GdImage $image, array $head): void {
+    $line = static fn (int $start, int $size, int $step): int => $start + intdiv($step * $size, self::DISGUISE_GRID);
+    foreach (self::DISGUISE as $row => $inks) {
+      $top = $line($head['y'], $head['height'], $row);
+      $bottom = $line($head['y'], $head['height'], $row + 1) - 1;
+      foreach (str_split($inks) as $column => $ink) {
+        $left = $line($head['x'], $head['width'], $column);
+        $right = $line($head['x'], $head['width'], $column + 1) - 1;
+        // On a head under 16 pixels some blocks are empty, and GD would fill
+        // them as reversed rectangles.
+        if ($ink === '.' || $right < $left || $bottom < $top) {
+          continue;
+        }
+        imagefilledrectangle($image, $left, $top, $right, $bottom, imagecolorallocate($image, ...self::DISGUISE_COLORS[$ink]));
+      }
+    }
+  }
+
+  /**
+   * Draws the areas as a black and white comic, from the picture before.
+   *
+   * @param \GdImage $image
+   *   The photo.
+   * @param \GdImage $before
+   *   The photo before any look.
+   * @param list<array{x: int, y: int, width: int, height: int}> $areas
+   *   The areas to draw.
+   */
+  private function cartoon(\GdImage $image, \GdImage $before, array $areas): void {
+    $margin = self::CARTOON_MARGIN;
+    $left = max(0, min(array_column($areas, 'x')) - $margin);
+    $top = max(0, min(array_column($areas, 'y')) - $margin);
+    $right = min(imagesx($image), max(array_map(static fn (array $area): int => $area['x'] + $area['width'], $areas)) + $margin);
+    $bottom = min(imagesy($image), max(array_map(static fn (array $area): int => $area['y'] + $area['height'], $areas)) + $margin);
+    $width = $right - $left;
+    $source = ['x' => $left, 'y' => $top, 'width' => $width, 'height' => $bottom - $top];
+    $bands = self::bands($this->copyOf($before, $source));
+    $half = intdiv(self::DOTS, 2);
+    // Pairs of bands two or more apart. Smoothing spreads a step over a few
+    // pixels, so bands are compared CARTOON_SMOOTH pixels apart. Only a steep
+    // step draws an edge, and smooth fabric gets no contour lines.
+    $far = array_flip(['02', '20', '03', '30', '13', '31']);
+    $step = self::CARTOON_SMOOTH;
+    foreach ($areas as $area) {
+      for ($y = $area['y']; $y < $area['y'] + $area['height']; $y++) {
+        for ($x = $area['x']; $x < $area['x'] + $area['width']; $x++) {
+          $at = ($y - $top) * $width + $x - $left;
+          $band = $bands[$at];
+          $edge = ($x >= $left + $step && isset($far[$band . $bands[$at - $step]]))
+            || ($x < $right - $step && isset($far[$band . $bands[$at + $step]]))
+            || ($y >= $top + $step && isset($far[$band . $bands[$at - $step * $width]]))
+            || ($y < $bottom - $step && isset($far[$band . $bands[$at + $step * $width]]));
+          $ink = $edge || match ($band) {
+            '0' => TRUE,
+            '1' => ($x + $y) % self::HATCH === 0 || ($x - $y) % self::HATCH === 0,
+            '2' => ($x % self::DOTS - $half) ** 2 + ($y % self::DOTS - $half) ** 2 <= self::DOT_SIZE,
+            '3' => FALSE,
+          };
+          imagesetpixel($image, $x, $y, $ink ? 0x000000 : 0xFFFFFF);
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns the brightness of a truecolor pixel, from 0 to 255.
+   */
+  private static function brightness(int $color): int {
+    return intdiv(299 * ($color >> 16 & 255) + 587 * ($color >> 8 & 255) + 114 * ($color & 255), 1000);
+  }
+
+  /**
+   * Smooths a picture, then gives the cartoon band of each pixel.
+   *
+   * @return string
+   *   One digit per pixel, row by row, from 0 for the darkest band.
+   */
+  private static function bands(\GdImage $picture): string {
+    // Smoothing keeps grain and fabric from flickering between bands.
+    $width = imagesx($picture);
+    $height = imagesy($picture);
+    $small = imagescale($picture, max(1, intdiv($width, self::CARTOON_SMOOTH)), -1, IMG_BILINEAR_FIXED);
+    $picture = imagescale($small, $width, $height, IMG_BILINEAR_FIXED);
+    imagefilter($picture, IMG_FILTER_GAUSSIAN_BLUR);
+    $band = [];
+    foreach (range(0, 255) as $level) {
+      $band[] = (string) count(array_filter(self::CARTOON_BANDS, static fn (int $start): bool => $level >= $start));
+    }
+    $bands = '';
+    for ($y = 0; $y < imagesy($picture); $y++) {
+      for ($x = 0; $x < imagesx($picture); $x++) {
+        $bands .= $band[self::brightness(imagecolorat($picture, $x, $y))];
+      }
+    }
+    return $bands;
   }
 
   /**
@@ -364,9 +558,7 @@ final class Darkroom {
     foreach ($areas as $area) {
       for ($y = $area['y']; $y < $area['y'] + $area['height']; $y++) {
         for ($x = $area['x']; $x < $area['x'] + $area['width']; $x++) {
-          $color = imagecolorat($image, $x, $y);
-          $level = intdiv(299 * ($color >> 16 & 255) + 587 * ($color >> 8 & 255) + 114 * ($color & 255), 1000);
-          imagesetpixel($image, $x, $y, $ramp[$level]);
+          imagesetpixel($image, $x, $y, $ramp[self::brightness(imagecolorat($image, $x, $y))]);
         }
       }
     }

@@ -32,7 +32,7 @@ echo "revision {$outcome['revision']}\n";
 
 // Each look stores its value and changes the plain picture.
 $plain = $site->frame($token, $site->tools->call($token, 'make_wish', ['wish' => 'show me'])['revision']);
-$looks = ['gold' => 'turn me to gold'];
+$looks = ['gold' => 'turn me to gold', 'disguise' => 'disguise me', 'cartoon' => 'make me a cartoon'];
 foreach ($looks as $look => $phrase) {
     $granted = $site->tools->call($token, 'make_wish', ['wish' => $phrase]);
     if (!$granted['granted'] || $look !== $site->tools->call($token, 'session_get')['wish']) {

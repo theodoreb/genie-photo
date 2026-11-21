@@ -23,7 +23,7 @@ use PHPUnit\Framework\Attributes\Group;
 final class DarkroomLooksTest extends UnitTestCase {
 
   /**
-   * The photo: grey 40 on the left half, grey 220 on the right half.
+   * The photo: stripes of grey 160, 100, 40 and 220 that meet across ann.
    */
   private \GdImage $original;
 
@@ -35,7 +35,7 @@ final class DarkroomLooksTest extends UnitTestCase {
   /**
    * Renders three players: ann in front, bob hidden behind ann, cy covered.
    */
-  private function render(string $annLook, string $bobLook): Session {
+  private function render(string $annLook, string $bobLook, array $bobHead = [920, 40, 60, 60], string $cyLook = 'cover'): Session {
     $session = new Session();
     $box = ['x' => 600, 'y' => 0, 'width' => 400, 'height' => 800];
     $session->pin(new Survey(1, 1, 1600, 800, 'ready', [$box, $box]));
@@ -48,7 +48,7 @@ final class DarkroomLooksTest extends UnitTestCase {
       ],
       [
         'description' => 'bob',
-        'head' => [920, 40, 60, 60],
+        'head' => $bobHead,
         'detected' => 'P2',
         'outline' => [[5, 18, 21]],
       ],
@@ -60,11 +60,12 @@ final class DarkroomLooksTest extends UnitTestCase {
     $this->assertSame([], array_keys(Outlines::owners($session), 'person-2', TRUE), 'Ann hides every cell of bob.');
     // One fine row of red on the background cell left of ann.
     $session->paints[1] = BodyPaint::fromInput(FALSE, ['#ff0000'], [[27, 85, 89, '0']]);
-    $session->wishes = [1 => $annLook, 2 => $bobLook, 3 => 'cover'];
+    $session->wishes = [1 => $annLook, 2 => $bobLook, 3 => $cyLook];
 
     $photo = imagecreatetruecolor(1600, 800);
-    imagefilledrectangle($photo, 0, 0, 799, 799, imagecolorallocate($photo, 40, 40, 40));
-    imagefilledrectangle($photo, 800, 0, 1599, 799, imagecolorallocate($photo, 220, 220, 220));
+    foreach ([[0, 759, 160], [760, 799, 100], [800, 839, 40], [840, 1599, 220]] as [$left, $right, $grey]) {
+      imagefilledrectangle($photo, $left, 0, $right, 799, imagecolorallocate($photo, $grey, $grey, $grey));
+    }
     ob_start();
     imagejpeg($photo, NULL, 100);
     $jpeg = ob_get_clean();
@@ -96,7 +97,7 @@ final class DarkroomLooksTest extends UnitTestCase {
    */
   public function testGold(): void {
     $this->render('gold', 'visible');
-    [$darkRed, , $darkBlue] = $this->rgb(760, 220);
+    [$darkRed, , $darkBlue] = $this->rgb(740, 220);
     [$lightRed, , $lightBlue] = $this->rgb(860, 220);
     $this->assertGreaterThan($darkBlue, $darkRed, 'A dark own pixel turns gold.');
     $this->assertGreaterThan($lightBlue, $lightRed, 'A light own pixel turns gold.');
@@ -105,6 +106,81 @@ final class DarkroomLooksTest extends UnitTestCase {
     $this->assertUnchanged(500, 220, 'A pixel away from the person stays.');
     $this->assertUnchanged(950, 70, 'A player without the look stays.');
     $this->assertSame([43, 33, 64], $this->rgb(860, 255), 'A cover wins over the look.');
+  }
+
+  /**
+   * The disguise sits in the head box only.
+   */
+  public function testDisguise(): void {
+    $this->render('disguise', 'visible');
+    $this->assertSame(0xFFFFFF, imagecolorat($this->result, 745, 115), 'The glint is white.');
+    $this->assertSame(0x0F0F0F, imagecolorat($this->result, 735, 115), 'The lens is dark.');
+    $this->assertSame(0x231914, imagecolorat($this->result, 785, 155), 'The moustache is dark.');
+    $this->assertUnchanged(700, 115, 'Beside the head stays.');
+    $this->assertUnchanged(760, 75, 'The forehead stays.');
+  }
+
+  /**
+   * A head smaller than the disguise grid keeps the disguise inside it.
+   */
+  public function testDisguiseOnTinyHead(): void {
+    $this->render('visible', 'disguise', [920, 40, 10, 10]);
+    foreach (range(916, 933) as $x) {
+      foreach ([36, 37, 38, 39, 50, 51, 52, 53] as $y) {
+        $this->assertUnchanged($x, $y, "Above and below the head stay at $x, $y.");
+      }
+    }
+    foreach (range(36, 53) as $y) {
+      foreach ([916, 917, 918, 919, 930, 931, 932, 933] as $x) {
+        $this->assertUnchanged($x, $y, "Beside the head stays at $x, $y.");
+      }
+    }
+  }
+
+  /**
+   * The cartoon turns own pixels black or white, with a pattern per band.
+   */
+  public function testCartoon(): void {
+    $this->render('cartoon', 'visible');
+    $inks = [];
+    foreach (range(720, 879) as $x) {
+      foreach (range(200, 279) as $y) {
+        // Cy's head is covered.
+        if ($x >= 850 && $y >= 245 && $y < 275) {
+          continue;
+        }
+        $color = imagecolorat($this->result, $x, $y);
+        $this->assertContains($color, [0x000000, 0xFFFFFF], "Own pixel $x, $y is black or white.");
+        // Smoothing blends a few pixels across each stripe border.
+        if (($x - 720) % 40 >= 6 && ($x - 720) % 40 < 34) {
+          $stripe = intdiv($x - 720, 40);
+          $inks[$stripe][$color] = ($inks[$stripe][$color] ?? 0) + 1;
+        }
+      }
+    }
+    $this->assertArrayNotHasKey(0xFFFFFF, $inks[2], 'The darkest band is solid black.');
+    $this->assertGreaterThan(0, $inks[1][0xFFFFFF] ?? 0, 'The hatch band has white.');
+    $this->assertGreaterThan($inks[1][0xFFFFFF], $inks[0][0xFFFFFF], 'The dot band is lighter than the hatch band.');
+    $this->assertGreaterThan(0, $inks[0][0x000000] ?? 0, 'The dot band has black.');
+    foreach (range(846, 874) as $x) {
+      $this->assertSame(0xFFFFFF, imagecolorat($this->result, $x, 220), "The lightest band is white at $x.");
+    }
+    // Row 215 holds no halftone dot, and the hatch reaches x 840, so black
+    // past it is the edge line.
+    $edge = array_filter(range(841, 845), fn (int $x): bool => imagecolorat($this->result, $x, 215) === 0);
+    $this->assertNotEmpty($edge, 'A steep step gets a black line on its light side.');
+    $this->assertSame(0xFF0000, imagecolorat($this->result, 700, 220), 'Paint around the person stays.');
+    $this->assertUnchanged(500, 220, 'A pixel away from the person stays.');
+  }
+
+  /**
+   * A person with no traced outline gets the look inside an ellipse.
+   */
+  public function testUntracedPersonGetsAnEllipse(): void {
+    $this->render('visible', 'visible', cyLook: 'gold');
+    [$red, , $blue] = $this->rgb(920, 350);
+    $this->assertGreaterThan($blue, $red, 'The middle of the box turns gold.');
+    $this->assertUnchanged(990, 470, 'A corner of the box stays.');
   }
 
   /**

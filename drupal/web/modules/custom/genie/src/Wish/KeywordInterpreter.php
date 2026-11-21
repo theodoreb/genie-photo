@@ -14,6 +14,14 @@ final class KeywordInterpreter {
    */
   private const NOT = '\b(?:stop|don\'t|do not|never|no longer)\b[a-z\' ]*';
 
+  private const GOLD = 'gold|golden|statue';
+
+  private const DISGUISE = 'disguise|disguised|incognito|sunglasses|moustache|mustache';
+
+  private const CARTOON = 'cartoon|comic|manga';
+
+  private const LOOK = '(?:' . self::GOLD . '|' . self::DISGUISE . '|' . self::CARTOON . ')';
+
   /**
    * Patterns by operation, where NULL marks a wish with no clear meaning.
    *
@@ -21,12 +29,21 @@ final class KeywordInterpreter {
    */
   private const PATTERNS = [
     // Removal runs first, so its look words are gone before the look rows.
+    // It names the speaker or the look, so "don't crop the comic book" stays
+    // a protect wish.
     [
       Operation::Show,
-      '/' . self::NOT . '\b(?:gold|golden|statue)\b|\b(?:take|get|remove)\b[a-z\' ]*\b(?:gold|golden|statue)\b[a-z\' ]*\b(?:off|away|from me)\b|\bno more (?:gold|golden|statue)\b/',
+      '/\b(?:stop|no more|no longer) (?:[a-z\']+ ){0,3}' . self::LOOK . '\b'
+      . '|\b(?:don\'t|do not|never) (?:make|turn|draw|give|put) (?:me|myself) (?:[a-z]+ ){0,3}' . self::LOOK . '\b'
+      . '|\b(?:don\'t|do not|never) disguise me\b'
+      . '|\btake off (?:[a-z]+ ){0,2}' . self::LOOK . '\b'
+      . '|\b(?:take|get|remove) (?:[a-z]+ ){0,3}' . self::LOOK . '(?: [a-z]+){0,2} (?:off|away|from me)\b'
+      . '|\bremove (?:my|the) ' . self::LOOK . '\b/',
     ],
     // The speaker comes first, so "protect the gold cup" stays a protect wish.
-    [Operation::Gold, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:gold|golden|statue)\b|\bgild me\b/'],
+    [Operation::Gold, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::GOLD . ')\b|\bgild me\b/'],
+    [Operation::Disguise, '/\bdisguise (?:me|myself)\b|\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::DISGUISE . ')\b/'],
+    [Operation::Cartoon, '/\b(?:me|myself) (?:[a-z]+ ){0,3}(?:' . self::CARTOON . ')\b/'],
     [Operation::Cover, '/' . self::NOT . '\b(?:show|reveal)\b[a-z\' ]*\b(?:me|my|myself)\b/'],
     [NULL, '/' . self::NOT . '\b(?:put|bring) me back\b/'],
     [

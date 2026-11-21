@@ -38,6 +38,15 @@ final class KeywordInterpreterTest extends UnitTestCase {
       'make me a golden statue' => Operation::Gold,
       'stop the gold' => Operation::Show,
       'take the gold off me' => Operation::Show,
+      'disguise me' => Operation::Disguise,
+      'give me sunglasses and a moustache' => Operation::Disguise,
+      'put me in disguise' => Operation::Disguise,
+      'take off my disguise' => Operation::Show,
+      "don't disguise me" => Operation::Show,
+      'make me a cartoon' => Operation::Cartoon,
+      'draw me like a comic' => Operation::Cartoon,
+      'no more cartoon' => Operation::Show,
+      "don't make me a cartoon" => Operation::Show,
     ];
     $interpreter = new KeywordInterpreter();
     foreach ($expected as $text => $operation) {
@@ -46,6 +55,9 @@ final class KeywordInterpreterTest extends UnitTestCase {
     $this->assertNull($interpreter->interpret("don't hide me, put me in the middle", []));
     $this->assertNull($interpreter->interpret('put me in the middle and make me gold', []));
     $this->assertSame('object-1', $interpreter->interpret('protect the gold cup', ['object-1' => 'gold cup'])?->object);
+    $this->assertSame('object-1', $interpreter->interpret("don't crop the comic book", ['object-1' => 'comic book'])?->object);
+    $this->assertSame('object-1', $interpreter->interpret('keep my sunglasses', ['object-1' => 'sunglasses'])?->object);
+    $this->assertNull($interpreter->interpret("don't disguise me, make me a cartoon", []));
     $this->assertNull($interpreter->interpret("don't protect the cake", ['object-1' => 'cake']));
     $this->assertSame('object-1', $interpreter->interpret("don't crop the cake", ['object-1' => 'cake'])?->object);
   }

@@ -22,7 +22,9 @@ final readonly class WishReading {
       Operation::Center->value,
       Operation::StopCenter->value,
       Operation::Protect->value,
+      Operation::Disguise->value,
       Operation::Gold->value,
+      Operation::Cartoon->value,
       NULL,
     ])]
     public ?Operation $operation,

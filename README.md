@@ -1,6 +1,6 @@
 # Genie photo
 
-A group shares one photo. Each person signs in through their own AI assistant and makes wishes: hide my face, crop me out, put me in the middle, paint a smile on my mask. A genie grants each wish to the letter, and the shared picture changes for everyone. The photo is final when every player approves the exact same picture.
+A group shares one photo. Each person signs in through their own AI assistant and makes wishes: hide my face, crop me out, put me in the middle, turn me to gold, paint a smile on my mask. A genie grants each wish to the letter, and the shared picture changes for everyone. The photo is final when every player approves the exact same picture.
 
 Each assistant receives the photo, so it can find who is in it and paint the person it sees. Your assistant's provider therefore receives the photo too. PHP code applies the crops, covers and paint.
 
@@ -65,7 +65,10 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 2. The others join from the invite link with a name only. A game takes 12 players.
 3. A local detector boxes the people in the photo. One player asks their assistant to trace them.
 4. Each player tells their assistant which person they are, or clicks their face on the web view. The page shows one picture, the shared one, with a box on each unclaimed face.
-5. Players make wishes and repaint their whole person, as pixel art if they like.
+5. Players make wishes and repaint their whole person, as pixel art if they like. Three looks need no painting, and they show on black-and-white photos too:
+   - "disguise me" adds sunglasses and a moustache;
+   - "turn me to gold" makes a statue;
+   - "make me a cartoon" draws a black-and-white comic.
 6. If two wishes cannot both hold, the page names the players in the way and shows the original photo.
 7. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
 8. When everyone has approved, the game closes for good and the page offers the download.

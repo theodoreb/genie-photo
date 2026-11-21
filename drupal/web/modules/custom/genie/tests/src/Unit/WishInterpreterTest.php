@@ -59,6 +59,12 @@ final class WishInterpreterTest extends UnitTestCase {
     $wish = $this->interpreter('{"target":"me","operation":"gold","object":null}')->interpret('make me shine', []);
     $this->assertEquals(new Wish(Operation::Gold, source: 'model'), $wish);
 
+    $wish = $this->interpreter('{"target":"me","operation":"disguise","object":null}')->interpret('incognito please', []);
+    $this->assertEquals(new Wish(Operation::Disguise, source: 'model'), $wish);
+
+    $wish = $this->interpreter('{"target":"me","operation":"cartoon","object":null}')->interpret('draw me', []);
+    $this->assertEquals(new Wish(Operation::Cartoon, source: 'model'), $wish);
+
     $this->assertNull($this->interpreter('{"target":"nothing","operation":null,"object":null}')->interpret('hello', []));
   }
 

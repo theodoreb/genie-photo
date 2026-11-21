@@ -15,13 +15,15 @@ enum Operation: string {
   case Center = 'center_on';
   case StopCenter = 'stop_center';
   case Protect = 'protect';
+  case Disguise = 'disguise';
   case Gold = 'gold';
+  case Cartoon = 'cartoon';
 
   /**
    * Tells whether the wish changes how the player's own person looks.
    */
   public function isLook(): bool {
-    return $this === self::Gold;
+    return in_array($this, [self::Disguise, self::Gold, self::Cartoon], TRUE);
   }
 
 }
