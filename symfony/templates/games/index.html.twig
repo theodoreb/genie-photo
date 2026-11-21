@@ -9,7 +9,7 @@
     <section class="hero" aria-labelledby="title">
         <div>
             <h1 id="title">Claim a <span class="mark">face</span> in a group photo</h1>
-            <p class="lead">Take a free place in an old group photo, then tell your AI assistant how you want to look. The picture is done when everyone in it approves.</p>
+            <p class="lead">Take a free place in an old group painting or photo, then tell your AI assistant how you want to look. The picture is done when everyone in it approves.</p>
             <p class="actions">
                 <a class="button" href="#join">Join a game</a>
                 <a class="button secondary" href="{{ host_url }}">Host a game with your photo</a>
@@ -29,12 +29,12 @@
     <section id="join" aria-labelledby="join-title">
         <h2 id="join-title">Join a game</h2>
         {% if joinable %}
-            <p>Each photo below has a free place. Open one, type a name, and take your place.</p>
+            <p>Each picture below has a free place. Open one, type a name, and take your place.</p>
             <ul class="cards">
                 {% for game in joinable %}{{ include('games/_card.html.twig') }}{% endfor %}
             </ul>
         {% else %}
-            <p class="quiet">No game has a free place right now. A new photo opens when a game ends.</p>
+            <p class="quiet">No game has a free place right now. A new picture opens when a game ends.</p>
         {% endif %}
     </section>
 
@@ -43,7 +43,7 @@
         <ol class="steps-grid">
             <li>
                 <h3>Take a place</h3>
-                <p>Open a game, type a name, then click your face in the photo.</p>
+                <p>Open a game, type a name, then click your face in the picture.</p>
             </li>
             <li>
                 <h3>Connect your assistant</h3>
@@ -55,7 +55,7 @@
             </li>
             <li>
                 <h3>Approve</h3>
-                <p>When the picture suits you, approve it with a click. Once everyone has, the picture is final and a new photo opens.</p>
+                <p>When the picture suits you, approve it with a click. Once everyone has, the picture is final and a new one opens.</p>
             </li>
         </ol>
     </section>
@@ -97,8 +97,8 @@
             <li>Drupal 11, run by Drupack, holds the rules. Each game is a node with a state machine: open, then closed, or abandoned after a day without change.</li>
             <li>Your assistant talks to Drupal's MCP server directly, with tools such as <code>photo_get</code>, <code>claim_place</code>, <code>make_wish</code> and <code>paint_me</code>. It signs in with OAuth as your player account, so it can only change your place.</li>
             <li>A DETR model runs in PHP through Symfony AI's TransformersPhp bridge and finds the people in a new photo.</li>
-            <li>Every hour, a second model on the same bridge checks each final picture for sexual content. A flagged picture leaves these pages, which then show the original photo.</li>
-            <li>A small local model reads each wish through Symfony AI, which turns its answer into a validated PHP object. Plain PHP code then crops, covers or repaints the photo.</li>
+            <li>Every hour, a second model on the same bridge checks each final picture for sexual content. A flagged picture leaves these pages, which then show the picture the game started from.</li>
+            <li>A small local model reads each wish through Symfony AI, which turns its answer into a validated PHP object. Plain PHP code then crops, covers or repaints the picture.</li>
             <li>Only your own click approves a picture. Your assistant gets the approval page as a link, through MCP URL elicitation where the client supports it.</li>
             <li>A Mercure hub tells every open page when the picture changes.</li>
             <li>The prepared paintings and photos are public domain, from Wikimedia Commons. Each one is checked against its SHA-1 when it opens.</li>

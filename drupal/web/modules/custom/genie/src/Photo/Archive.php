@@ -51,7 +51,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
   /**
    * The manifest, read once.
    *
-   * @var list<array{id: string, title: string, page: string, thumb: string, sha1: string, licence: string, author: string, date: string, width: int, height: int, boxes: list<array{x: int, y: int, width: int, height: int}>}>|null
+   * @var list<array{id: string, title: string, name: string, page: string, thumb: string, sha1: string, licence: string, author: string, date: string, width: int, height: int, boxes: list<array{x: int, y: int, width: int, height: int}>}>|null
    */
   private ?array $photos = NULL;
 
@@ -145,8 +145,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
    */
   public function credit(string $id): array {
     $photo = $this->manifest()[array_search($id, array_column($this->manifest(), 'id'), TRUE)];
-    // Commons titles are file names.
-    return ['title' => preg_replace('/^File:|\.jpe?g$/i', '', $photo['title'])]
+    return ['title' => $photo['name']]
       + array_intersect_key($photo, array_flip(['author', 'date', 'licence', 'page']));
   }
 

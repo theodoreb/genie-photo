@@ -2,6 +2,7 @@
  {
   "id": "shakuntala-patralekhan",
   "title": "File:Shakuntala Patralekhan.jpg",
+  "name": "Shakuntala Patralekhan",
   "page": "https://commons.wikimedia.org/wiki/File:Shakuntala_Patralekhan.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Shakuntala_Patralekhan.jpg/1280px-Shakuntala_Patralekhan.jpg",
   "sha1": "ae8bc668cb457df1d26ebe3bb27d80eadc5bd918",
@@ -40,6 +41,7 @@
  {
   "id": "amrita-sger-gil-bride-s-toilet",
   "title": "File:Amrita Sger-Gil Bride's Toilet.jpg",
+  "name": "The Bride's Toilet",
   "page": "https://commons.wikimedia.org/wiki/File:Amrita_Sger-Gil_Bride%27s_Toilet.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/Amrita_Sger-Gil_Bride%27s_Toilet.jpg/1280px-Amrita_Sger-Gil_Bride%27s_Toilet.jpg",
   "sha1": "8bd40abf3cdddff0ff12ef758bab8290f7c90cb7",
@@ -84,6 +86,7 @@
  {
   "id": "les-femmes-d-alger-d-eug-ne-delacroix-re",
   "title": "File:Les Femmes d’Alger d’Eugène Delacroix (Restauré).jpg",
+  "name": "Women of Algiers in Their Apartment",
   "page": "https://commons.wikimedia.org/wiki/File:Les_Femmes_d%E2%80%99Alger_d%E2%80%99Eug%C3%A8ne_Delacroix_(Restaur%C3%A9).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Les_Femmes_d%E2%80%99Alger_d%E2%80%99Eug%C3%A8ne_Delacroix_%28Restaur%C3%A9%29.jpg/1280px-Les_Femmes_d%E2%80%99Alger_d%E2%80%99Eug%C3%A8ne_Delacroix_%28Restaur%C3%A9%29.jpg",
   "sha1": "86cb2babe4d2deca7faa70f164b10ff303c97f34",
@@ -128,6 +131,7 @@
  {
   "id": "1880-leibl-drei-frauen-in-der-kirche-ana",
   "title": "File:1880 Leibl Drei Frauen in der Kirche anagoria.JPG",
+  "name": "Three Women in Church",
   "page": "https://commons.wikimedia.org/wiki/File:1880_Leibl_Drei_Frauen_in_der_Kirche_anagoria.JPG",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/1880_Leibl_Drei_Frauen_in_der_Kirche_anagoria.JPG/1280px-1880_Leibl_Drei_Frauen_in_der_Kirche_anagoria.JPG",
   "sha1": "412d5a73ea734c5d28ba98a4f777f7f647971650",
@@ -166,6 +170,7 @@
  {
   "id": "cezanne-the-card-players-barnes",
   "title": "File:Cezanne The Card Players Barnes.jpg",
+  "name": "The Card Players",
   "page": "https://commons.wikimedia.org/wiki/File:Cezanne_The_Card_Players_Barnes.jpg",
   "thumb": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Cezanne_The_Card_Players_Barnes.jpg",
   "sha1": "ef6cc1136bf7b7b782ccfd550610cb526d09448f",
@@ -216,6 +221,7 @@
  {
   "id": "frans-hals-018",
   "title": "File:Frans Hals 018.jpg",
+  "name": "Regents of the St Elisabeth Hospital",
   "page": "https://commons.wikimedia.org/wiki/File:Frans_Hals_018.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Frans_Hals_018.jpg/1280px-Frans_Hals_018.jpg",
   "sha1": "8a4e84246f9c49de5d7ef76ffb4f019f89ab3deb",
@@ -266,6 +272,7 @@
  {
   "id": "claude-monet-024",
   "title": "File:Claude Monet 024.jpg",
+  "name": "Women in the Garden",
   "page": "https://commons.wikimedia.org/wiki/File:Claude_Monet_024.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Claude_Monet_024.jpg/1280px-Claude_Monet_024.jpg",
   "sha1": "007c026e56f2e2f4f7d0a6ed94d15aedddcfe2ae",
@@ -310,6 +317,7 @@
  {
   "id": "hommage-delacroix-henri-fantin-latour",
   "title": "File:Hommage à Delacroix - Henri Fantin-Latour.jpg",
+  "name": "Homage to Delacroix",
   "page": "https://commons.wikimedia.org/wiki/File:Hommage_%C3%A0_Delacroix_-_Henri_Fantin-Latour.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Hommage_%C3%A0_Delacroix_-_Henri_Fantin-Latour.jpg/1280px-Hommage_%C3%A0_Delacroix_-_Henri_Fantin-Latour.jpg",
   "sha1": "7bcd523337240982d8d31b1e19eaa6a5c871fb79",
@@ -384,6 +392,7 @@
  {
   "id": "henri-fantin-latour-by-the-table-google",
   "title": "File:Henri Fantin-Latour - By the Table - Google Art Project.jpg",
+  "name": "By the Table",
   "page": "https://commons.wikimedia.org/wiki/File:Henri_Fantin-Latour_-_By_the_Table_-_Google_Art_Project.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Henri_Fantin-Latour_-_By_the_Table_-_Google_Art_Project.jpg/1280px-Henri_Fantin-Latour_-_By_the_Table_-_Google_Art_Project.jpg",
   "sha1": "dcb19b90dedc5e5ba4ea9085f3b263b03eeb9e2e",
@@ -458,6 +467,7 @@
  {
   "id": "jacques-louis-david-le-serment-des-horac",
   "title": "File:Jacques-Louis David, Le Serment des HoracesFXD.jpg",
+  "name": "The Oath of the Horatii",
   "page": "https://commons.wikimedia.org/wiki/File:Jacques-Louis_David,_Le_Serment_des_HoracesFXD.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Jacques-Louis_David%2C_Le_Serment_des_HoracesFXD.jpg/1280px-Jacques-Louis_David%2C_Le_Serment_des_HoracesFXD.jpg",
   "sha1": "18d8adc2d3113792d269fb4833e2a16104912821",
@@ -520,6 +530,7 @@
  {
   "id": "nicolas-poussin-et-in-arcadia-ego-deuxi",
   "title": "File:Nicolas Poussin - Et in Arcadia ego (deuxième version).jpg",
+  "name": "The Arcadian Shepherds",
   "page": "https://commons.wikimedia.org/wiki/File:Nicolas_Poussin_-_Et_in_Arcadia_ego_(deuxi%C3%A8me_version).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Nicolas_Poussin_-_Et_in_Arcadia_ego_%28deuxi%C3%A8me_version%29.jpg/1280px-Nicolas_Poussin_-_Et_in_Arcadia_ego_%28deuxi%C3%A8me_version%29.jpg",
   "sha1": "fa22d99cd47683be6c6d2212c5a437c14714e80f",
@@ -558,6 +569,7 @@
  {
   "id": "le-tricheur-l-as-de-carreau-georges-de-l",
   "title": "File:Le Tricheur à l'as de carreau - Georges de La Tour - Musée du Louvre Peintures RF 1972 8.jpg",
+  "name": "The Cheat with the Ace of Diamonds",
   "page": "https://commons.wikimedia.org/wiki/File:Le_Tricheur_%C3%A0_l%27as_de_carreau_-_Georges_de_La_Tour_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1972_8.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Le_Tricheur_%C3%A0_l%27as_de_carreau_-_Georges_de_La_Tour_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1972_8.jpg/1280px-Le_Tricheur_%C3%A0_l%27as_de_carreau_-_Georges_de_La_Tour_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1972_8.jpg",
   "sha1": "e793f829a3dec1985b6a796eb750711f6a1053c7",
@@ -596,12 +608,13 @@
  {
   "id": "valentin-de-boulogne-fortune-teller-01",
   "title": "File:Valentin de Boulogne, Fortune Teller 01.jpg",
+  "name": "The Fortune Teller",
   "page": "https://commons.wikimedia.org/wiki/File:Valentin_de_Boulogne,_Fortune_Teller_01.jpg",
   "thumb": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Valentin_de_Boulogne%2C_Fortune_Teller_01.jpg",
   "sha1": "5ba1f1c1f442b1c00c78d840a61122798ce3bb80",
   "licence": "Public domain",
   "author": "Valentin de Boulogne",
-  "date": "circa 1628",
+  "date": "About 1628",
   "width": 1600,
   "height": 1115,
   "boxes": [
@@ -640,11 +653,12 @@
  {
   "id": "le-nain-repas-de-paysans-1642",
   "title": "File:Le Nain - Repas de paysans (1642).jpg",
+  "name": "Peasant Meal",
   "page": "https://commons.wikimedia.org/wiki/File:Le_Nain_-_Repas_de_paysans_(1642).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Le_Nain_-_Repas_de_paysans_%281642%29.jpg/1280px-Le_Nain_-_Repas_de_paysans_%281642%29.jpg",
   "sha1": "82cf0a34ac64295eba73218b746c8cb7307f7d28",
   "licence": "Public domain",
-  "author": "Antoine Le Nain / Louis Le Nain",
+  "author": "Antoine and Louis Le Nain",
   "date": "1642",
   "width": 1600,
   "height": 1235,
@@ -702,11 +716,12 @@
  {
   "id": "famille-de-paysans-dans-un-interieur",
   "title": "File:Famille de paysans dans un interieur.jpg",
+  "name": "Peasant Family in an Interior",
   "page": "https://commons.wikimedia.org/wiki/File:Famille_de_paysans_dans_un_interieur.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Famille_de_paysans_dans_un_interieur.jpg/1280px-Famille_de_paysans_dans_un_interieur.jpg",
   "sha1": "6ba549626f355ec93fe77a9dc99e7e4649999fe6",
   "licence": "Public domain",
-  "author": "Attributed to Louis Le Nain / Antoine Le Nain",
+  "author": "Attributed to Louis Le Nain",
   "date": "1642",
   "width": 1600,
   "height": 1121,
@@ -764,6 +779,7 @@
  {
   "id": "the-employment-of-women-in-britain-1914",
   "title": "File:The Employment of Women in Britain, 1914-1918 Q28222.jpg",
+  "name": "Women workers in Britain",
   "page": "https://commons.wikimedia.org/wiki/File:The_Employment_of_Women_in_Britain,_1914-1918_Q28222.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/The_Employment_of_Women_in_Britain%2C_1914-1918_Q28222.jpg/1280px-The_Employment_of_Women_in_Britain%2C_1914-1918_Q28222.jpg",
   "sha1": "f63a6d4642d2ddeaef9d91e0e35209dfff5629f1",
@@ -832,6 +848,7 @@
  {
   "id": "officers-of-the-terra-nova-by-herbert-ge",
   "title": "File:Officers of the 'Terra Nova by Herbert George Ponting.jpg",
+  "name": "Officers of the Terra Nova",
   "page": "https://commons.wikimedia.org/wiki/File:Officers_of_the_%27Terra_Nova_by_Herbert_George_Ponting.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Officers_of_the_%27Terra_Nova_by_Herbert_George_Ponting.jpg/1280px-Officers_of_the_%27Terra_Nova_by_Herbert_George_Ponting.jpg",
   "sha1": "9599f3327c93ebce278c1f125702ea8174c8896f",
@@ -894,11 +911,12 @@
  {
   "id": "madison-turners-1913",
   "title": "File:Madison Turners 1913.jpg",
+  "name": "Madison Turners",
   "page": "https://commons.wikimedia.org/wiki/File:Madison_Turners_1913.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Madison_Turners_1913.jpg/1280px-Madison_Turners_1913.jpg",
   "sha1": "ac67ef197a8e2b12bda8b7a0a507156600c3f3ff",
   "licence": "Public domain",
-  "author": "photo: unknown; file: James Steakley",
+  "author": "Unknown photographer",
   "date": "1913",
   "width": 1600,
   "height": 1153,
@@ -980,6 +998,7 @@
  {
   "id": "founders-of-the-ukrainian-academy-of-art",
   "title": "File:Founders of the Ukrainian academy of arts.jpg",
+  "name": "Founders of the Ukrainian Academy of Arts",
   "page": "https://commons.wikimedia.org/wiki/File:Founders_of_the_Ukrainian_academy_of_arts.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Founders_of_the_Ukrainian_academy_of_arts.jpg/1280px-Founders_of_the_Ukrainian_academy_of_arts.jpg",
   "sha1": "2413cb641fbcc67812596d45eba207ad26f93e4f",
@@ -1060,11 +1079,12 @@
  {
   "id": "woman-suffrage-second-group-in-political",
   "title": "File:WOMAN SUFFRAGE. SECOND GROUP IN POLITICAL CAMPAIGN- ELSIE LANCASTER, 2ND FROM LEFT, TO WYOMING; MRS. IDA WATERS, CENTER LCCN2016865837.jpg",
+  "name": "Woman suffrage campaigners",
   "page": "https://commons.wikimedia.org/wiki/File:WOMAN_SUFFRAGE._SECOND_GROUP_IN_POLITICAL_CAMPAIGN-_ELSIE_LANCASTER,_2ND_FROM_LEFT,_TO_WYOMING;_MRS._IDA_WATERS,_CENTER_LCCN2016865837.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/WOMAN_SUFFRAGE._SECOND_GROUP_IN_POLITICAL_CAMPAIGN-_ELSIE_LANCASTER%2C_2ND_FROM_LEFT%2C_TO_WYOMING%3B_MRS._IDA_WATERS%2C_CENTER_LCCN2016865837.jpg/1280px-WOMAN_SUFFRAGE._SECOND_GROUP_IN_POLITICAL_CAMPAIGN-_ELSIE_LANCASTER%2C_2ND_FROM_LEFT%2C_TO_WYOMING%3B_MRS._IDA_WATERS%2C_CENTER_LCCN2016865837.jpg",
   "sha1": "81f418a37956f5def780ded8acc14727153bd847",
   "licence": "Public domain",
-  "author": "Harris & Ewing, photographer",
+  "author": "Harris & Ewing",
   "date": "1914",
   "width": 1600,
   "height": 1194,
@@ -1104,11 +1124,12 @@
  {
   "id": "american-assn-of-engineers-with-coolidge",
   "title": "File:American Assn. of Engineers with Coolidge, (9-5-24) LOC npcc.12230.jpg",
+  "name": "American Association of Engineers with Coolidge",
   "page": "https://commons.wikimedia.org/wiki/File:American_Assn._of_Engineers_with_Coolidge,_(9-5-24)_LOC_npcc.12230.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/American_Assn._of_Engineers_with_Coolidge%2C_%289-5-24%29_LOC_npcc.12230.jpg/1280px-American_Assn._of_Engineers_with_Coolidge%2C_%289-5-24%29_LOC_npcc.12230.jpg",
   "sha1": "d1065b6abacc76a698a2a6444f6f5b6ebc1aa586",
   "licence": "Public domain",
-  "author": "National Photo Company Collection",
+  "author": "National Photo Company",
   "date": "1924-09-05",
   "width": 1600,
   "height": 1304,
@@ -1154,6 +1175,7 @@
  {
   "id": "yaichnikovi1886",
   "title": "File:Yaichnikovi1886.jpg",
+  "name": "The Yaichnikov family",
   "page": "https://commons.wikimedia.org/wiki/File:Yaichnikovi1886.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Yaichnikovi1886.jpg/1280px-Yaichnikovi1886.jpg",
   "sha1": "47d1d7ee30a1b66cf8cbac37adc55dc17ca6934c",
@@ -1210,11 +1232,12 @@
  {
   "id": "frans-joseph-i-van-habsburg-lotharingen",
   "title": "File:Frans Joseph I van Habsburg-Lotharingen, keizer van Oostenrijk met zijn broers, objectnr FA 1446.3.jpg",
+  "name": "Emperor Franz Joseph I with his brothers",
   "page": "https://commons.wikimedia.org/wiki/File:Frans_Joseph_I_van_Habsburg-Lotharingen,_keizer_van_Oostenrijk_met_zijn_broers,_objectnr_FA_1446.3.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Frans_Joseph_I_van_Habsburg-Lotharingen%2C_keizer_van_Oostenrijk_met_zijn_broers%2C_objectnr_FA_1446.3.jpg/1280px-Frans_Joseph_I_van_Habsburg-Lotharingen%2C_keizer_van_Oostenrijk_met_zijn_broers%2C_objectnr_FA_1446.3.jpg",
   "sha1": "dfc94623e8e7bd2b462b005b08687aa9136d4ff2",
   "licence": "Public domain",
-  "author": "Ludwig Angerer (fotograaf)",
+  "author": "Ludwig Angerer",
   "date": "1863",
   "width": 1600,
   "height": 975,
@@ -1248,11 +1271,12 @@
  {
   "id": "thesouthernparty",
   "title": "File:TheSouthernParty.jpg",
+  "name": "The Southern Party",
   "page": "https://commons.wikimedia.org/wiki/File:TheSouthernParty.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/TheSouthernParty.jpg/1280px-TheSouthernParty.jpg",
   "sha1": "5659e7a777ae722612e87922ac469868e670ed27",
   "licence": "Public domain",
-  "author": "probably James Murray (1865–1914)",
+  "author": "Probably James Murray",
   "date": "1909",
   "width": 1600,
   "height": 1188,
@@ -1292,6 +1316,7 @@
  {
   "id": "1845-hutchinsonfamilysingers-mma",
   "title": "File:1845 HutchinsonFamilySingers MMA.jpg",
+  "name": "The Hutchinson Family Singers",
   "page": "https://commons.wikimedia.org/wiki/File:1845_HutchinsonFamilySingers_MMA.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/1845_HutchinsonFamilySingers_MMA.jpg/1280px-1845_HutchinsonFamilySingers_MMA.jpg",
   "sha1": "ce9eae65231c5dd65662ff54f046da45cb4504e9",
@@ -1360,11 +1385,12 @@
  {
   "id": "members-of-the-terra-nova-expedition-at",
   "title": "File:Members of the Terra Nova expedition at the South Pole- Robert F. Scott, Lawrence Oates, Henry R. Bowers, Edward A. Wilson, and Edgar Evans LCCN2009633365.jpg",
+  "name": "Scott's party at the South Pole",
   "page": "https://commons.wikimedia.org/wiki/File:Members_of_the_Terra_Nova_expedition_at_the_South_Pole-_Robert_F._Scott,_Lawrence_Oates,_Henry_R._Bowers,_Edward_A._Wilson,_and_Edgar_Evans_LCCN2009633365.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Members_of_the_Terra_Nova_expedition_at_the_South_Pole-_Robert_F._Scott%2C_Lawrence_Oates%2C_Henry_R._Bowers%2C_Edward_A._Wilson%2C_and_Edgar_Evans_LCCN2009633365.jpg/1280px-Members_of_the_Terra_Nova_expedition_at_the_South_Pole-_Robert_F._Scott%2C_Lawrence_Oates%2C_Henry_R._Bowers%2C_Edward_A._Wilson%2C_and_Edgar_Evans_LCCN2009633365.jpg",
   "sha1": "251087fbc18f77f3337d91e3d1c467f9442edcda",
   "licence": "Public domain",
-  "author": "Ponting, Herbert George, copyright claimant Photographer was Henry Bowers per source",
+  "author": "Henry Bowers",
   "date": "18 January 1912",
   "width": 1600,
   "height": 1334,
@@ -1404,12 +1430,13 @@
  {
   "id": "primo-kof-skupinski-portret",
   "title": "File:Primož Škof - skupinski portret.jpg",
+  "name": "Group portrait by Primož Škof",
   "page": "https://commons.wikimedia.org/wiki/File:Primo%C5%BE_%C5%A0kof_-_skupinski_portret.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Primo%C5%BE_%C5%A0kof_-_skupinski_portret.jpg/1280px-Primo%C5%BE_%C5%A0kof_-_skupinski_portret.jpg",
   "sha1": "a7c801be20ce32e27a5e8f65e0de2261ff0e3806",
   "licence": "Public domain",
   "author": "Primož Škof",
-  "date": "circa 1865",
+  "date": "About 1865",
   "width": 1600,
   "height": 1055,
   "boxes": [
@@ -1466,6 +1493,7 @@
  {
   "id": "unidentified-group-standing-in-front-of",
   "title": "File:Unidentified group standing in front of airplane. (af25b403-a530-498e-ad64-a862950632fc).jpg",
+  "name": "Group in front of an airplane",
   "page": "https://commons.wikimedia.org/wiki/File:Unidentified_group_standing_in_front_of_airplane._(af25b403-a530-498e-ad64-a862950632fc).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Unidentified_group_standing_in_front_of_airplane._%28af25b403-a530-498e-ad64-a862950632fc%29.jpg/1280px-Unidentified_group_standing_in_front_of_airplane._%28af25b403-a530-498e-ad64-a862950632fc%29.jpg",
   "sha1": "6d9b65e746c553dbc4d554245a59d171e1eb1e2b",
@@ -1522,12 +1550,13 @@
  {
   "id": "motorised-sleds-terra-nova-expedition",
   "title": "File:Motorised sleds - Terra Nova Expedition.jpg",
+  "name": "Motorised sleds, Terra Nova expedition",
   "page": "https://commons.wikimedia.org/wiki/File:Motorised_sleds_-_Terra_Nova_Expedition.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Motorised_sleds_-_Terra_Nova_Expedition.jpg/1280px-Motorised_sleds_-_Terra_Nova_Expedition.jpg",
   "sha1": "19477e1c108005b6ae16d92b3b2db2c2d6bf402a",
   "licence": "Public domain",
   "author": "Herbert Ponting",
-  "date": "between 1910 and 1913",
+  "date": "1910 to 1913",
   "width": 1600,
   "height": 1040,
   "boxes": [
@@ -1560,11 +1589,12 @@
  {
   "id": "mohammad-yaqub-khan-with-british-officer",
   "title": "File:Mohammad Yaqub Khan with British officers in May of 1879.jpg",
+  "name": "Mohammad Yaqub Khan with British officers",
   "page": "https://commons.wikimedia.org/wiki/File:Mohammad_Yaqub_Khan_with_British_officers_in_May_of_1879.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Mohammad_Yaqub_Khan_with_British_officers_in_May_of_1879.jpg/1280px-Mohammad_Yaqub_Khan_with_British_officers_in_May_of_1879.jpg",
   "sha1": "b07fd80defb2f4b9d88d2a569f2094f4881f83f8",
   "licence": "Public domain",
-  "author": "John Burke (1843 - 1900)",
+  "author": "John Burke",
   "date": "1879",
   "width": 1600,
   "height": 996,
@@ -1604,11 +1634,12 @@
  {
   "id": "oxford-college-senior-line-1914-31907502",
   "title": "File:Oxford College senior line 1914 (3190750259).jpg",
+  "name": "Oxford College senior line",
   "page": "https://commons.wikimedia.org/wiki/File:Oxford_College_senior_line_1914_(3190750259).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Oxford_College_senior_line_1914_%283190750259%29.jpg/1280px-Oxford_College_senior_line_1914_%283190750259%29.jpg",
   "sha1": "318154f4d81710f70df4b63bfd7857f40267fc99",
   "licence": "Public domain",
-  "author": "Snyder, Frank R. Flickr: Miami U. Libraries - Digital Collections",
+  "author": "Frank R. Snyder",
   "date": "1914-03",
   "width": 1600,
   "height": 1290,
@@ -1666,6 +1697,7 @@
  {
   "id": "members-of-the-boston-society-for-medica",
   "title": "File:Members of the Boston Society for Medical Improvement.jpg",
+  "name": "Boston Society for Medical Improvement",
   "page": "https://commons.wikimedia.org/wiki/File:Members_of_the_Boston_Society_for_Medical_Improvement.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Members_of_the_Boston_Society_for_Medical_Improvement.jpg/1280px-Members_of_the_Boston_Society_for_Medical_Improvement.jpg",
   "sha1": "fe091a6fb8a92a27263b82935db29f62495ca13e",
@@ -1752,6 +1784,7 @@
  {
   "id": "george-alfred-hill-family",
   "title": "File:George Alfred Hill & family.jpg",
+  "name": "George Alfred Hill and family",
   "page": "https://commons.wikimedia.org/wiki/File:George_Alfred_Hill_%26_family.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/George_Alfred_Hill_%26_family.jpg/1280px-George_Alfred_Hill_%26_family.jpg",
   "sha1": "e06882f899e636b887e0143c86713adeafc1d720",
@@ -1790,12 +1823,13 @@
  {
   "id": "british-home-front-1914-1918-q103287",
   "title": "File:BRITISH HOME FRONT 1914-1918 Q103287.jpg",
+  "name": "British home front",
   "page": "https://commons.wikimedia.org/wiki/File:BRITISH_HOME_FRONT_1914-1918_Q103287.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/BRITISH_HOME_FRONT_1914-1918_Q103287.jpg/1280px-BRITISH_HOME_FRONT_1914-1918_Q103287.jpg",
   "sha1": "002518d9d6a0a2c6f52f4f5170632c87300ce8fb",
   "licence": "Public domain",
   "author": "",
-  "date": "(First World War)",
+  "date": "1914 to 1918",
   "width": 1600,
   "height": 1038,
   "boxes": [
@@ -1852,12 +1886,13 @@
  {
   "id": "maximilian-ii-of-bavaria-with-his-family",
   "title": "File:Maximilian II of Bavaria with his family.jpg",
+  "name": "Maximilian II of Bavaria with his family",
   "page": "https://commons.wikimedia.org/wiki/File:Maximilian_II_of_Bavaria_with_his_family.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Maximilian_II_of_Bavaria_with_his_family.jpg/1280px-Maximilian_II_of_Bavaria_with_his_family.jpg",
   "sha1": "40833aa2be6ceea650cdc1f5c0af29b9f5e2af26",
   "licence": "Public domain",
   "author": "Josef Albert",
-  "date": "circa 1860",
+  "date": "About 1860",
   "width": 1600,
   "height": 1128,
   "boxes": [
@@ -1896,6 +1931,7 @@
  {
   "id": "treaty-of-lausanne-1912",
   "title": "File:Treaty of Lausanne 1912.jpg",
+  "name": "Treaty of Lausanne",
   "page": "https://commons.wikimedia.org/wiki/File:Treaty_of_Lausanne_1912.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Treaty_of_Lausanne_1912.jpg/1280px-Treaty_of_Lausanne_1912.jpg",
   "sha1": "20fe82e9e4bac9a6f4749b2844d63c9980fcf83b",
@@ -1964,11 +2000,12 @@
  {
   "id": "hockey-team-p-shea-de-barr-myers-brooks",
   "title": "File:Hockey team - P. Shea, De Barr, Myers, Brooks, Comer, Osmum, Smith, Sharp, and Jesson LCCN2014692062.jpg",
+  "name": "Hockey team",
   "page": "https://commons.wikimedia.org/wiki/File:Hockey_team_-_P._Shea,_De_Barr,_Myers,_Brooks,_Comer,_Osmum,_Smith,_Sharp,_and_Jesson_LCCN2014692062.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Hockey_team_-_P._Shea%2C_De_Barr%2C_Myers%2C_Brooks%2C_Comer%2C_Osmum%2C_Smith%2C_Sharp%2C_and_Jesson_LCCN2014692062.jpg/1280px-Hockey_team_-_P._Shea%2C_De_Barr%2C_Myers%2C_Brooks%2C_Comer%2C_Osmum%2C_Smith%2C_Sharp%2C_and_Jesson_LCCN2014692062.jpg",
   "sha1": "42197718e6ce1e06edf2cae40c277c0170b14977",
   "licence": "Public domain",
-  "author": "Bain News Service, publisher",
+  "author": "Bain News Service",
   "date": "1910",
   "width": 1600,
   "height": 1165,
@@ -2038,6 +2075,7 @@
  {
   "id": "1872-lord-baltimore-canaries",
   "title": "File:1872 Lord Baltimore Canaries.jpg",
+  "name": "Lord Baltimore Canaries",
   "page": "https://commons.wikimedia.org/wiki/File:1872_Lord_Baltimore_Canaries.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/1872_Lord_Baltimore_Canaries.jpg/1280px-1872_Lord_Baltimore_Canaries.jpg",
   "sha1": "efcd0811347832a72294e417ac474b3d0cedfe45",
@@ -2118,6 +2156,7 @@
  {
   "id": "scott1",
   "title": "File:Scott1.jpg",
+  "name": "Terra Nova expedition members",
   "page": "https://commons.wikimedia.org/wiki/File:Scott1.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Scott1.jpg/1280px-Scott1.jpg",
   "sha1": "78afb52500b798214014b48759a7929606e37a0c",
@@ -2156,6 +2195,7 @@
  {
   "id": "lehrerkollegium-der-b-rgerschule-in-blan",
   "title": "File:Lehrerkollegium der Bürgerschule in Blankenburg (Harz) 1894.jpg",
+  "name": "Teachers of the Blankenburg town school",
   "page": "https://commons.wikimedia.org/wiki/File:Lehrerkollegium_der_B%C3%BCrgerschule_in_Blankenburg_(Harz)_1894.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Lehrerkollegium_der_B%C3%BCrgerschule_in_Blankenburg_%28Harz%29_1894.jpg/1280px-Lehrerkollegium_der_B%C3%BCrgerschule_in_Blankenburg_%28Harz%29_1894.jpg",
   "sha1": "bd80a941b41a789356568e927b37a240348c119c",
@@ -2242,6 +2282,7 @@
  {
   "id": "hungarian-family-1920s-2",
   "title": "File:Hungarian family 1920s (2).jpg",
+  "name": "Hungarian family",
   "page": "https://commons.wikimedia.org/wiki/File:Hungarian_family_1920s_(2).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Hungarian_family_1920s_%282%29.jpg/1280px-Hungarian_family_1920s_%282%29.jpg",
   "sha1": "9dffb3ce952e60615c6ae4c6191e40b2f8bc2173",
@@ -2310,12 +2351,13 @@
  {
   "id": "arbeidsstokken-sundskanalen-nedesn-s-amt",
   "title": "File:Arbeidsstokken, Sundskanalen, Nedesnæs amt - fo30141511270006.jpg",
+  "name": "Work crew at the Sund canal",
   "page": "https://commons.wikimedia.org/wiki/File:Arbeidsstokken,_Sundskanalen,_Nedesn%C3%A6s_amt_-_fo30141511270006.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Arbeidsstokken%2C_Sundskanalen%2C_Nedesn%C3%A6s_amt_-_fo30141511270006.jpg/1280px-Arbeidsstokken%2C_Sundskanalen%2C_Nedesn%C3%A6s_amt_-_fo30141511270006.jpg",
   "sha1": "f1bbecb6a8b4a0204b89ec9cdb5c79d50e64fb83",
   "licence": "Public domain",
   "author": "",
-  "date": "between 1900 and 1910",
+  "date": "1900 to 1910",
   "width": 1600,
   "height": 1223,
   "boxes": [
@@ -2384,12 +2426,13 @@
  {
   "id": "alberto-henschel-a-familia-imperial",
   "title": "File:Alberto Henschel - A Familia Imperial.jpg",
+  "name": "The Brazilian imperial family",
   "page": "https://commons.wikimedia.org/wiki/File:Alberto_Henschel_-_A_Familia_Imperial.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Alberto_Henschel_-_A_Familia_Imperial.jpg/1280px-Alberto_Henschel_-_A_Familia_Imperial.jpg",
   "sha1": "b160983e110bbd0c4016040ae5bd775fd58a9235",
   "licence": "Public domain",
   "author": "Alberto Henschel",
-  "date": "circa 1875",
+  "date": "About 1875",
   "width": 1600,
   "height": 1149,
   "boxes": [
@@ -2440,6 +2483,7 @@
  {
   "id": "hungary-delegation-at-1896-summer-olympi",
   "title": "File:Hungary delegation at 1896 Summer Olympics alternative.jpg",
+  "name": "Hungarian team at the 1896 Olympics",
   "page": "https://commons.wikimedia.org/wiki/File:Hungary_delegation_at_1896_Summer_Olympics_alternative.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Hungary_delegation_at_1896_Summer_Olympics_alternative.jpg/1280px-Hungary_delegation_at_1896_Summer_Olympics_alternative.jpg",
   "sha1": "5a3e9d2b669fe73b30d18ad4dca97b8e09e17a02",
@@ -2490,6 +2534,7 @@
  {
   "id": "1920-olympics-swiss-ice-hockey-team-2",
   "title": "File:1920 Olympics Swiss Ice Hockey Team (2).jpg",
+  "name": "Swiss ice hockey team at the 1920 Olympics",
   "page": "https://commons.wikimedia.org/wiki/File:1920_Olympics_Swiss_Ice_Hockey_Team_(2).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/1920_Olympics_Swiss_Ice_Hockey_Team_%282%29.jpg/1280px-1920_Olympics_Swiss_Ice_Hockey_Team_%282%29.jpg",
   "sha1": "c8c0172296bb8178f0107ca0d97b482f3110cdb2",
@@ -2558,12 +2603,13 @@
  {
   "id": "familjen-yngve-larsson-1925",
   "title": "File:Familjen Yngve Larsson 1925.jpg",
+  "name": "The Yngve Larsson family",
   "page": "https://commons.wikimedia.org/wiki/File:Familjen_Yngve_Larsson_1925.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Familjen_Yngve_Larsson_1925.jpg/1280px-Familjen_Yngve_Larsson_1925.jpg",
   "sha1": "ccd60139038b7b15b6e98a951a23f865862c1a7d",
   "licence": "Public domain",
   "author": "",
-  "date": "circa 1925",
+  "date": "About 1925",
   "width": 1600,
   "height": 1065,
   "boxes": [
@@ -2620,12 +2666,13 @@
  {
   "id": "bouw-van-het-fort-bij-de-vuurlijn-invent",
   "title": "File:Bouw van het fort bij de vuurlijn, Inventarisnummer NL-HlmNHA Hmr 04417.JPG",
+  "name": "Building the fort at the firing line",
   "page": "https://commons.wikimedia.org/wiki/File:Bouw_van_het_fort_bij_de_vuurlijn,_Inventarisnummer_NL-HlmNHA_Hmr_04417.JPG",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Bouw_van_het_fort_bij_de_vuurlijn%2C_Inventarisnummer_NL-HlmNHA_Hmr_04417.JPG/1280px-Bouw_van_het_fort_bij_de_vuurlijn%2C_Inventarisnummer_NL-HlmNHA_Hmr_04417.JPG",
   "sha1": "dda7d2cda3f66f2cbebc54955cad2029da02a7ab",
   "licence": "Public domain",
   "author": "",
-  "date": "before 1904",
+  "date": "Before 1904",
   "width": 1600,
   "height": 951,
   "boxes": [
@@ -2682,12 +2729,13 @@
  {
   "id": "slovenske-narodne-no-e-gorenjska-no-a-v",
   "title": "File:Slovenske narodne noše-gorenjska noša v Podkorenu.jpg",
+  "name": "Slovene folk costume in Podkoren",
   "page": "https://commons.wikimedia.org/wiki/File:Slovenske_narodne_no%C5%A1e-gorenjska_no%C5%A1a_v_Podkorenu.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Slovenske_narodne_no%C5%A1e-gorenjska_no%C5%A1a_v_Podkorenu.jpg/1280px-Slovenske_narodne_no%C5%A1e-gorenjska_no%C5%A1a_v_Podkorenu.jpg",
   "sha1": "b902f04bb636bce311b878367e7d13e27bcd99e1",
   "licence": "Public domain",
   "author": "",
-  "date": "by 1928",
+  "date": "By 1928",
   "width": 1302,
   "height": 1600,
   "boxes": [
@@ -2720,12 +2768,13 @@
  {
   "id": "orrin-abner-abbey-family-c1900",
   "title": "File:Orrin Abner Abbey family c1900.jpg",
+  "name": "The Orrin Abner Abbey family",
   "page": "https://commons.wikimedia.org/wiki/File:Orrin_Abner_Abbey_family_c1900.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Orrin_Abner_Abbey_family_c1900.jpg/1280px-Orrin_Abner_Abbey_family_c1900.jpg",
   "sha1": "a9b3580ea69b28107d5a65b7bb2826cb1d0847fa",
   "licence": "Public domain",
   "author": "",
-  "date": "circa 1900",
+  "date": "About 1900",
   "width": 1600,
   "height": 1109,
   "boxes": [
@@ -2776,12 +2825,13 @@
  {
   "id": "alexander-popov-with-his-family",
   "title": "File:Alexander Popov with his family.jpg",
+  "name": "Alexander Popov with his family",
   "page": "https://commons.wikimedia.org/wiki/File:Alexander_Popov_with_his_family.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Alexander_Popov_with_his_family.jpg/1280px-Alexander_Popov_with_his_family.jpg",
   "sha1": "c79653b2de18235c898cc85378bba28e600c40b0",
   "licence": "Public domain",
   "author": "",
-  "date": "from 1890 until 1905",
+  "date": "1890 to 1905",
   "width": 1208,
   "height": 1600,
   "boxes": [
@@ -2820,12 +2870,13 @@
  {
   "id": "julia-grant-with-family-brady-handy",
   "title": "File:Julia Grant with family - Brady-Handy.jpg",
+  "name": "Julia Grant with her family",
   "page": "https://commons.wikimedia.org/wiki/File:Julia_Grant_with_family_-_Brady-Handy.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Julia_Grant_with_family_-_Brady-Handy.jpg/1280px-Julia_Grant_with_family_-_Brady-Handy.jpg",
   "sha1": "4e61cbd1b968d578283a58c01bd606f51234c734",
   "licence": "Public domain",
-  "author": "Mathew Benjamin Brady / Levin Corbin Handy",
-  "date": "between 1865 and 1880",
+  "author": "Mathew Brady and Levin Handy",
+  "date": "1865 to 1880",
   "width": 1600,
   "height": 1380,
   "boxes": [
@@ -2858,6 +2909,7 @@
  {
   "id": "president-roosevelt-and-his-sons-triumph",
   "title": "File:President Roosevelt and His Sons (Triumphantlifeof00mill 0082).jpg",
+  "name": "President Roosevelt and his sons",
   "page": "https://commons.wikimedia.org/wiki/File:President_Roosevelt_and_His_Sons_(Triumphantlifeof00mill_0082).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/President_Roosevelt_and_His_Sons_%28Triumphantlifeof00mill_0082%29.jpg/1280px-President_Roosevelt_and_His_Sons_%28Triumphantlifeof00mill_0082%29.jpg",
   "sha1": "088313e982728158a1e937a264cbffdc4185e959",
@@ -2902,6 +2954,7 @@
  {
   "id": "men-s-basketball-team-at-the-university",
   "title": "File:Men's basketball team at the University of Washington, 1923 (MOHAI 5091).jpg",
+  "name": "University of Washington basketball team",
   "page": "https://commons.wikimedia.org/wiki/File:Men%27s_basketball_team_at_the_University_of_Washington,_1923_(MOHAI_5091).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Men%27s_basketball_team_at_the_University_of_Washington%2C_1923_%28MOHAI_5091%29.jpg/1280px-Men%27s_basketball_team_at_the_University_of_Washington%2C_1923_%28MOHAI_5091%29.jpg",
   "sha1": "926eb949c864cbd37b0c92a21160eac1efaca847",
@@ -2976,12 +3029,13 @@
  {
   "id": "narcyz-witczak-witaczy-ski-pobyt-szwadro",
   "title": "File:Narcyz Witczak-Witaczyński - Pobyt Szwadronu Przybocznego Prezydenta Rzeczypospolitej w rejonie Lasomina w związku z letnim wypasem koni (107-29-18).jpg",
+  "name": "Presidential cavalry squadron near Lasomin",
   "page": "https://commons.wikimedia.org/wiki/File:Narcyz_Witczak-Witaczy%C5%84ski_-_Pobyt_Szwadronu_Przybocznego_Prezydenta_Rzeczypospolitej_w_rejonie_Lasomina_w_zwi%C4%85zku_z_letnim_wypasem_koni_(107-29-18).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Narcyz_Witczak-Witaczy%C5%84ski_-_Pobyt_Szwadronu_Przybocznego_Prezydenta_Rzeczypospolitej_w_rejonie_Lasomina_w_zwi%C4%85zku_z_letnim_wypasem_koni_%28107-29-18%29.jpg/1280px-Narcyz_Witczak-Witaczy%C5%84ski_-_Pobyt_Szwadronu_Przybocznego_Prezydenta_Rzeczypospolitej_w_rejonie_Lasomina_w_zwi%C4%85zku_z_letnim_wypasem_koni_%28107-29-18%29.jpg",
   "sha1": "60b5e5a1e14c0acde5a65c740b58985f2d1f44e3",
   "licence": "Public domain",
   "author": "Narcyz Witczak-Witaczyński",
-  "date": "11 June 1924 - 1924-07-28",
+  "date": "1924",
   "width": 1600,
   "height": 1238,
   "boxes": [
@@ -3050,12 +3104,13 @@
  {
   "id": "d-kennedy-j-smith-willy-stewart-john-bro",
   "title": "File:D. Kennedy, J. Smith, Willy Stewart, John Brown, F. Farquarson, Mr Morgan, Charlie Coutts, P. Robertson and John Grant by George Washington Wilson.jpg",
+  "name": "Nine men by George Washington Wilson",
   "page": "https://commons.wikimedia.org/wiki/File:D._Kennedy,_J._Smith,_Willy_Stewart,_John_Brown,_F._Farquarson,_Mr_Morgan,_Charlie_Coutts,_P._Robertson_and_John_Grant_by_George_Washington_Wilson.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/D._Kennedy%2C_J._Smith%2C_Willy_Stewart%2C_John_Brown%2C_F._Farquarson%2C_Mr_Morgan%2C_Charlie_Coutts%2C_P._Robertson_and_John_Grant_by_George_Washington_Wilson.jpg/1280px-D._Kennedy%2C_J._Smith%2C_Willy_Stewart%2C_John_Brown%2C_F._Farquarson%2C_Mr_Morgan%2C_Charlie_Coutts%2C_P._Robertson_and_John_Grant_by_George_Washington_Wilson.jpg",
   "sha1": "7425e3b3082f613ca53128f6d9a1f5d64cca8ea3",
   "licence": "Public domain",
-  "author": "George Washington Wilson (died 1893)",
-  "date": "circa 1857",
+  "author": "George Washington Wilson",
+  "date": "About 1857",
   "width": 1600,
   "height": 1171,
   "boxes": [
@@ -3124,6 +3179,7 @@
  {
   "id": "group-portrait-of-first-aid-officers-tak",
   "title": "File:Group portrait of first aid officers, taken for South Australian Railways(GN11466).jpg",
+  "name": "South Australian Railways first aid officers",
   "page": "https://commons.wikimedia.org/wiki/File:Group_portrait_of_first_aid_officers,_taken_for_South_Australian_Railways(GN11466).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Group_portrait_of_first_aid_officers%2C_taken_for_South_Australian_Railways%28GN11466%29.jpg/1280px-Group_portrait_of_first_aid_officers%2C_taken_for_South_Australian_Railways%28GN11466%29.jpg",
   "sha1": "0ef1c26fa857d2e873e5d4b018e4ba5abbcaef1b",
@@ -3168,12 +3224,13 @@
  {
   "id": "portret-van-vijf-naaiende-vrouwen-rp-f-2",
   "title": "File:Portret van vijf naaiende vrouwen, RP-F-2012-96-147.jpg",
+  "name": "Five women sewing",
   "page": "https://commons.wikimedia.org/wiki/File:Portret_van_vijf_naaiende_vrouwen,_RP-F-2012-96-147.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Portret_van_vijf_naaiende_vrouwen%2C_RP-F-2012-96-147.jpg/1280px-Portret_van_vijf_naaiende_vrouwen%2C_RP-F-2012-96-147.jpg",
   "sha1": "28033d1e8be20278499ffd5aa05b75220924f846",
   "licence": "CC0",
-  "author": "Rijksmuseum",
-  "date": "ca. 1890 - ca. 1910",
+  "author": "Unknown photographer",
+  "date": "About 1890 to 1910",
   "width": 1600,
   "height": 1034,
   "boxes": [
@@ -3218,11 +3275,12 @@
  {
   "id": "mr-and-mrs-theo-roosevelt-family-lccn201",
   "title": "File:Mr. and Mrs. Theo Roosevelt & family LCCN2013650885.jpg",
+  "name": "The Roosevelt family",
   "page": "https://commons.wikimedia.org/wiki/File:Mr._and_Mrs._Theo_Roosevelt_%26_family_LCCN2013650885.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Mr._and_Mrs._Theo_Roosevelt_%26_family_LCCN2013650885.jpg/1280px-Mr._and_Mrs._Theo_Roosevelt_%26_family_LCCN2013650885.jpg",
   "sha1": "6f767f714b059243331825f29644b2bc14f7bae6",
   "licence": "Public domain",
-  "author": "Pach Brothers (Firm), photographer",
+  "author": "Pach Brothers",
   "date": "1907",
   "width": 1301,
   "height": 1600,
@@ -3274,12 +3332,13 @@
  {
   "id": "suffrage-group-lccn2016858850",
   "title": "File:SUFFRAGE GROUP LCCN2016858850.jpg",
+  "name": "Suffrage group",
   "page": "https://commons.wikimedia.org/wiki/File:SUFFRAGE_GROUP_LCCN2016858850.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/SUFFRAGE_GROUP_LCCN2016858850.jpg/1280px-SUFFRAGE_GROUP_LCCN2016858850.jpg",
   "sha1": "70b5580ed55ed5bf8400503bb887da2d7d1d6a8f",
   "licence": "Public domain",
-  "author": "Harris & Ewing, photographer",
-  "date": "between 1905 and 1945",
+  "author": "Harris & Ewing",
+  "date": "1905 to 1945",
   "width": 1600,
   "height": 1278,
   "boxes": [
@@ -3312,11 +3371,12 @@
  {
   "id": "pres-coolidge-mother-jones-mrs-coolidge",
   "title": "File:Pres. Coolidge, Mother Jones, Mrs. Coolidge, Theodore Roosevelt, 9-26-24 LOC npcc.12398.jpg",
+  "name": "President Coolidge with Mother Jones",
   "page": "https://commons.wikimedia.org/wiki/File:Pres._Coolidge,_Mother_Jones,_Mrs._Coolidge,_Theodore_Roosevelt,_9-26-24_LOC_npcc.12398.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Pres._Coolidge%2C_Mother_Jones%2C_Mrs._Coolidge%2C_Theodore_Roosevelt%2C_9-26-24_LOC_npcc.12398.jpg/1280px-Pres._Coolidge%2C_Mother_Jones%2C_Mrs._Coolidge%2C_Theodore_Roosevelt%2C_9-26-24_LOC_npcc.12398.jpg",
   "sha1": "361af2d7fbe2db1b666a453f1cd60ec4c806b47a",
   "licence": "Public domain",
-  "author": "National Photo Company Collection",
+  "author": "National Photo Company",
   "date": "1924-09-26",
   "width": 1600,
   "height": 1298,
@@ -3350,6 +3410,7 @@
  {
   "id": "narcyz-witczak-witaczy-ski-chrzciny-u-st",
   "title": "File:Narcyz Witczak-Witaczyński - Chrzciny u Sternika (107-4-6).jpg",
+  "name": "A christening at the Sternik home",
   "page": "https://commons.wikimedia.org/wiki/File:Narcyz_Witczak-Witaczy%C5%84ski_-_Chrzciny_u_Sternika_(107-4-6).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Narcyz_Witczak-Witaczy%C5%84ski_-_Chrzciny_u_Sternika_%28107-4-6%29.jpg/1280px-Narcyz_Witczak-Witaczy%C5%84ski_-_Chrzciny_u_Sternika_%28107-4-6%29.jpg",
   "sha1": "1bb06c8ef6041dba9157250b6ba6c0fa914bc4bf",
@@ -3418,12 +3479,13 @@
  {
   "id": "major-general-william-t-sherman-commandi",
   "title": "File:Major General William T. Sherman, Commanding Military Division of the Mississippi, and his Generals, 1. Maj. Gen. O.... - NARA - 533374.jpg",
+  "name": "General Sherman and his generals",
   "page": "https://commons.wikimedia.org/wiki/File:Major_General_William_T._Sherman,_Commanding_Military_Division_of_the_Mississippi,_and_his_Generals,_1._Maj._Gen._O...._-_NARA_-_533374.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Major_General_William_T._Sherman%2C_Commanding_Military_Division_of_the_Mississippi%2C_and_his_Generals%2C_1._Maj._Gen._O...._-_NARA_-_533374.jpg/1280px-Major_General_William_T._Sherman%2C_Commanding_Military_Division_of_the_Mississippi%2C_and_his_Generals%2C_1._Maj._Gen._O...._-_NARA_-_533374.jpg",
   "sha1": "c1a7b8d414a99511a8e539edc5d62fd4ce865ad7",
   "licence": "Public domain",
   "author": "George N. Barnard",
-  "date": "between circa 1862 and circa 1865date QS",
+  "date": "About 1862 to 1865",
   "width": 1600,
   "height": 1075,
   "boxes": [
@@ -3492,11 +3554,12 @@
  {
   "id": "pres-theodore-roosevelt-and-family-pach",
   "title": "File:Pres. Theodore Roosevelt and family - Pach Bros. LCCN2009631485.jpg",
+  "name": "Theodore Roosevelt and family",
   "page": "https://commons.wikimedia.org/wiki/File:Pres._Theodore_Roosevelt_and_family_-_Pach_Bros._LCCN2009631485.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Pres._Theodore_Roosevelt_and_family_-_Pach_Bros._LCCN2009631485.jpg/1280px-Pres._Theodore_Roosevelt_and_family_-_Pach_Bros._LCCN2009631485.jpg",
   "sha1": "35d069bbf0f3ae1996113c06ec6985ce24949fd6",
   "licence": "Public domain",
-  "author": "Pach Brothers (Firm), photographer",
+  "author": "Pach Brothers",
   "date": "1903",
   "width": 1600,
   "height": 1319,
@@ -3566,11 +3629,12 @@
  {
   "id": "oregon-girls-in-n-y-lccn2014692275",
   "title": "File:Oregon girls in N. Y. LCCN2014692275.jpg",
+  "name": "Oregon girls in New York",
   "page": "https://commons.wikimedia.org/wiki/File:Oregon_girls_in_N._Y._LCCN2014692275.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Oregon_girls_in_N._Y._LCCN2014692275.jpg/1280px-Oregon_girls_in_N._Y._LCCN2014692275.jpg",
   "sha1": "5e2c684317907bc008370fe7d8e61418b3b871a5",
   "licence": "Public domain",
-  "author": "Bain News Service, publisher",
+  "author": "Bain News Service",
   "date": "1912",
   "width": 1600,
   "height": 1158,
@@ -3628,12 +3692,13 @@
  {
   "id": "engine-company-no-1-ca-1879-dpla-a7f0373",
   "title": "File:Engine Company No. 1, ca. 1879 - DPLA - a7f0373ff078adfacfb0ad6616f4541a.jpg",
+  "name": "Engine Company No. 1",
   "page": "https://commons.wikimedia.org/wiki/File:Engine_Company_No._1,_ca._1879_-_DPLA_-_a7f0373ff078adfacfb0ad6616f4541a.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Engine_Company_No._1%2C_ca._1879_-_DPLA_-_a7f0373ff078adfacfb0ad6616f4541a.jpg/1280px-Engine_Company_No._1%2C_ca._1879_-_DPLA_-_a7f0373ff078adfacfb0ad6616f4541a.jpg",
   "sha1": "2cef4ed255eae96e867239e2c3b7797d25a41284",
   "licence": "Public domain",
   "author": "",
-  "date": "circa 1879",
+  "date": "About 1879",
   "width": 1565,
   "height": 1600,
   "boxes": [
@@ -3714,12 +3779,13 @@
  {
   "id": "narcyz-witczak-witaczy-ski-wycieczki-do",
   "title": "File:Narcyz Witczak-Witaczyński - Wycieczki do Pyr, Zawad i Żabieńca (107-6-10).jpg",
+  "name": "Excursion to Pyry, Zawady and Żabieniec",
   "page": "https://commons.wikimedia.org/wiki/File:Narcyz_Witczak-Witaczy%C5%84ski_-_Wycieczki_do_Pyr,_Zawad_i_%C5%BBabie%C5%84ca_(107-6-10).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Narcyz_Witczak-Witaczy%C5%84ski_-_Wycieczki_do_Pyr%2C_Zawad_i_%C5%BBabie%C5%84ca_%28107-6-10%29.jpg/1280px-Narcyz_Witczak-Witaczy%C5%84ski_-_Wycieczki_do_Pyr%2C_Zawad_i_%C5%BBabie%C5%84ca_%28107-6-10%29.jpg",
   "sha1": "06425ac7e16f9482912c695cecc9e53526da482c",
   "licence": "Public domain",
   "author": "Narcyz Witczak-Witaczyński",
-  "date": "25 May 1922 - 1922-06-25",
+  "date": "1922",
   "width": 1600,
   "height": 1238,
   "boxes": [
@@ -3800,12 +3866,13 @@
  {
   "id": "earle-de-gray-lord-stratford-northcote-l",
   "title": "File:Earle De Gray, Lord Stratford Northcote, Lord Tenderden, and Sir Edward Thornton, British Minister. - NARA - 525787.jpg",
+  "name": "British diplomats by Mathew Brady",
   "page": "https://commons.wikimedia.org/wiki/File:Earle_De_Gray,_Lord_Stratford_Northcote,_Lord_Tenderden,_and_Sir_Edward_Thornton,_British_Minister._-_NARA_-_525787.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Earle_De_Gray%2C_Lord_Stratford_Northcote%2C_Lord_Tenderden%2C_and_Sir_Edward_Thornton%2C_British_Minister._-_NARA_-_525787.jpg/1280px-Earle_De_Gray%2C_Lord_Stratford_Northcote%2C_Lord_Tenderden%2C_and_Sir_Edward_Thornton%2C_British_Minister._-_NARA_-_525787.jpg",
   "sha1": "a0da21a99cb17a03a4cf527ba1f722940ae5f004",
   "licence": "Public domain",
   "author": "Mathew Benjamin Brady",
-  "date": "between circa 1860 and circa 1865date QS",
+  "date": "About 1860 to 1865",
   "width": 1600,
   "height": 1280,
   "boxes": [
@@ -3856,12 +3923,13 @@
  {
   "id": "familien-r-hr-p-r-hr-gard-ringsaker-0412",
   "title": "File:Familien Røhr på Røhr gard, Ringsaker (0412-08685).jpg",
+  "name": "The Røhr family at Røhr farm",
   "page": "https://commons.wikimedia.org/wiki/File:Familien_R%C3%B8hr_p%C3%A5_R%C3%B8hr_gard,_Ringsaker_(0412-08685).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Familien_R%C3%B8hr_p%C3%A5_R%C3%B8hr_gard%2C_Ringsaker_%280412-08685%29.jpg/1280px-Familien_R%C3%B8hr_p%C3%A5_R%C3%B8hr_gard%2C_Ringsaker_%280412-08685%29.jpg",
   "sha1": "9a2f4514baea337ffeab32aab7686183e0154def",
   "licence": "Public domain",
   "author": "Inger Barth",
-  "date": "between 1897 and 1900",
+  "date": "1897 to 1900",
   "width": 1129,
   "height": 1600,
   "boxes": [
@@ -3906,6 +3974,7 @@
  {
   "id": "louis-alexandre-taschereau-and-his-wife",
   "title": "File:Louis-Alexandre Taschereau and his wife Adine Dionne, London, 14 October 1926.jpg",
+  "name": "Louis-Alexandre Taschereau and Adine Dionne",
   "page": "https://commons.wikimedia.org/wiki/File:Louis-Alexandre_Taschereau_and_his_wife_Adine_Dionne,_London,_14_October_1926.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Louis-Alexandre_Taschereau_and_his_wife_Adine_Dionne%2C_London%2C_14_October_1926.jpg/1280px-Louis-Alexandre_Taschereau_and_his_wife_Adine_Dionne%2C_London%2C_14_October_1926.jpg",
   "sha1": "662d65445adc0e5378d0ae20589a8f1e92f119cd",
@@ -3962,6 +4031,7 @@
  {
   "id": "274-mss-p-24-b2-f11",
   "title": "File:274 MSS P 24 B2 F11.jpg",
+  "name": "Group by Charles Roscoe Savage",
   "page": "https://commons.wikimedia.org/wiki/File:274_MSS_P_24_B2_F11.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/274_MSS_P_24_B2_F11.jpg/1280px-274_MSS_P_24_B2_F11.jpg",
   "sha1": "3a0257b455613ec9cb4bd0c8af1dca034109b0b8",
@@ -4042,6 +4112,7 @@
  {
   "id": "mailmen-oscar-olsson",
   "title": "File:Mailmen Oscar Olsson.jpg",
+  "name": "Mail carriers in Östersund",
   "page": "https://commons.wikimedia.org/wiki/File:Mailmen_Oscar_Olsson.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Mailmen_Oscar_Olsson.jpg/1280px-Mailmen_Oscar_Olsson.jpg",
   "sha1": "bbbc84864fab7213f5c42beac4c8036a080c84ec",
@@ -4116,6 +4187,7 @@
  {
   "id": "saionji-hachir-family",
   "title": "File:Saionji Hachirō family.jpg",
+  "name": "The Saionji Hachirō family",
   "page": "https://commons.wikimedia.org/wiki/File:Saionji_Hachir%C5%8D_family.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Saionji_Hachir%C5%8D_family.jpg/1280px-Saionji_Hachir%C5%8D_family.jpg",
   "sha1": "576b01ad20d11d10c982d087b6e23ccbe2ac6862",
@@ -4202,12 +4274,13 @@
  {
   "id": "no-nb-bldsa-2c015",
   "title": "File:No-nb bldsa 2c015.jpg",
+  "name": "Group by Ingeborg Motzfeldt Løchen",
   "page": "https://commons.wikimedia.org/wiki/File:No-nb_bldsa_2c015.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/No-nb_bldsa_2c015.jpg/1280px-No-nb_bldsa_2c015.jpg",
   "sha1": "2bd6bce42fa6240f51e2945a8af0832724b7063a",
   "licence": "Public domain",
   "author": "Ingeborg Motzfeldt Løchen",
-  "date": "before 1911",
+  "date": "Before 1911",
   "width": 1191,
   "height": 1600,
   "boxes": [
@@ -4246,6 +4319,7 @@
  {
   "id": "gezinsleven-familieleven-nederland-sfa00",
   "title": "File:Gezinsleven, familieleven, Nederland, SFA003008906.jpg",
+  "name": "Family life in the Netherlands",
   "page": "https://commons.wikimedia.org/wiki/File:Gezinsleven,_familieleven,_Nederland,_SFA003008906.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Gezinsleven%2C_familieleven%2C_Nederland%2C_SFA003008906.jpg/1280px-Gezinsleven%2C_familieleven%2C_Nederland%2C_SFA003008906.jpg",
   "sha1": "8ccb4206f5e55da7ddf64bbe866314a55e45576c",
@@ -4302,12 +4376,13 @@
  {
   "id": "charles-evans-hughes-and-family-retouche",
   "title": "File:Charles Evans Hughes and family (retouched).jpg",
+  "name": "Charles Evans Hughes and family",
   "page": "https://commons.wikimedia.org/wiki/File:Charles_Evans_Hughes_and_family_(retouched).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/Charles_Evans_Hughes_and_family_%28retouched%29.jpg/1280px-Charles_Evans_Hughes_and_family_%28retouched%29.jpg",
   "sha1": "aaa584515ad88fead18e23c0e752ebbcf34ee75e",
   "licence": "Public domain",
-  "author": "Bachrach Studios; Bain News Service, publisher",
-  "date": "circa 1916",
+  "author": "Bachrach Studios",
+  "date": "About 1916",
   "width": 1280,
   "height": 1600,
   "boxes": [
@@ -4370,12 +4445,13 @@
  {
   "id": "103-skedsmo-vaaler-med-familie-nb-bldsa",
   "title": "File:103. Skedsmo. Vaaler med Familie - NB bldsa OTO0081 A.jpg",
+  "name": "The Vaaler family of Skedsmo",
   "page": "https://commons.wikimedia.org/wiki/File:103._Skedsmo._Vaaler_med_Familie_-_NB_bldsa_OTO0081_A.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/103._Skedsmo._Vaaler_med_Familie_-_NB_bldsa_OTO0081_A.jpg/1280px-103._Skedsmo._Vaaler_med_Familie_-_NB_bldsa_OTO0081_A.jpg",
   "sha1": "4f14015ef0e7d665aae9fecf31fd02a3ebd8a447",
   "licence": "Public domain",
   "author": "Ole Tobias Olsen",
-  "date": "between 1860 and 1900",
+  "date": "1860 to 1900",
   "width": 1509,
   "height": 1600,
   "boxes": [
@@ -4426,11 +4502,12 @@
  {
   "id": "familieholzner1912",
   "title": "File:FamilieHolzner1912.jpg",
+  "name": "The Holzner family",
   "page": "https://commons.wikimedia.org/wiki/File:FamilieHolzner1912.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/FamilieHolzner1912.jpg/1280px-FamilieHolzner1912.jpg",
   "sha1": "5ba0082f8e12984677d86943739ef230137e4964",
   "licence": "Public domain",
-  "author": "unbekannt/Maria.holzner",
+  "author": "Unknown photographer",
   "date": "1912",
   "width": 1600,
   "height": 1165,
@@ -4476,12 +4553,13 @@
  {
   "id": "nf-11376-054-nr-2-sogneprest-jens-otterb",
   "title": "File:NF.11376-054 nr 2 Sogneprest Jens Otterbech med flere..jpg",
+  "name": "Parish priest Jens Otterbech with others",
   "page": "https://commons.wikimedia.org/wiki/File:NF.11376-054_nr_2_Sogneprest_Jens_Otterbech_med_flere..jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/NF.11376-054_nr_2_Sogneprest_Jens_Otterbech_med_flere..jpg/1280px-NF.11376-054_nr_2_Sogneprest_Jens_Otterbech_med_flere..jpg",
   "sha1": "9924625b5c0887f495ae42fbfbfdb0e6c8207fcc",
   "licence": "Public domain",
-  "author": "unknown /Norsk folkemuseum",
-  "date": "between circa 1902 and circa 1903date QS",
+  "author": "Unknown photographer",
+  "date": "About 1902 to 1903",
   "width": 1600,
   "height": 1134,
   "boxes": [
@@ -4520,11 +4598,12 @@
  {
   "id": "fam-lia-picchi",
   "title": "File:Família Picchi.jpg",
+  "name": "The Picchi family",
   "page": "https://commons.wikimedia.org/wiki/File:Fam%C3%ADlia_Picchi.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Fam%C3%ADlia_Picchi.jpg/1280px-Fam%C3%ADlia_Picchi.jpg",
   "sha1": "2eb438ec93e654712b0d1a3cf178ab18403d34a6",
   "licence": "Public domain",
-  "author": "João Humberto Picchi (original photo) / Luiz Carlos Cappellano (repro)",
+  "author": "João Humberto Picchi",
   "date": "1912",
   "width": 1600,
   "height": 1166,
@@ -4606,12 +4685,13 @@
  {
   "id": "hanna-ridderstedt-fredin-family",
   "title": "File:Hanna Ridderstedt Fredin family.jpg",
+  "name": "The Hanna Ridderstedt Fredin family",
   "page": "https://commons.wikimedia.org/wiki/File:Hanna_Ridderstedt_Fredin_family.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Hanna_Ridderstedt_Fredin_family.jpg/1280px-Hanna_Ridderstedt_Fredin_family.jpg",
   "sha1": "661f810f6719827abfe6ddb57a0c61a4d46b4f5a",
   "licence": "Public domain",
-  "author": "N. Aug. Hedblom of Falun Korsnäs (left insert) & unknown family assistants, Demitz Archives acquired by FamSAC",
-  "date": "Various up until c 1928",
+  "author": "N. Aug. Hedblom",
+  "date": "Before 1928",
   "width": 1600,
   "height": 1138,
   "boxes": [
@@ -4686,6 +4766,7 @@
  {
   "id": "charles-graham-webb-with-his-family-1898",
   "title": "File:Charles Graham Webb with his family, 1898-99..jpg",
+  "name": "Charles Graham Webb with his family",
   "page": "https://commons.wikimedia.org/wiki/File:Charles_Graham_Webb_with_his_family,_1898-99..jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Charles_Graham_Webb_with_his_family%2C_1898-99..jpg/1280px-Charles_Graham_Webb_with_his_family%2C_1898-99..jpg",
   "sha1": "53b232f528a17fb5e81e870617721ee177e7449a",
@@ -4754,12 +4835,13 @@
  {
   "id": "james-couzens-and-family-hec-20118",
   "title": "File:James Couzens and family hec.20118.jpg",
+  "name": "James Couzens and family",
   "page": "https://commons.wikimedia.org/wiki/File:James_Couzens_and_family_hec.20118.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/James_Couzens_and_family_hec.20118.jpg/1280px-James_Couzens_and_family_hec.20118.jpg",
   "sha1": "4226f8d2f9a5adeae069fe04e64d81cf612c2761",
   "licence": "Public domain",
   "author": "Harris & Ewing",
-  "date": "between 1905 and 1936",
+  "date": "1905 to 1936",
   "width": 1292,
   "height": 1600,
   "boxes": [
@@ -4798,6 +4880,7 @@
  {
   "id": "rosa-buchthal-mit-geschwistern-1895",
   "title": "File:Rosa Buchthal mit Geschwistern 1895.jpg",
+  "name": "Rosa Buchthal with her siblings",
   "page": "https://commons.wikimedia.org/wiki/File:Rosa_Buchthal_mit_Geschwistern_1895.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Rosa_Buchthal_mit_Geschwistern_1895.jpg/1280px-Rosa_Buchthal_mit_Geschwistern_1895.jpg",
   "sha1": "1036edcab39863135ed491e99b08960ec9179fb6",
@@ -4878,11 +4961,12 @@
  {
   "id": "jan-zeegers-afb-010029000011",
   "title": "File:Jan Zeegers, Afb 010029000011.jpg",
+  "name": "Group by Jan Zeegers",
   "page": "https://commons.wikimedia.org/wiki/File:Jan_Zeegers,_Afb_010029000011.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Jan_Zeegers%2C_Afb_010029000011.jpg/1280px-Jan_Zeegers%2C_Afb_010029000011.jpg",
   "sha1": "721706172aac47a8fa19d09c3762b502b96175bf",
   "licence": "Public domain",
-  "author": "Zeegers, Jan (1872-1937)",
+  "author": "Jan Zeegers",
   "date": "1920",
   "width": 1200,
   "height": 1600,
@@ -4934,12 +5018,13 @@
  {
   "id": "paus-family-portrait-nfb-18645",
   "title": "File:Paus family portrait NFB-18645.jpg",
+  "name": "The Paus family",
   "page": "https://commons.wikimedia.org/wiki/File:Paus_family_portrait_NFB-18645.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Paus_family_portrait_NFB-18645.jpg/1280px-Paus_family_portrait_NFB-18645.jpg",
   "sha1": "d996af99305fb7a8ee8b1bbfe6c1d2c6e48a98e8",
   "licence": "Public domain",
   "author": "Gustav Borgen",
-  "date": "circa 1900",
+  "date": "About 1900",
   "width": 1295,
   "height": 1600,
   "boxes": [
@@ -4990,6 +5075,7 @@
  {
   "id": "podebrady-pramen-milada-1913",
   "title": "File:Podebrady pramen Milada 1913.jpg",
+  "name": "Milada spring in Poděbrady",
   "page": "https://commons.wikimedia.org/wiki/File:Podebrady_pramen_Milada_1913.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Podebrady_pramen_Milada_1913.jpg/1280px-Podebrady_pramen_Milada_1913.jpg",
   "sha1": "7d787bd0cb15a1483fd36d2de0a26facbfffc0b7",
@@ -5052,12 +5138,13 @@
  {
   "id": "group-photograph-of-a-family-gn13911",
   "title": "File:Group photograph of a family(GN13911).jpg",
+  "name": "A family group",
   "page": "https://commons.wikimedia.org/wiki/File:Group_photograph_of_a_family(GN13911).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Group_photograph_of_a_family%28GN13911%29.jpg/1280px-Group_photograph_of_a_family%28GN13911%29.jpg",
   "sha1": "e66475dbf5e143f3170a17660e7d16d0a404c3e6",
   "licence": "CC0",
   "author": "State Government Photographer",
-  "date": "circa 1905",
+  "date": "About 1905",
   "width": 1600,
   "height": 1200,
   "boxes": [
@@ -5126,6 +5213,7 @@
  {
   "id": "guillermo-kahlo-matilde-adriana-frida-an",
   "title": "File:Guillermo Kahlo - Matilde, Adriana, Frida and Cristina Kahlo - Google Art Project.jpg",
+  "name": "Matilde, Adriana, Frida and Cristina Kahlo",
   "page": "https://commons.wikimedia.org/wiki/File:Guillermo_Kahlo_-_Matilde,_Adriana,_Frida_and_Cristina_Kahlo_-_Google_Art_Project.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Guillermo_Kahlo_-_Matilde%2C_Adriana%2C_Frida_and_Cristina_Kahlo_-_Google_Art_Project.jpg/1280px-Guillermo_Kahlo_-_Matilde%2C_Adriana%2C_Frida_and_Cristina_Kahlo_-_Google_Art_Project.jpg",
   "sha1": "ce7d5d07cb97381d859c1f1579aef00e179a4442",
@@ -5164,12 +5252,13 @@
  {
   "id": "james-c-hall-family-of-tennessee-circa-1",
   "title": "File:James C. Hall family, of Tennessee, circa 1899 - DPLA - 96cb934c7a4a428d70c973f8ca680a46.jpg",
+  "name": "The James C. Hall family of Tennessee",
   "page": "https://commons.wikimedia.org/wiki/File:James_C._Hall_family,_of_Tennessee,_circa_1899_-_DPLA_-_96cb934c7a4a428d70c973f8ca680a46.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/James_C._Hall_family%2C_of_Tennessee%2C_circa_1899_-_DPLA_-_96cb934c7a4a428d70c973f8ca680a46.jpg/1280px-James_C._Hall_family%2C_of_Tennessee%2C_circa_1899_-_DPLA_-_96cb934c7a4a428d70c973f8ca680a46.jpg",
   "sha1": "386f622084bf916987f65a334981a59a5bf19499",
   "licence": "Public domain",
   "author": "",
-  "date": "circa 1899",
+  "date": "About 1899",
   "width": 1600,
   "height": 1129,
   "boxes": [
@@ -5226,6 +5315,7 @@
  {
   "id": "native-hawaiian-missionary-family-c-1878",
   "title": "File:Native Hawaiian missionary family, c. 1878.jpg",
+  "name": "Native Hawaiian missionary family",
   "page": "https://commons.wikimedia.org/wiki/File:Native_Hawaiian_missionary_family,_c._1878.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Native_Hawaiian_missionary_family%2C_c._1878.jpg/1280px-Native_Hawaiian_missionary_family%2C_c._1878.jpg",
   "sha1": "3e97cad7a76cb3b290a1aaa6cea8bd929951dc78",
@@ -5282,12 +5372,13 @@
  {
   "id": "the-rossetti-family-by-lewis-carroll-cha",
   "title": "File:The Rossetti Family by Lewis Carroll (Charles Lutwidge Dodgson).jpg",
+  "name": "The Rossetti family",
   "page": "https://commons.wikimedia.org/wiki/File:The_Rossetti_Family_by_Lewis_Carroll_(Charles_Lutwidge_Dodgson).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/The_Rossetti_Family_by_Lewis_Carroll_%28Charles_Lutwidge_Dodgson%29.jpg/1280px-The_Rossetti_Family_by_Lewis_Carroll_%28Charles_Lutwidge_Dodgson%29.jpg",
   "sha1": "89c85312ccea5790a798b792860d137ea0ac12d9",
   "licence": "Public domain",
   "author": "Lewis Carroll",
-  "date": "6 October 1863 according to Wakeling, 7",
+  "date": "6 October 1863",
   "width": 1600,
   "height": 1283,
   "boxes": [
@@ -5320,12 +5411,13 @@
  {
   "id": "cab-card-wis-front",
   "title": "File:Cab-card-wis-front.jpg",
+  "name": "A family on a cabinet card",
   "page": "https://commons.wikimedia.org/wiki/File:Cab-card-wis-front.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Cab-card-wis-front.jpg/1280px-Cab-card-wis-front.jpg",
   "sha1": "ff54611fe41c99ac5344751b075e603fdce8b691",
   "licence": "Public domain",
-  "author": "Groh & Bro. Photographic studio, Wisconsin",
-  "date": "Unknown date, pre-1900",
+  "author": "Groh & Bro.",
+  "date": "Before 1900",
   "width": 1600,
   "height": 1045,
   "boxes": [
@@ -5370,12 +5462,13 @@
  {
   "id": "self-portrait-with-son-ashley-and-daught",
   "title": "File:Self-Portrait with son Ashley and daughters Harriet and Nellie LACMA AC1992.197.12.jpg",
+  "name": "Self-portrait with son and daughters",
   "page": "https://commons.wikimedia.org/wiki/File:Self-Portrait_with_son_Ashley_and_daughters_Harriet_and_Nellie_LACMA_AC1992.197.12.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Self-Portrait_with_son_Ashley_and_daughters_Harriet_and_Nellie_LACMA_AC1992.197.12.jpg/1280px-Self-Portrait_with_son_Ashley_and_daughters_Harriet_and_Nellie_LACMA_AC1992.197.12.jpg",
   "sha1": "88eb78ae6769126642531c3c51f1777cc483ccb4",
   "licence": "Public domain",
-  "author": "Henry Hamilton Bennett (Canada, 1843-1908)",
-  "date": "circa 1887",
+  "author": "Henry Hamilton Bennett",
+  "date": "About 1887",
   "width": 1600,
   "height": 1246,
   "boxes": [
@@ -5414,6 +5507,7 @@
  {
   "id": "marquis-it-hirobumi-family-1899",
   "title": "File:Marquis Itō Hirobumi family (1899).jpg",
+  "name": "The family of Marquis Itō Hirobumi",
   "page": "https://commons.wikimedia.org/wiki/File:Marquis_It%C5%8D_Hirobumi_family_(1899).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Marquis_It%C5%8D_Hirobumi_family_%281899%29.jpg/1280px-Marquis_It%C5%8D_Hirobumi_family_%281899%29.jpg",
   "sha1": "dcc258d8ed9a5b8f60dc1e833614296f3d25f5aa",
@@ -5482,12 +5576,13 @@
  {
   "id": "african-american-soldier-in-union-unifor",
   "title": "File:African American soldier in Union uniform with wife and two daughters (cropped).jpg",
+  "name": "Union soldier with his wife and daughters",
   "page": "https://commons.wikimedia.org/wiki/File:African_American_soldier_in_Union_uniform_with_wife_and_two_daughters_(cropped).jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/African_American_soldier_in_Union_uniform_with_wife_and_two_daughters_%28cropped%29.jpg/1280px-African_American_soldier_in_Union_uniform_with_wife_and_two_daughters_%28cropped%29.jpg",
   "sha1": "e22ab3ab2c8bbe8ab6c636c8957c2a5dab37d69c",
   "licence": "Public domain",
   "author": "",
-  "date": "between 1863 and 1865",
+  "date": "1863 to 1865",
   "width": 1600,
   "height": 1224,
   "boxes": [
@@ -5520,12 +5615,13 @@
  {
   "id": "victor-matsson-family-c-1922",
   "title": "File:Victor Matsson family c 1922.jpg",
+  "name": "The Victor Matsson family",
   "page": "https://commons.wikimedia.org/wiki/File:Victor_Matsson_family_c_1922.jpg",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Victor_Matsson_family_c_1922.jpg/1280px-Victor_Matsson_family_c_1922.jpg",
   "sha1": "8ed56abaef55c2878248e02a2a093bbbb4c16b00",
   "licence": "Public domain",
-  "author": "Unknown photograher (Demitz Files acquired by FamSAC)",
-  "date": "circa 1922",
+  "author": "Unknown photographer",
+  "date": "About 1922",
   "width": 1600,
   "height": 1145,
   "boxes": [

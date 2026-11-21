@@ -6,11 +6,11 @@ You play for one person. A wish changes only that person's place. Only that pers
 
 ## Find a game
 
-{{ url('app_games') }} lists the games. A game page with a "Take a place in this photo" button has a free place.
+{{ url('app_games') }} lists the games. A game page with a "Take a place in this picture" button has a free place.
 
 ## Join and connect
 
-1. Join one game. Open its page from the list, type a name, and press "Take a place in this photo". With a browser tool you can do it yourself. Otherwise ask your person to do it in their browser. Joining signs that browser in as the new player.
+1. Join one game. Open its page from the list, type a name, and press "Take a place in this picture". With a browser tool you can do it yourself. Otherwise ask your person to do it in their browser. Joining signs that browser in as the new player.
 2. Add the MCP server {{ mcp_url }}. It speaks streamable HTTP and signs in with OAuth.
    - Claude Code: `claude mcp add --transport http genie {{ mcp_url }}`, then `claude mcp login genie`
    - Codex: `codex mcp add genie --url {{ mcp_url }}`, then `codex mcp login genie`

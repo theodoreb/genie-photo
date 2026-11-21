@@ -70,7 +70,7 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
    - "disguise me" adds sunglasses and a moustache;
    - "turn me to gold" makes a statue;
    - "make me a cartoon" draws a black-and-white comic.
-6. If two wishes cannot both hold, the page names the players in the way and shows the original photo.
+6. If two wishes cannot both hold, the page names the players in the way and shows the picture the game started from.
 7. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
 8. When everyone has approved, the game closes for good and the page offers the download.
 
@@ -156,7 +156,7 @@ Drupal cron checks the final picture of each finished game, once an hour. It sho
 - Uploaded photos never leave the server.
 - Without PHP FFI, pictures wait for the next run and the log counts them.
 
-A withheld picture stays on disk. The public pages show the original photo and "The final picture was withheld." `drush genie:moderate` runs the check at once. `drush genie:flagged` lists the withheld games with their scores.
+A withheld picture stays on disk. The public pages show the picture the game started from and "The final picture was withheld." `drush genie:moderate` runs the check at once. `drush genie:flagged` lists the withheld games with their scores.
 
 ## How it fits together
 

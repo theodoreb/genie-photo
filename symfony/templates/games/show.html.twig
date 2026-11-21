@@ -14,7 +14,7 @@
 
     <div class="game-layout">
         <figure class="picture-frame">
-            <img class="frame" alt="{{ game.has_picture ? 'The photo as every wish leaves it' : 'The original group photo' }}"
+            <img class="frame" alt="{{ game.has_picture ? 'The picture as every wish leaves it' : 'The picture the game started from' }}"
                  src="{{ path('app_game_picture', {game: game.id, view: game.has_picture ? 'frame' : 'photo'}) }}?r={{ game.revision }}">
         </figure>
 
@@ -30,7 +30,7 @@
             {% else %}
                 <p><span class="badge open">Open</span> {{ game.free }} {{ game.free == 1 ? 'person is' : 'people are' }} left to claim.</p>
                 {% if not game.has_picture %}
-                    <p class="quiet">The wishes collide right now, so this is the original photo.</p>
+                    <p class="quiet">The wishes collide right now, so this is the picture the game started from.</p>
                 {% endif %}
             {% endif %}
 
@@ -43,7 +43,7 @@
                     <form class="join" method="post" action="{{ game.join }}">
                         <label for="name">Your name in the game</label>
                         <input id="name" name="name" maxlength="30" required autocomplete="nickname">
-                        <button>Take a place in this photo</button>
+                        <button>Take a place in this picture</button>
                     </form>
                     {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
                     <p class="quiet">An AI agent can join for you: <a href="{{ path('app_agent_guide') }}">{{ url('app_agent_guide') }}</a> has the steps.</p>
