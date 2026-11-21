@@ -11,6 +11,8 @@ use App\Drupal\McpDrupalTools;
 use App\Security\DrupalOAuth;
 use App\Tests\Smoke\PlayerSession;
 use App\Tests\Smoke\Seats;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpClient\HttpClient;
 
@@ -18,7 +20,7 @@ require dirname(__DIR__, 2).'/symfony/vendor/autoload.php';
 (new Dotenv())->bootEnv(dirname(__DIR__, 2).'/symfony/.env');
 
 $mcp = $_ENV['DRUPAL_URL'].'/mcp';
-$tools = new McpDrupalTools($mcp);
+$tools = new McpDrupalTools($mcp, new Psr16Cache(new ArrayAdapter()));
 $web = static fn (string $player): string => (new PlayerSession(
     $mcp,
     $_ENV['PUBLIC_URL'].'/oauth/callback',
