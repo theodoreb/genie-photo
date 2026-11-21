@@ -65,11 +65,14 @@ final class Places {
    *   List of people with description, head and body.
    * @param mixed $objects
    *   List of objects with label and box.
+   * @param bool $guesses
+   *   TRUE when the people are boxes guessed for a prepared game, which wait
+   *   for an assistant's trace. An assistant's scan traces each person.
    *
    * @throws \InvalidArgumentException
    *   When the scan breaks a rule.
    */
-  public static function scan(Session $session, int $uid, mixed $people, mixed $objects): void {
+  public static function scan(Session $session, int $uid, mixed $people, mixed $objects, bool $guesses = FALSE): void {
     self::assertPhoto($session);
     if (!is_array($people) || !array_is_list($people) || count($people) > self::MAX_PEOPLE) {
       throw new \InvalidArgumentException(sprintf('People is a list of at most %d entries.', self::MAX_PEOPLE));
@@ -83,6 +86,10 @@ final class Places {
       $body = self::bodyOf($person, $session);
       $cells = Outlines::parse($person['outline'] ?? [], $body, $session->photo);
       $label = self::label($person['description'] ?? NULL);
+      // An untraced person would hold every assistant back.
+      if ($cells === [] && !$guesses) {
+        throw new \InvalidArgumentException(sprintf('Trace %s: give outline runs on their grid cells.', $label));
+      }
       $claimed = self::claimedHead($session, $head);
       if ($claimed === NULL) {
         self::dropUnclaimedOn($session, $head);
@@ -90,10 +97,12 @@ final class Places {
         continue;
       }
       // A place claimed on a page has no outline until an assistant traces
-      // it. The trace fills the cells and keeps the player's head and body.
+      // it. The trace fills the cells, read inside the player's own body box.
       foreach ($survey->people as $index => $known) {
         if ($known['id'] === $claimed && $known['cells'] === []) {
-          $survey->people[$index]['cells'] = $cells;
+          $box = ['x' => $known['x'], 'y' => $known['y'], 'width' => $known['width'], 'height' => $known['height']];
+          $survey->people[$index]['cells'] = Outlines::parse($person['outline'], $box, $session->photo)
+            ?: throw new \InvalidArgumentException(sprintf('The outline of %s lies outside their place.', $label));
         }
       }
     }

@@ -225,7 +225,7 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke live` | Upload, a live update and the picture over MCP |
 | `bin/smoke wish alice` | A wish changes the picture, and oversized, blank and eleventh wishes are refused |
 | `bin/smoke collision` | Two wishes that cannot both hold |
-| `bin/smoke scan` | A claim is refused while someone is untraced, then an assistant traces, claims one person and paints, and ids survive a new scan |
+| `bin/smoke scan` | A scan without an outline is refused, a box moved by hand holds wishes until the next trace, and ids survive a new scan |
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |
 | `bin/smoke approve` | Approval, URL elicitation, output schemas, what an assistant cannot reach, and the closed game |

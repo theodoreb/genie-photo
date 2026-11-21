@@ -44,7 +44,9 @@ final class PlacesTest extends UnitTestCase {
     $session = $this->scanned();
     [$red, $blue] = array_keys($session->proposals);
     Places::claim($session, 2, 'bob', $blue, NULL, NULL);
-    Places::scan($session, 1, [['description' => 'again', 'head' => [600, 50, 80, 80], 'body' => [560, 50, 160, 400]]], []);
+    Places::scan($session, 1, [
+      ['description' => 'again', 'head' => [600, 50, 80, 80], 'body' => [560, 50, 160, 400], 'outline' => [[2, 14, 17]]],
+    ], []);
     $this->assertSame($blue, $session->regions['person-2']['person'], 'A scan leaves a claimed person alone.');
     $this->assertSame([$red, $blue], array_column($session->survey->people, 'id'));
 
@@ -58,30 +60,40 @@ final class PlacesTest extends UnitTestCase {
   }
 
   /**
-   * A scan traces a claimed place that has no outline, and keeps its boxes.
+   * A scan refuses a person with no outline, who would hold everyone back.
+   */
+  public function testScanRefusesUntracedPerson(): void {
+    $session = $this->scanned();
+    $this->expectExceptionMessage('Trace green coat');
+    $green = ['description' => 'green coat', 'head' => [800, 50, 80, 80], 'body' => [780, 50, 160, 400]];
+    Places::scan($session, 1, [$green], []);
+  }
+
+  /**
+   * A scan traces a claimed place inside its own box, and keeps its boxes.
    */
   public function testScanTracesClaimedPlace(): void {
     $session = $this->scanned();
-    $this->assertSame(['red shirt', 'blue shirt'], $session->untraced());
-    $blue = array_keys($session->proposals)[1];
-    Places::claim($session, 2, 'bob', $blue, NULL, NULL);
+    $this->assertSame([], $session->untraced());
+    Places::claim($session, 2, 'bob', NULL, [800, 50, 80, 80], [780, 50, 160, 400]);
+    $this->assertSame(['bob'], $session->untraced());
     $this->assertStringStartsWith('Trace every person', $session->next(2));
 
+    // The scan sends a body over the whole photo, and the place keeps its own.
     $trace = [
-      'description' => 'blue',
-      'head' => [600, 50, 80, 80],
-      'body' => [560, 50, 160, 400],
-      'outline' => [[2, 14, 17]],
+      'description' => 'green',
+      'head' => [800, 50, 80, 80],
+      'body' => [0, 0, 1000, 500],
+      'outline' => [[2, 0, 24]],
     ];
     Places::scan($session, 1, [$trace], []);
     $region = $session->regions['person-2'];
-    $this->assertNotSame([], $region['cells'], 'The claimed place is traced.');
-    $this->assertSame([$blue, 160, 400], [$region['person'], $region['width'], $region['height']], 'The place keeps its id and body.');
-    $this->assertSame(['red shirt'], $session->untraced());
+    $this->assertSame([[2, 18, 24]], $region['cells'], 'The outline stays inside the place.');
+    $this->assertSame([780, 160], [$region['x'], $region['width']], 'The place keeps its body.');
+    $this->assertSame([], $session->untraced());
 
-    $cells = $region['cells'];
-    Places::scan($session, 1, [['outline' => [[3, 14, 17]]] + $trace], []);
-    $this->assertSame($cells, $session->regions['person-2']['cells'], 'A traced place keeps its outline.');
+    Places::scan($session, 1, [['outline' => [[3, 19, 22]]] + $trace], []);
+    $this->assertSame([[2, 18, 24]], $session->regions['person-2']['cells'], 'A traced place keeps its outline.');
   }
 
   /**
@@ -91,8 +103,18 @@ final class PlacesTest extends UnitTestCase {
     $session = new Session();
     $session->pin(new Survey(1, 1, 1000, 500, 'off'));
     Places::scan($session, 1, [
-      ['description' => 'red shirt', 'head' => [100, 50, 80, 80], 'body' => [60, 50, 160, 480]],
-      ['description' => 'blue shirt', 'head' => [600, 50, 80, 80], 'body' => [560, 50, 160, 400]],
+      [
+        'description' => 'red shirt',
+        'head' => [100, 50, 80, 80],
+        'body' => [60, 50, 160, 480],
+        'outline' => [[3, 2, 4]],
+      ],
+      [
+        'description' => 'blue shirt',
+        'head' => [600, 50, 80, 80],
+        'body' => [560, 50, 160, 400],
+        'outline' => [[2, 14, 17]],
+      ],
     ], [['label' => 'cake', 'box' => [300, 300, 100, 100]]]);
     return $session;
   }

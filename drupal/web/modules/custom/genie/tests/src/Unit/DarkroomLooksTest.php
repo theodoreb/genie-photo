@@ -213,19 +213,31 @@ final class DarkroomLooksTest extends UnitTestCase {
   }
 
   /**
-   * A guessed box in front of an untraced person takes none of their cells.
+   * A guess in front of an untraced person takes no cell, and a player does.
+   *
+   * The guess is unclaimed and has no outline. The player is claimed.
    */
   public function testGuessedBoxTakesNoCell(): void {
     $session = new Session();
-    $session->pin(new Survey(1, 1, 1600, 800, 'off'));
-    Places::scan($session, 1, [
-      ['description' => 'dan', 'head' => [900, 210, 30, 30], 'body' => [880, 200, 80, 300]],
-    ], []);
+    $dan = [
+      'id' => 'dan',
+      'description' => 'dan',
+      'x' => 880,
+      'y' => 200,
+      'width' => 80,
+      'height' => 300,
+      'head' => ['x' => 900, 'y' => 210, 'width' => 30, 'height' => 30],
+      'cells' => [],
+    ];
+    $session->pin(new Survey(1, 1, 1600, 800, 'off', [], [$dan]));
+    Places::claim($session, 2, 'fay', NULL, [805, 205, 30, 30], [800, 200, 60, 300]);
     Places::claim($session, 1, 'cy', NULL, [850, 245, 30, 30], [800, 200, 200, 300]);
     $session->wishes = [1 => 'gold'];
     $result = $this->develop($session, [[0, 1599, 128]]);
     $color = imagecolorat($result, 920, 350);
     $this->assertGreaterThan($color & 255, $color >> 16 & 255, 'The middle of the box under the guess turns gold.');
+    $fay = imagecolorat($result, 820, 350);
+    $this->assertSame($fay & 255, $fay >> 16 & 255, 'Fay stays grey.');
   }
 
   /**

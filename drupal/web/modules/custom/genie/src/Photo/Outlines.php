@@ -104,9 +104,9 @@ final class Outlines {
   }
 
   /**
-   * Gives an untraced person's box cells, less those of traced people.
+   * Gives an untraced person's box cells, less those of other people.
    *
-   * Another untraced box is a guess, so it takes no cell away.
+   * An unclaimed guess without an outline takes no cell away.
    *
    * @param \Drupal\genie\Game\Session $session
    *   The session, which has a photo.
@@ -118,15 +118,15 @@ final class Outlines {
    */
   public static function untracedBox(Session $session, string $id): array {
     $people = self::people($session);
-    $traced = [];
-    foreach ($people as $person) {
-      if ($person['cells'] !== []) {
-        $traced += array_fill_keys(self::cellsOf($person, $session->photo), TRUE);
+    $taken = [];
+    foreach ($people as $other => $person) {
+      if ($other !== $id && ($person['cells'] !== [] || isset($session->regions[$other]))) {
+        $taken += array_fill_keys(self::cellsOf($person, $session->photo), TRUE);
       }
     }
     return array_values(array_filter(
       self::cellsOf($people[$id], $session->photo),
-      static fn (int $cell): bool => !isset($traced[$cell]),
+      static fn (int $cell): bool => !isset($taken[$cell]),
     ));
   }
 

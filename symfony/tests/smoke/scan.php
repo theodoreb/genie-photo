@@ -21,22 +21,33 @@ if (null === $photo['image'] || false === imagecreatefromstring($photo['image'])
     SmokeSite::fail('The assistant received no image.');
 }
 
-$yellow = ['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]];
-$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => [['label' => 'cake', 'box' => [700, 500, 200, 200]]]]);
-$person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
-try {
-    $site->tools->call($assistant, 'claim_place', ['person' => $person]);
-    SmokeSite::fail('A claim went through while a person was untraced.');
-} catch (DrupalToolFailed $e) {
-    if (!str_contains($e->getMessage(), 'Trace every person')) {
-        SmokeSite::fail('The refused claim did not say to trace: '.$e->getMessage());
+$refusal = static function (callable $call): string {
+    try {
+        $call();
+    } catch (DrupalToolFailed $e) {
+        return $e->getMessage();
     }
-}
+    SmokeSite::fail('A call went through while a person was untraced.');
+};
 
+$yellow = ['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]];
+$cake = [['label' => 'cake', 'box' => [700, 500, 200, 200]]];
+if (!str_contains($refusal(static fn () => $site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => $cake])), 'Trace yellow sweater')) {
+    SmokeSite::fail('A scan without an outline was not refused.');
+}
 $yellow['outline'] = [[5, 2, 7], [6, 2, 7], [7, 2, 7]];
-$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => []]);
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => $cake]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
-$claim = $site->tools->call($assistant, 'claim_place', ['person' => $person]);
+$site->tools->call($assistant, 'claim_place', ['person' => $person]);
+
+// A box moved by hand has no outline, so every assistant waits for the next trace.
+$site->tools->call($assistant, 'claim_place', ['head' => [100, 100, 200, 200], 'body' => [40, 100, 320, 700]]);
+if (!str_contains($refusal(static fn () => $site->tools->call($assistant, 'make_wish', ['wish' => 'hide me'])), 'Trace every person')) {
+    SmokeSite::fail('The refused wish did not say to trace.');
+}
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => []]);
+$mine = array_filter($site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'], static fn (array $one): bool => isset($one['player']));
+$person = array_values($mine)[0]['id'];
 $site->tools->call($assistant, 'scan_photo', [
     'people' => [
         ['description' => 'yellow sweater again'] + $yellow,
