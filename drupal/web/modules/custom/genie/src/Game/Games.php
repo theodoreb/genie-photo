@@ -111,14 +111,17 @@ final class Games {
   }
 
   /**
-   * Counts the open games of prepared photos.
+   * Counts the open games on some of the prepared pictures.
+   *
+   * @param list<string> $archive
+   *   The ids of those pictures in the archive manifest.
    */
-  public function openPrepared(): int {
+  public function openPrepared(array $archive): int {
     return (int) $this->entityTypeManager->getStorage('node')->getQuery()
       ->accessCheck(FALSE)
       ->condition('type', 'genie_game')
       ->condition('field_genie_state', 'open')
-      ->exists('field_genie_archive')
+      ->condition('field_genie_archive', $archive, 'IN')
       ->count()
       ->execute();
   }

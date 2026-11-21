@@ -20,24 +20,30 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Keeps games open on the prepared photos of `archive/manifest.json`.
+ * Keeps games open on the prepared pictures of `archive/manifest.json`.
  *
- * The first photos ship with the module. The others come from Wikimedia
- * Commons when their turn comes, in the order of the manifest.
+ * Paintings and photos each have their own turn, in the order of the
+ * manifest. The first pictures ship with the module. The others come from
+ * Wikimedia Commons when their turn comes.
  */
 final class Archive implements EventSubscriberInterface, DestructableInterface {
 
   /**
-   * How many prepared games stay open.
+   * How many prepared games of each kind stay open.
    */
-  public const OPEN = 6;
+  public const OPEN = 3;
+
+  /**
+   * The kinds of prepared picture, as the manifest names them.
+   */
+  private const KINDS = ['painting', 'photo'];
 
   private const LOCK = 'genie:archive';
 
   /**
-   * State key of the manifest position the next game opens.
+   * State key prefix of the next position among one kind's entries.
    */
-  private const NEXT = 'genie.archive.next';
+  private const NEXT = 'genie.archive.next.';
 
   private const API = 'https://commons.wikimedia.org/w/api.php';
 
@@ -51,7 +57,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
   /**
    * The manifest, read once.
    *
-   * @var list<array{id: string, title: string, name: string, page: string, thumb: string, sha1: string, licence: string, author: string, date: string, width: int, height: int, boxes: list<array{x: int, y: int, width: int, height: int}>}>|null
+   * @var list<array{id: string, title: string, name: string, kind: string, page: string, thumb: string, sha1: string, licence: string, author: string, date: string, width: int, height: int, boxes: list<array{x: int, y: int, width: int, height: int}>}>|null
    */
   private ?array $photos = NULL;
 
@@ -99,10 +105,10 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
   }
 
   /**
-   * Opens prepared games until enough of them are open.
+   * Opens prepared games until enough of each kind are open.
    *
-   * A photo that cannot be fetched stops the round. The next round starts
-   * with the photo after it.
+   * A picture that cannot be fetched stops the round of its kind. The next
+   * round starts with the picture after it.
    *
    * @return int
    *   How many games opened.
@@ -114,21 +120,24 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     }
     try {
       $opened = 0;
-      for ($missing = self::OPEN - $this->games->openPrepared(); $missing > 0; $missing--) {
-        $position = (int) $this->state->get(self::NEXT, 0);
-        $this->state->set(self::NEXT, $position + 1);
-        $photo = $this->manifest()[$position % count($this->manifest())];
-        try {
-          $this->open($photo);
+      foreach (self::KINDS as $kind) {
+        $photos = array_values(array_filter($this->manifest(), static fn (array $photo): bool => $photo['kind'] === $kind));
+        for ($missing = self::OPEN - $this->games->openPrepared(array_column($photos, 'id')); $missing > 0; $missing--) {
+          $position = (int) $this->state->get(self::NEXT . $kind, 0);
+          $this->state->set(self::NEXT . $kind, $position + 1);
+          $photo = $photos[$position % count($photos)];
+          try {
+            $this->open($photo);
+          }
+          catch (\RuntimeException $e) {
+            $this->logger->warning('The archive picture @id did not open: @reason', [
+              '@id' => $photo['id'],
+              '@reason' => $e->getMessage(),
+            ]);
+            break;
+          }
+          $opened++;
         }
-        catch (\RuntimeException $e) {
-          $this->logger->warning('The archive photo @id did not open: @reason', [
-            '@id' => $photo['id'],
-            '@reason' => $e->getMessage(),
-          ]);
-          break;
-        }
-        $opened++;
       }
       return $opened;
     }
