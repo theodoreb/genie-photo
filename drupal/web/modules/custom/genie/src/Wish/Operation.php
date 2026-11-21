@@ -10,11 +10,7 @@ namespace Drupal\genie\Wish;
 enum Operation: string {
 
   case Cover = 'cover';
-  case Exclude = 'exclude';
   case Show = 'visible';
-  case Center = 'center_on';
-  case StopCenter = 'stop_center';
-  case Protect = 'protect';
   case Disguise = 'disguise';
   case Gold = 'gold';
   case Cartoon = 'cartoon';

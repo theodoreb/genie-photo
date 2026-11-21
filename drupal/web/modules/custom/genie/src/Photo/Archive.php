@@ -188,7 +188,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     // keeps the people it adds only to a survey stored before it.
     $this->ledger->write(static function (Session $session): void {
       $detected = Places::detected($session);
-      Places::scan($session, 0, array_map(self::person(...), array_keys($detected), $detected), [], guesses: TRUE);
+      Places::scan($session, array_map(self::person(...), array_keys($detected), $detected), guesses: TRUE);
     });
   }
 

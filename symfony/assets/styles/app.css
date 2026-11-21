@@ -88,14 +88,13 @@ footer p { max-width: 72rem; margin: 0 auto; overflow-wrap: anywhere; }
 /* Face boxes: light outlines, thicker for the player's own place. A free place is a magenta button. */
 .region { position: absolute; border: 2px solid var(--light); color: #fff; font-size: .8rem; font-weight: 700; text-shadow: 0 0 3px #000; pointer-events: none; }
 .region[data-mine="true"] { border-width: 4px; box-shadow: 0 0 0 1px var(--dark); }
-.region.object { border-style: dotted; }
 .region.proposal { padding: 0; color: #fff; background: #bb449966; border: 3px dashed var(--action); box-shadow: none; cursor: pointer; pointer-events: auto; font: 700 .8rem var(--text); }
-.objects { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .5rem; }
-.objects:empty { display: none; }
+.proposal-list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .5rem; }
+.proposal-list:empty { display: none; }
 #wrong h2 { margin: 0; font-size: 1.3rem; }
 #wrong p { margin: 0; }
-.objects li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem .75rem; background: var(--card); border: 2px solid var(--line); }
-.objects button { padding: .35rem .8rem; font-size: .9rem; box-shadow: 2px 2px 0 var(--shade); }
+.proposal-list li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem .75rem; background: var(--card); border: 2px solid var(--line); }
+.proposal-list button { padding: .35rem .8rem; font-size: .9rem; box-shadow: 2px 2px 0 var(--shade); }
 
 .steps { margin: 0; padding-left: 1.4rem; display: grid; gap: .6rem; }
 .steps ul { padding-left: 1.2rem; }

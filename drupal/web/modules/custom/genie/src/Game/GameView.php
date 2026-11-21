@@ -7,9 +7,6 @@ namespace Drupal\genie\Game;
 use Drupal\Core\Url;
 use Drupal\genie\Photo\Archive;
 use Drupal\genie\Photo\Moderation;
-use Drupal\genie\Wish\Collision;
-use Drupal\genie\Wish\Frame;
-use Drupal\genie\Wish\Framer;
 use Drupal\genie\Wish\Operation;
 
 /**
@@ -28,12 +25,11 @@ final class GameView {
   /**
    * What the web view may read about a place.
    */
-  private const PLACE_KEYS = ['kind', 'owner', 'label', 'description', 'head', 'x', 'y', 'width', 'height'];
+  private const PLACE_KEYS = ['owner', 'label', 'description', 'head', 'x', 'y', 'width', 'height'];
 
   public function __construct(
     private readonly Ledger $ledger,
     private readonly Exports $exports,
-    private readonly Framer $framer,
     private readonly Archive $archive,
     private readonly Moderation $moderation,
   ) {}
@@ -42,18 +38,14 @@ final class GameView {
    * Describes the session for one player, without image data.
    *
    * @return array<string, mixed>
-   *   The revision, the photo size, the regions and the frame.
+   *   The revision, the photo size, the regions and the picture state.
    */
   public function view(int $uid): array {
     $session = $this->ledger->read();
     $export = $session->photo === NULL ? NULL : $this->exports->current($session);
     $regions = [];
     foreach ($session->regions as $id => $region) {
-      $regions[] = self::place($region) + [
-        'id' => $id,
-        'protected' => isset($session->protected[$id]),
-        'suggested_by' => $session->suggestions[$id] ?? [],
-      ];
+      $regions[] = self::place($region) + ['id' => $id];
     }
     $game = $this->ledger->game();
     $withheld = $this->moderation->withheld((int) $game->id());
@@ -72,11 +64,10 @@ final class GameView {
         $session->proposals,
       ),
       'wish' => $session->wishes[$uid] ?? Operation::Show->value,
-      'centered' => isset($session->centered[$uid]),
       'frame' => match (TRUE) {
         $session->photo === NULL => NULL,
         $withheld => ['ready' => FALSE, 'withheld' => self::WITHHELD],
-        default => self::describe($this->framer->frame($session)),
+        default => ['ready' => TRUE],
       },
       'export' => $export === NULL ? NULL : $session->receipt($uid, $export->hash),
     ];
@@ -106,7 +97,7 @@ final class GameView {
       'photo' => $session->photo,
       'players' => array_values(array_intersect_key($session->players, $session->claims)),
       'free' => $free,
-      'has_picture' => !$withheld && $this->framer->frame($session) instanceof Frame,
+      'has_picture' => !$withheld,
       'withheld' => $withheld ? self::WITHHELD : NULL,
       'join' => $joinable
         ? Url::fromRoute('genie.play', ['code' => $game->get('field_genie_invite')->value])->setAbsolute()->toString()
@@ -126,18 +117,6 @@ final class GameView {
    */
   private static function place(array $place): array {
     return array_intersect_key($place, array_flip(self::PLACE_KEYS));
-  }
-
-  /**
-   * Describes a framing result.
-   *
-   * @return array<string, mixed>
-   *   The crop, or the players whose wishes collide.
-   */
-  private static function describe(Frame|Collision $result): array {
-    return $result instanceof Frame
-      ? ['ready' => TRUE, 'x' => $result->x, 'y' => $result->y, 'width' => $result->width, 'height' => $result->height]
-      : ['ready' => FALSE, 'players' => $result->players];
   }
 
 }

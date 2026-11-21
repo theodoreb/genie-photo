@@ -49,23 +49,19 @@ final class WishInterpreterTest extends UnitTestCase {
    * Turns valid answers into wishes.
    */
   public function testValidAnswers(): void {
-    $wish = $this->interpreter('{"target":"me","operation":"cover","object":null}')->interpret('conceal me', []);
+    $wish = $this->interpreter('{"target":"me","operation":"cover"}')->interpret('conceal me');
     $this->assertEquals(new Wish(Operation::Cover, source: 'model'), $wish);
 
-    $wish = $this->interpreter('{"target":"me","operation":"protect","object":"the Lamp"}')
-      ->interpret('the lamp stays', ['object-1' => 'lamp']);
-    $this->assertEquals(new Wish(Operation::Protect, 'object-1', 'model'), $wish);
-
-    $wish = $this->interpreter('{"target":"me","operation":"gold","object":null}')->interpret('make me shine', []);
+    $wish = $this->interpreter('{"target":"me","operation":"gold"}')->interpret('make me shine');
     $this->assertEquals(new Wish(Operation::Gold, source: 'model'), $wish);
 
-    $wish = $this->interpreter('{"target":"me","operation":"disguise","object":null}')->interpret('incognito please', []);
+    $wish = $this->interpreter('{"target":"me","operation":"disguise"}')->interpret('incognito please');
     $this->assertEquals(new Wish(Operation::Disguise, source: 'model'), $wish);
 
-    $wish = $this->interpreter('{"target":"me","operation":"cartoon","object":null}')->interpret('draw me', []);
+    $wish = $this->interpreter('{"target":"me","operation":"cartoon"}')->interpret('draw me');
     $this->assertEquals(new Wish(Operation::Cartoon, source: 'model'), $wish);
 
-    $this->assertNull($this->interpreter('{"target":"nothing","operation":null,"object":null}')->interpret('hello', []));
+    $this->assertNull($this->interpreter('{"target":"nothing","operation":null}')->interpret('hello'));
   }
 
   /**
@@ -74,7 +70,7 @@ final class WishInterpreterTest extends UnitTestCase {
    * @dataProvider unusableAnswers
    */
   public function testUnusableAnswers(string $answer): void {
-    $this->assertNull($this->interpreter($answer)->interpret('hide my face', []));
+    $this->assertNull($this->interpreter($answer)->interpret('hide my face'));
   }
 
   /**
@@ -86,10 +82,9 @@ final class WishInterpreterTest extends UnitTestCase {
   public static function unusableAnswers(): array {
     return [
       'not JSON' => ['I would hide you'],
-      'unknown operation' => ['{"target":"me","operation":"explode","object":null}'],
-      'no target' => ['{"operation":"cover","object":null}'],
-      'about someone else' => ['{"target":"someone_else","operation":"cover","object":null}'],
-      'protect without object' => ['{"target":"me","operation":"protect","object":null}'],
+      'unknown operation' => ['{"target":"me","operation":"explode"}'],
+      'no target' => ['{"operation":"cover"}'],
+      'about someone else' => ['{"target":"someone_else","operation":"cover"}'],
     ];
   }
 
@@ -98,7 +93,7 @@ final class WishInterpreterTest extends UnitTestCase {
    */
   public function testUnavailableModel(): void {
     $interpreter = $this->interpreter(static fn () => throw new RuntimeException('Connection refused.'));
-    $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face', []));
+    $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face'));
   }
 
   /**
@@ -106,7 +101,7 @@ final class WishInterpreterTest extends UnitTestCase {
    */
   public function testSpentBudget(): void {
     $interpreter = $this->interpreter(static fn () => throw new \LogicException('The model was called.'), FALSE);
-    $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face', []));
+    $this->assertEquals(new Wish(Operation::Cover), $interpreter->interpret('hide my face'));
   }
 
 }

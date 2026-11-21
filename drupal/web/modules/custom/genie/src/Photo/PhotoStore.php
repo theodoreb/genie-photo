@@ -26,7 +26,6 @@ final class PhotoStore {
   private const DETECTOR = 'field_genie_detector';
   private const BOXES = 'field_genie_boxes';
   private const PEOPLE = 'field_genie_people';
-  private const OBJECTS = 'field_genie_objects';
 
   /**
    * Box keys, by the suffix of their sub-field.
@@ -88,7 +87,6 @@ final class PhotoStore {
     $media->set(self::DETECTOR, $survey->detector);
     $media->set(self::BOXES, array_map(self::boxRow(...), $survey->boxes));
     $media->set(self::PEOPLE, array_map(self::personRow(...), $survey->people));
-    $media->set(self::OBJECTS, array_map(self::objectRow(...), $survey->objects));
     $media->setNewRevision(TRUE);
     $media->save();
     return (int) $media->getRevisionId();
@@ -189,11 +187,6 @@ final class PhotoStore {
         'head' => self::box($row, 'head_'),
         'cells' => json_decode($row['outline__value'] ?? '[]', TRUE, flags: JSON_THROW_ON_ERROR),
       ] + self::box($row, 'body_'), $media->get(self::PEOPLE)->getValue()),
-      array_map(static fn (array $row): array => [
-        'id' => $row['cfi_uuid'],
-        'label' => $row['label__value'],
-        'reporter' => (int) $row['reporter__value'],
-      ] + self::box($row, ''), $media->get(self::OBJECTS)->getValue()),
     );
   }
 
@@ -250,23 +243,6 @@ final class PhotoStore {
       'description' => $person['description'],
       'outline' => $person['cells'] === [] ? NULL : json_encode($person['cells'], JSON_THROW_ON_ERROR),
     ] + self::boxRow($person, 'body_') + self::boxRow($person['head'], 'head_');
-  }
-
-  /**
-   * Writes an object as sub-field values.
-   *
-   * @param array<string, mixed> $object
-   *   The object.
-   *
-   * @return array<string, mixed>
-   *   The values.
-   */
-  private static function objectRow(array $object): array {
-    return [
-      'cfi_uuid' => $object['id'],
-      'label' => $object['label'],
-      'reporter' => $object['reporter'],
-    ] + self::boxRow($object);
   }
 
   /**

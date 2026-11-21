@@ -22,16 +22,8 @@ final class KeywordInterpreterTest extends UnitTestCase {
    */
   public function testNegatedWishes(): void {
     $expected = [
-      'crop me out' => Operation::Exclude,
-      "don't crop me out" => Operation::Show,
-      'do not remove me' => Operation::Show,
-      "don't leave me out" => Operation::Show,
       'hide my face' => Operation::Cover,
-      'put me in the middle' => Operation::Center,
-      'put me back in the middle' => Operation::Center,
-      "don't put me in the middle" => Operation::StopCenter,
-      'take me out of the middle' => Operation::StopCenter,
-      'I no longer want to be in the middle' => Operation::StopCenter,
+      'do not hide me' => Operation::Show,
       "don't show me" => Operation::Cover,
       "I don't want to be seen, hide my face" => Operation::Cover,
       'turn me to gold' => Operation::Gold,
@@ -50,16 +42,11 @@ final class KeywordInterpreterTest extends UnitTestCase {
     ];
     $interpreter = new KeywordInterpreter();
     foreach ($expected as $text => $operation) {
-      $this->assertSame($operation, $interpreter->interpret($text, [])?->operation, $text);
+      $this->assertSame($operation, $interpreter->interpret($text)?->operation, $text);
     }
-    $this->assertNull($interpreter->interpret("don't hide me, put me in the middle", []));
-    $this->assertNull($interpreter->interpret('put me in the middle and make me gold', []));
-    $this->assertSame('object-1', $interpreter->interpret('protect the gold cup', ['object-1' => 'gold cup'])?->object);
-    $this->assertSame('object-1', $interpreter->interpret("don't crop the comic book", ['object-1' => 'comic book'])?->object);
-    $this->assertSame('object-1', $interpreter->interpret('keep my sunglasses', ['object-1' => 'sunglasses'])?->object);
-    $this->assertNull($interpreter->interpret("don't disguise me, make me a cartoon", []));
-    $this->assertNull($interpreter->interpret("don't protect the cake", ['object-1' => 'cake']));
-    $this->assertSame('object-1', $interpreter->interpret("don't crop the cake", ['object-1' => 'cake'])?->object);
+    $this->assertNull($interpreter->interpret('hide my face and make me gold'));
+    $this->assertNull($interpreter->interpret("don't disguise me, make me a cartoon"));
+    $this->assertNull($interpreter->interpret('put me in the middle'));
   }
 
 }

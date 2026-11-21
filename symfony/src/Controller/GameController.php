@@ -136,16 +136,6 @@ final class GameController extends AbstractController
         return $this->callTool('web_export_approve', ['hash' => $request->request->getString('hash')]);
     }
 
-    #[Route('/objects/protect', name: 'app_protect', methods: ['POST'])]
-    #[IsCsrfTokenValid('regions', tokenKey: '_token')]
-    public function protect(Request $request): JsonResponse
-    {
-        return $this->callTool('web_protect_set', [
-            'object' => $request->request->getString('object'),
-            'protected' => $request->request->getBoolean('protected'),
-        ]);
-    }
-
     #[Route('/claim', name: 'app_claim', methods: ['POST'])]
     #[IsCsrfTokenValid('regions', tokenKey: '_token')]
     public function claim(Request $request): JsonResponse

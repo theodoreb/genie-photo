@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[Tool(
   id: 'session_get',
   label: new TranslatableMarkup('Session'),
-  description: new TranslatableMarkup('Lists the revision, the photo size, the marked regions and the state of the frame.'),
+  description: new TranslatableMarkup('Lists the revision, the photo size, the claimed places and the state of the picture.'),
   readOnly: TRUE,
   destructive: FALSE,
   idempotent: TRUE,

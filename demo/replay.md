@@ -1,6 +1,6 @@
 # Replay the demo
 
-The demo video tells this story on `demo/holiday-party.jpg`. Four friends wear Santa hats and surgical masks, so each one asks an assistant to paint a smile. Then Alice wants the middle, and everyone approves the new picture.
+The demo video tells this story on `demo/holiday-party.jpg`. Four friends wear Santa hats and surgical masks, so each one asks an assistant to paint a smile. Then Alice asks to be turned to gold, and everyone approves the new picture.
 
 ## Run it with one assistant
 
@@ -32,7 +32,7 @@ Sign in one assistant per player, as the README shows, and paste each prompt int
 5. dan: Use my genie tools: I'm the one in the blue denim shirt, claim my place. Look at my head with the grid, then paint one big solid round red clown nose in the middle of my mask. Make no wish.
 6. alice: Use my genie tools: paint a curly black handlebar moustache on my mask. Look at my head with the grid first, and stay on the mask. Make no wish.
 7. carol approves on the page.
-8. alice: Use my genie tools: put me in the middle of the photo.
+8. alice: Use my genie tools: turn me to gold.
 9. bob approves on the page.
 10. alice approves on the page.
 11. carol approves on the page.

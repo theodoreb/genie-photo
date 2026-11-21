@@ -1,8 +1,8 @@
 # Genie photo
 
-A group shares one photo. Each person signs in through their own AI assistant and makes wishes: hide my face, crop me out, put me in the middle, turn me to gold, paint a smile on my mask. A genie grants each wish to the letter, and the shared picture changes for everyone. The photo is final when every player approves the exact same picture.
+A group shares one photo. Each person signs in through their own AI assistant and makes wishes: hide my face, turn me to gold, paint a smile on my mask. A genie grants each wish to the letter, and the shared picture changes for everyone. The photo is final when every player approves the exact same picture.
 
-Each assistant receives the photo, so it can find who is in it and paint the person it sees. Your assistant's provider therefore receives the photo too. PHP code applies the crops, covers and paint.
+Each assistant receives the photo, so it can find who is in it and paint the person it sees. Your assistant's provider therefore receives the photo too. PHP code applies the covers, looks and paint. The picture is always the whole photo.
 
 ## Run it
 
@@ -70,11 +70,10 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
    - "disguise me" adds sunglasses and a moustache;
    - "turn me to gold" makes a statue;
    - "make me a cartoon" draws a black-and-white comic.
-6. If two wishes cannot both hold, the page names the players in the way and shows the picture the game started from.
-7. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
-8. When everyone has approved, the game closes for good and the page offers the download.
+6. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
+7. When everyone has approved, the game closes for good and the page offers the download.
 
-The picture hides a head only when its player asked to be covered or cut out. People nobody has claimed stay visible.
+The picture hides a head only when its player asked to be covered. People nobody has claimed stay visible.
 
 A game with a player and no change for a day is abandoned and turns read-only. Nothing is deleted.
 
@@ -115,7 +114,7 @@ To play several players from one machine, add the server once per player under a
 | `my_status` | Names the signed-in player |
 | `session_get` | Describes the session, without image data |
 | `photo_get` | Returns the photo, the shared picture, the tracing grid, or what you can paint under a grid |
-| `scan_photo` | Reports the people, their outlines and the objects found in the photo |
+| `scan_photo` | Reports the people found in the photo and their outlines |
 | `claim_place` | Takes a found person as yours, or corrects your head or box |
 | `make_wish` | Sends a wish to the genie |
 | `paint_me` | Repaints your whole person and a one-block safe zone, with optional pixel art, and returns the result |
@@ -124,7 +123,7 @@ To play several players from one machine, add the server once per player under a
 
 The server also offers three prompts, which clients such as claude.ai list in their prompt menu: `genie_join`, `genie_paint` and `genie_wish`. Each takes one line of text and asks the assistant to use the tools above. They are config entities of `mcp_server`, in the module's `config/install`.
 
-Protecting objects and dismissing people who are not playing stay on the web view. The web view also has `web_picture_get`, which returns its images, and three tools for visitors: `web_games_list`, `web_game_view` and `web_game_picture`. Assistants cannot call them.
+Dismissing people who are not playing stays on the web view. The web view also has `web_picture_get`, which returns its images, and three tools for visitors: `web_games_list`, `web_game_view` and `web_game_picture`. Assistants cannot call them.
 
 Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.
 
@@ -168,7 +167,7 @@ A withheld picture stays on disk. The public pages show the picture the game sta
 - Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A place claimed on the page gets its outline from the next trace.
 - Each game is a node. A `state_machine` field moves it from start to open, then closed or abandoned. A JSON field holds the play state.
 - Each player is an account named `NAME@NID` that references its game, so two games can each have an Alice.
-- A revisionable Media item holds the photo, the detector's boxes, the people and the objects, as `compound_field` rows. The game points to one revision.
+- A revisionable Media item holds the photo, the detector's boxes and the people, as `compound_field` rows. The game points to one revision.
 - Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
 - The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
 - The web view serves the public pages `/games`, `/games/{uuid}` and `/llms.txt`, and the player page at `/`.
@@ -220,7 +219,7 @@ Each line names a library feature and links to the code that uses it.
 - Cron abandons idle games, and `hook_user_format_name_alter` shows players without their game id: [`GenieHooks.php`](drupal/web/modules/custom/genie/src/Hook/GenieHooks.php).
 - The site runs on the `main` branches of Symfony AI and the MCP SDK, with patches for what broke: [`docs/upstream-breaks.md`](docs/upstream-breaks.md).
 - Drupal AI holds the platform and the Ollama provider as config: [`ai.platform.genie.yml`](drupal/web/modules/custom/genie/config/install/ai.platform.genie.yml).
-- A revisionable Media item holds the photo, with `compound_field` rows for people and objects: [`PhotoStore.php`](drupal/web/modules/custom/genie/src/Photo/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie/src/Game/Session.php).
+- A revisionable Media item holds the photo, with `compound_field` rows for people: [`PhotoStore.php`](drupal/web/modules/custom/genie/src/Photo/PhotoStore.php), [`Session.php`](drupal/web/modules/custom/genie/src/Game/Session.php).
 - FrankenPHP's `mercure_publish()` announces each new revision: [`RevisionPublisher.php`](drupal/web/modules/custom/genie/src/Game/RevisionPublisher.php).
 - Drupack runs Drupal, its Mercure hub, the web view and Composer. The project's build adds FFI: [`fork/drupack/`](fork/drupack/), [`bin/lib/get-drupack`](bin/lib/get-drupack).
 
@@ -240,7 +239,6 @@ Each line names a library feature and links to the code that uses it.
 | `bin/smoke subscribe` | A resource update reaches a `subscriptions/listen` stream |
 | `bin/smoke live` | Upload, a live update and the picture over MCP |
 | `bin/smoke wish alice` | A wish changes the picture, and oversized, blank and eleventh wishes are refused |
-| `bin/smoke collision` | Two wishes that cannot both hold |
 | `bin/smoke scan` | A scan without an outline is refused, a box moved by hand holds wishes until the next trace, and ids survive a new scan |
 | `bin/smoke outline` | The detector finds people, and paint reaches the safe zone but no neighbour |
 | `bin/smoke review` | The approval page: return after sign-in, wrong player, changed picture |

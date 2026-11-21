@@ -47,10 +47,7 @@ final class Pictures {
       default => throw new \InvalidArgumentException('The view is photo, picture, outline or my_body.'),
     };
     if ($view === 'photo') {
-      $info += $session->photo + [
-        'people' => self::people($session),
-        'objects' => array_values($session->objectNames()),
-      ];
+      $info += $session->photo + ['people' => self::people($session)];
     }
     if ($view === 'outline') {
       $info += [
@@ -74,9 +71,9 @@ final class Pictures {
    * Returns an image the web view shows.
    *
    * @param string $view
-   *   Either photo or frame.
+   *   Either photo or frame, the shared picture.
    * @param mixed $revision
-   *   For a frame, the revision the page asks for.
+   *   For the picture, the revision the page asks for.
    *
    * @return array{bytes: string, mime: string, info: array<string, mixed>}
    *   The image and what to say about it.
@@ -102,9 +99,6 @@ final class Pictures {
       throw new \InvalidArgumentException(GameView::WITHHELD);
     }
     $export = $this->exports->current($session);
-    if ($export === NULL) {
-      throw new \InvalidArgumentException('No frame fits every wish right now.');
-    }
     return [
       'bytes' => $export->png,
       'mime' => 'image/png',
@@ -116,11 +110,7 @@ final class Pictures {
    * Renders the shared picture for an assistant.
    */
   private function pictureJpeg(Session $session): string {
-    $export = $this->exports->current($session);
-    if ($export === NULL) {
-      throw new \InvalidArgumentException('No frame fits every wish right now.');
-    }
-    return $this->darkroom->toJpeg($export->png);
+    return $this->darkroom->toJpeg($this->exports->current($session)->png);
   }
 
   /**
@@ -167,15 +157,13 @@ final class Pictures {
       ];
     }
     foreach ($session->regions as $region) {
-      if ($region['kind'] === 'person') {
-        $people[] = [
-          'id' => $region['person'],
-          'player' => $region['label'],
-          'description' => $region['description'],
-          'head' => $list($region['head']),
-          'body' => $list($region),
-        ];
-      }
+      $people[] = [
+        'id' => $region['person'],
+        'player' => $region['label'],
+        'description' => $region['description'],
+        'head' => $list($region['head']),
+        'body' => $list($region),
+      ];
     }
     return $people;
   }

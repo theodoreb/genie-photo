@@ -27,8 +27,6 @@ $web = static fn (string $player): string => (new PlayerSession(
     DrupalOAuth::CLIENT_ID,
     $_ENV['GENIE_WEB_SECRET'],
 ))->signIn(Seats::saved()->account($player), Seats::saved()->password($player));
-// The export is empty while no frame holds every wish, and the page then names the players in the way.
-$collision = static fn (array $session): string => 'No frame holds every wish. In the way: '.implode(', ', $session['frame']['players']).'.';
 
 [, $command, $player, $argument] = $argv + [null, '', 'alice', ''];
 switch ($command) {
@@ -53,22 +51,17 @@ switch ($command) {
     case 'approve':
         $token = $web($player);
         $session = $tools->call($token, 'session_get');
-        if (null === $session['export']) {
-            fwrite(STDERR, $collision($session)."\n");
-            exit(1);
-        }
         $tools->call($token, 'web_export_approve', ['hash' => $session['export']['hash']]);
         break;
 
     case 'status':
         $session = $tools->call($web($player), 'session_get');
-        $placed = array_column(array_filter($session['regions'], static fn (array $region): bool => 'person' === $region['kind'] && isset($region['owner'])), 'label');
+        $placed = array_column($session['regions'], 'label');
         $export = $session['export'];
         printf(
             "Players placed: %s. %s\n",
             implode(', ', $placed) ?: 'none',
             match (true) {
-                null === $export => $collision($session),
                 $export['final'] => 'The picture is final.',
                 default => 'Waiting for: '.implode(', ', $export['waiting_for']).'.',
             },

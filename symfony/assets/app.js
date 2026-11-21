@@ -7,7 +7,6 @@ const regions = document.querySelector('#regions');
 const status = document.querySelector('#status');
 const frame = document.querySelector('#frame');
 const blocked = document.querySelector('#blocked');
-const objects = document.querySelector('#objects');
 const wrong = document.querySelector('#wrong');
 const proposals = document.querySelector('#proposals');
 const approve = document.querySelector('#approve');
@@ -21,15 +20,10 @@ function percent(value, total) {
     return `${(100 * value) / total}%`;
 }
 
-// The part of the photo the picture shows: the crop, or the whole photo when no crop fits.
-function view() {
-    return session.frame.ready ? session.frame : { x: 0, y: 0, ...session.photo };
-}
-
 function place(element, box) {
-    const { x, y, width, height } = view();
-    element.style.left = percent(box.x - x, width);
-    element.style.top = percent(box.y - y, height);
+    const { width, height } = session.photo;
+    element.style.left = percent(box.x, width);
+    element.style.top = percent(box.y, height);
     element.style.width = percent(box.width, width);
     element.style.height = percent(box.height, height);
     return element;
@@ -37,7 +31,7 @@ function place(element, box) {
 
 function markElement(region) {
     const element = document.createElement('div');
-    element.className = `region ${region.kind}`;
+    element.className = 'region';
     element.textContent = region.label;
     element.dataset.mine = String(region.owner === Number(game.dataset.player));
     return place(element, region.head ?? region);
@@ -63,7 +57,7 @@ function render() {
         frame.src = game.dataset.frameUrl + session.revision;
     } else {
         frame.src = game.dataset.photoUrl;
-        blocked.textContent = session.frame.withheld ?? `No frame fits these wishes: ${session.frame.players.join(', ')}.`;
+        blocked.textContent = session.frame.withheld;
     }
     renderApproval();
     guide.hidden = session.proposals.length > 0 || session.regions.length > 0;
@@ -71,7 +65,6 @@ function render() {
         wrong.hidden = session.proposals.length === 0;
         proposals.replaceChildren(...session.proposals.map(proposalRow));
     }
-    objects.replaceChildren(...session.regions.filter((region) => region.kind === 'object').map(objectRow));
     regions.replaceChildren(...session.regions.map(markElement), ...session.proposals.map(proposalElement));
 }
 
@@ -114,16 +107,6 @@ function claim(box) {
     post(game.dataset.claimUrl, body);
 }
 
-function objectRow(region) {
-    const row = document.createElement('li');
-    const suggested = region.suggested_by.length ? `, suggested by ${region.suggested_by.join(', ')}` : '';
-    row.textContent = `${region.label}: ${region.protected ? 'stays in the frame' : 'free'}${suggested} `;
-    if (session.is_uploader) {
-        row.append(button(region.protected ? 'Release' : 'Protect', () => setProtected(region)));
-    }
-    return row;
-}
-
 async function send(url, body) {
     body.set('_token', game.dataset.regionToken);
     const response = await fetch(url, { method: 'POST', body, redirect: 'manual' });
@@ -140,13 +123,6 @@ async function post(url, body) {
         status.textContent = (await response.json()).error;
     }
     return response.ok;
-}
-
-function setProtected(region) {
-    const body = new FormData();
-    body.set('object', region.id);
-    body.set('protected', region.protected ? '0' : '1');
-    post(game.dataset.protectUrl, body);
 }
 
 async function refresh() {

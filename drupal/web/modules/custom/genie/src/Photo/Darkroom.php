@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Drupal\genie\Photo;
 
 use Drupal\genie\Game\Session;
-use Drupal\genie\Wish\Frame;
 use Drupal\genie\Wish\Operation;
 
 /**
- * Renders the shared picture: private areas, paint, covers, then the crop.
+ * Renders the shared picture: private areas, paint, looks, then covers.
  */
 final class Darkroom {
 
@@ -104,17 +103,11 @@ final class Darkroom {
   ];
 
   /**
-   * Returns the frame as PNG bytes.
+   * Returns the whole picture as PNG bytes.
    */
-  public function render(string $jpeg, Session $session, Frame $frame): string {
-    $crop = imagecrop($this->develop($jpeg, $session), [
-      'x' => $frame->x,
-      'y' => $frame->y,
-      'width' => $frame->width,
-      'height' => $frame->height,
-    ]);
+  public function render(string $jpeg, Session $session): string {
     ob_start();
-    imagepng($crop);
+    imagepng($this->develop($jpeg, $session));
     return ob_get_clean();
   }
 
@@ -146,7 +139,7 @@ final class Darkroom {
     $owners = Outlines::owners($session);
     $reach = Outlines::reach($session);
     foreach ($session->regions as $id => $region) {
-      if ($region['kind'] === 'person' && isset($session->paints[$region['owner']])) {
+      if (isset($session->paints[$region['owner']])) {
         $this->paintPerson($image, $session->photo, array_keys($owners, $id, TRUE), $reach[$id], $session->paints[$region['owner']]);
       }
     }
@@ -367,7 +360,7 @@ final class Darkroom {
   private function dress(\GdImage $image, Session $session, array $owners): void {
     $looks = [];
     foreach ($session->regions as $id => $region) {
-      if ($region['kind'] !== 'person' || !isset($session->wishes[$region['owner']])) {
+      if (!isset($session->wishes[$region['owner']])) {
         continue;
       }
       $look = Operation::from($session->wishes[$region['owner']]);
@@ -621,16 +614,15 @@ final class Darkroom {
   }
 
   /**
-   * Lists the heads of the players who asked to be covered or excluded.
+   * Lists the heads of the players who asked to be covered.
    *
    * @return list<array{x: int, y: int, width: int, height: int}>
    *   The head boxes.
    */
   private function hiddenHeads(Session $session): array {
-    $private = [Operation::Cover->value, Operation::Exclude->value];
     $hidden = [];
     foreach ($session->regions as $region) {
-      if ($region['kind'] === 'person' && in_array($session->wishes[$region['owner']] ?? NULL, $private, TRUE)) {
+      if (($session->wishes[$region['owner']] ?? NULL) === Operation::Cover->value) {
         $hidden[] = $region['head'];
       }
     }

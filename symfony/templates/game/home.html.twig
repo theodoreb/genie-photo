@@ -21,7 +21,6 @@
       data-photo-url="{{ path('app_photo') }}"
       data-frame-url="{{ path('app_frame', {revision: 0})|replace({'/0': '/'}) }}"
       data-claim-url="{{ path('app_claim') }}"
-      data-protect-url="{{ path('app_protect') }}"
       data-approve-url="{{ path('app_approve') }}"
       data-dismiss-url="{{ path('app_proposal_dismiss') }}"
       data-region-token="{{ csrf_token('regions') }}"
@@ -53,10 +52,9 @@
                     <section id="wrong" class="stage-wrap" aria-labelledby="wrong-title" hidden>
                         <h2 id="wrong-title">A box marks no one?</h2>
                         <p class="hint">As the host, remove it, so nobody waits for that place.</p>
-                        <ul id="proposals" class="objects"></ul>
+                        <ul id="proposals" class="proposal-list"></ul>
                     </section>
                 {% endif %}
-                <ul id="objects" class="objects" aria-label="Things in the picture"></ul>
             </section>
 
             <div class="side">
@@ -76,7 +74,7 @@
                                 </ul>
                             </details>
                         </li>
-                        <li>Tell it your wish: "hide my face", "put me in the middle", "disguise me", "turn me to gold", "make me a cartoon", or "repaint me as pixel art". Everyone sees the picture change.</li>
+                        <li>Tell it your wish: "hide my face", "disguise me", "turn me to gold", "make me a cartoon", or "repaint me as pixel art". Everyone sees the picture change.</li>
                         <li>When the picture suits you, click "I approve this picture". The game ends when every player approves.</li>
                     </ol>
                 </section>

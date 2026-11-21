@@ -167,10 +167,6 @@ final class Moderation {
       }
       $this->game->enter($game);
       $export = $this->exports->current($this->ledger->read());
-      if ($export === NULL) {
-        $this->record($game, $check, NULL);
-        continue;
-      }
       $pictures[self::KEY . $game] = $export->png;
     }
     return $pictures;

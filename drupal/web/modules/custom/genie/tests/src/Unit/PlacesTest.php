@@ -26,7 +26,6 @@ final class PlacesTest extends UnitTestCase {
     $this->assertCount(2, $session->proposals);
     $red = array_key_first($session->proposals);
     $this->assertSame(450, $session->proposals[$red]['height'], 'A box stops at the edge of the photo.');
-    $this->assertSame(['cake'], array_column($session->survey->objects, 'label'));
 
     Places::claim($session, 2, 'bob', $red, NULL, NULL);
     $this->assertSame('red shirt', $session->regions['person-2']['description']);
@@ -44,9 +43,9 @@ final class PlacesTest extends UnitTestCase {
     $session = $this->scanned();
     [$red, $blue] = array_keys($session->proposals);
     Places::claim($session, 2, 'bob', $blue, NULL, NULL);
-    Places::scan($session, 1, [
+    Places::scan($session, [
       ['description' => 'again', 'head' => [600, 50, 80, 80], 'body' => [560, 50, 160, 400], 'outline' => [[2, 14, 17]]],
-    ], []);
+    ]);
     $this->assertSame($blue, $session->regions['person-2']['person'], 'A scan leaves a claimed person alone.');
     $this->assertSame([$red, $blue], array_column($session->survey->people, 'id'));
 
@@ -66,7 +65,7 @@ final class PlacesTest extends UnitTestCase {
     $session = $this->scanned();
     $this->expectExceptionMessage('Trace green coat');
     $green = ['description' => 'green coat', 'head' => [800, 50, 80, 80], 'body' => [780, 50, 160, 400]];
-    Places::scan($session, 1, [$green], []);
+    Places::scan($session, [$green]);
   }
 
   /**
@@ -86,13 +85,13 @@ final class PlacesTest extends UnitTestCase {
       'body' => [0, 0, 1000, 500],
       'outline' => [[2, 0, 24]],
     ];
-    Places::scan($session, 1, [$trace], []);
+    Places::scan($session, [$trace]);
     $region = $session->regions['person-2'];
     $this->assertSame([[2, 18, 24]], $region['cells'], 'The outline stays inside the place.');
     $this->assertSame([780, 160], [$region['x'], $region['width']], 'The place keeps its body.');
     $this->assertSame([], $session->untraced());
 
-    Places::scan($session, 1, [['outline' => [[3, 19, 22]]] + $trace], []);
+    Places::scan($session, [['outline' => [[3, 19, 22]]] + $trace]);
     $this->assertSame([[2, 18, 24]], $session->regions['person-2']['cells'], 'A traced place keeps its outline.');
   }
 
@@ -102,7 +101,7 @@ final class PlacesTest extends UnitTestCase {
   private function scanned(): Session {
     $session = new Session();
     $session->pin(new Survey(1, 1, 1000, 500, 'off'));
-    Places::scan($session, 1, [
+    Places::scan($session, [
       [
         'description' => 'red shirt',
         'head' => [100, 50, 80, 80],
@@ -115,7 +114,7 @@ final class PlacesTest extends UnitTestCase {
         'body' => [560, 50, 160, 400],
         'outline' => [[2, 14, 17]],
       ],
-    ], [['label' => 'cake', 'box' => [300, 300, 100, 100]]]);
+    ]);
     return $session;
   }
 

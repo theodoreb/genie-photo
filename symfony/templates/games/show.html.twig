@@ -29,9 +29,6 @@
                 <p><span class="badge abandoned">Left as it was</span> This game saw no change for a day.</p>
             {% else %}
                 <p><span class="badge open">Open</span> {{ game.free }} {{ game.free == 1 ? 'person is' : 'people are' }} left to claim.</p>
-                {% if not game.has_picture %}
-                    <p class="quiet">The wishes collide right now, so this is the picture the game started from.</p>
-                {% endif %}
             {% endif %}
 
             <p>{% if game.players %}Playing: {{ game.players|join(', ') }}.{% else %}Nobody plays yet.{% endif %}</p>

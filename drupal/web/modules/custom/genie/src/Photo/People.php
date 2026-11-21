@@ -19,20 +19,19 @@ final class People {
   /**
    * Records what an assistant found in the photo.
    *
-   * @return array{revision: int, unclaimed_people: int, objects: int, next: string}
+   * @return array{revision: int, unclaimed_people: int, next: string}
    *   The outcome.
    *
    * @throws \InvalidArgumentException
    *   When the scan breaks a rule.
    */
-  public function scan(int $uid, mixed $people, mixed $objects): array {
-    $session = $this->ledger->write(static function (Session $session) use ($uid, $people, $objects): void {
-      Places::scan($session, $uid, $people, $objects);
+  public function scan(int $uid, mixed $people): array {
+    $session = $this->ledger->write(static function (Session $session) use ($people): void {
+      Places::scan($session, $people);
     });
     return [
       'revision' => $session->revision,
       'unclaimed_people' => count($session->proposals),
-      'objects' => count($session->objectNames()),
       'next' => $session->next($uid),
     ];
   }

@@ -48,7 +48,7 @@ foreach (array_slice($outline['info']['detected'], 0, 2, true) as $label => [$x,
         'outline' => $runs[$label],
     ];
 }
-$site->tools->call($assistant, 'scan_photo', ['people' => $scan, 'objects' => []]);
+$site->tools->call($assistant, 'scan_photo', ['people' => $scan]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
 $claim = $site->tools->call($assistant, 'claim_place', ['person' => $person, 'head' => $scan[0]['head']]);
 $before = imagecreatefromstring($site->frame($web, $claim['revision']));

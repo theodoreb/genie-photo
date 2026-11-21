@@ -14,12 +14,12 @@ use Mcp\Server\Exception\ToolCallException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Records the people and objects an assistant found in the photo.
+ * Records the people an assistant found in the photo.
  */
 #[Tool(
   id: 'scan_photo',
   label: new TranslatableMarkup('Report who is in the photo'),
-  description: new TranslatableMarkup('After looking at the photo with photo_get, reports every person and notable object in it, so nobody has to draw boxes. List people from front to back. Give each person a short visible description such as "red shirt, Santa hat" and a tight head box. When view outline shows detected people, pass the label as detected and trace the person as outline runs. Otherwise pass a body box. Call it again to add someone who was missed or to replace a wrong box that nobody claimed.'),
+  description: new TranslatableMarkup('After looking at the photo with photo_get, reports every person in it, so nobody has to draw boxes. List people from front to back. Give each person a short visible description such as "red shirt, Santa hat" and a tight head box. When view outline shows detected people, pass the label as detected and trace the person as outline runs. Otherwise pass a body box. Call it again to add someone who was missed or to replace a wrong box that nobody claimed.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [
@@ -44,19 +44,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
           'required' => ['description', 'head'],
         ],
       ],
-      'objects' => [
-        'type' => 'array',
-        'items' => [
-          'type' => 'object',
-          'properties' => [
-            'label' => ['type' => 'string'],
-            'box' => Places::BOX_SCHEMA,
-          ],
-          'required' => ['label', 'box'],
-        ],
-      ],
     ],
-    'required' => ['people', 'objects'],
+    'required' => ['people'],
   ],
   readOnly: FALSE,
   destructive: FALSE,
@@ -84,7 +73,7 @@ final class ScanPhotoTool extends LedgerToolBase {
    */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     try {
-      return $this->people->scan((int) $this->currentUser->id(), $arguments['people'] ?? NULL, $arguments['objects'] ?? NULL);
+      return $this->people->scan((int) $this->currentUser->id(), $arguments['people'] ?? NULL);
     }
     catch (\InvalidArgumentException $e) {
       throw new ToolCallException($e->getMessage(), previous: $e);

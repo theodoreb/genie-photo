@@ -77,7 +77,7 @@ final class Approvals {
       throw new \InvalidArgumentException(Places::NO_PLACE);
     }
     $export = $this->exports->current($seen);
-    if ($export === NULL || !hash_equals($export->hash, $hash)) {
+    if (!hash_equals($export->hash, $hash)) {
       throw new \InvalidArgumentException('The picture has changed. Look at it again.');
     }
     $session = $this->ledger->write(static function (Session $session) use ($uid, $hash, $seen): void {
@@ -106,10 +106,10 @@ final class Approvals {
     if (!isset($session->players[$uid])) {
       throw new \InvalidArgumentException(Places::NO_PLACE);
     }
-    $export = $session->photo === NULL ? NULL : $this->exports->current($session);
-    if ($export === NULL) {
+    if ($session->photo === NULL) {
       throw new \InvalidArgumentException('There is no photo to approve right now.');
     }
+    $export = $this->exports->current($session);
     $state = $session->receipt($uid, $export->hash);
     if ($state['approved_by_you']) {
       return $this->approved($state);

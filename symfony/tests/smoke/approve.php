@@ -41,7 +41,7 @@ $approve = static function (string ...$players) use ($site, &$tokens): array {
 };
 
 $assistant = $site->signInAsAssistant('alice');
-foreach (['web_picture_get', 'web_export_approve', 'web_protect_set', 'web_proposal_dismiss'] as $tool) {
+foreach (['web_picture_get', 'web_export_approve', 'web_proposal_dismiss'] as $tool) {
     try {
         $site->tools->call($assistant, $tool, ['hash' => 'x']);
         SmokeSite::fail("An assistant reached $tool.");

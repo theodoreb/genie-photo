@@ -121,7 +121,7 @@ final class GenieCommands extends DrushCommands {
   #[CLI\Command(name: 'genie:interpret')]
   #[CLI\Argument(name: 'wish', description: 'The words of the wish.')]
   public function interpret(string $wish): void {
-    $result = $this->interpreter->interpret($wish, []);
+    $result = $this->interpreter->interpret($wish);
     $this->output()->writeln($result === NULL ? 'unclear' : "{$result->operation->value} ({$result->source})");
   }
 

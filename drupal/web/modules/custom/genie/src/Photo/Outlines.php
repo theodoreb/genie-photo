@@ -238,12 +238,7 @@ final class Outlines {
    *   Regions and proposals, by id.
    */
   private static function people(Session $session): array {
-    $people = $session->proposals;
-    foreach ($session->regions as $id => $region) {
-      if ($region['kind'] === 'person') {
-        $people[$id] = $region;
-      }
-    }
+    $people = $session->proposals + $session->regions;
     uasort($people, static fn (array $one, array $other): int => $one['rank'] <=> $other['rank']);
     return $people;
   }

@@ -6,6 +6,7 @@ namespace Drupal\genie\Game;
 
 use Drupal\genie\Photo\BodyPaint;
 use Drupal\genie\Photo\Survey;
+use Drupal\genie\Wish\Operation;
 use Drupal\node\NodeInterface;
 
 /**
@@ -22,9 +23,6 @@ final class Session {
     'paints',
     'claims',
     'wishes',
-    'centered',
-    'protected',
-    'suggestions',
     'players',
     'update',
     'approvals',
@@ -84,12 +82,12 @@ final class Session {
   public array $claims = [];
 
   /**
-   * Claimed people and found objects in photo pixels, from the survey.
+   * Claimed people in photo pixels, from the survey.
    *
    * A person's box is the body. The head box inside it takes covers. Cells
    * hold the traced outline, and rank counts from the front.
    *
-   * @var array<string, array{kind: string, owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int, person?: string}>
+   * @var array<string, array{owner: int, label: string, x: int, y: int, width: int, height: int, description?: string, head?: array{x: int, y: int, width: int, height: int}, cells?: list<array{int, int, int}>, rank?: int, person?: string}>
    */
   public array $regions = [];
 
@@ -99,27 +97,6 @@ final class Session {
    * @var array<int, string>
    */
   public array $wishes = [];
-
-  /**
-   * Players who asked for the middle of the frame, by account id.
-   *
-   * @var array<int, true>
-   */
-  public array $centered = [];
-
-  /**
-   * Who protected each object, by region id.
-   *
-   * @var array<string, string>
-   */
-  public array $protected = [];
-
-  /**
-   * Who suggested protecting each object, by region id.
-   *
-   * @var array<string, list<string>>
-   */
-  public array $suggestions = [];
 
   /**
    * Who takes part: the uploader and everyone with a place, by account id.
@@ -181,7 +158,6 @@ final class Session {
       if (isset($owners[$id])) {
         $uid = $owners[$id];
         $this->regions["person-$uid"] = [
-          'kind' => 'person',
           'owner' => $uid,
           'label' => $this->players[$uid],
           'description' => $description,
@@ -191,13 +167,6 @@ final class Session {
       else {
         $this->proposals[$id] = ['label' => $description] + $place;
       }
-    }
-    foreach ($this->survey->objects as $object) {
-      $this->regions[$object['id']] = [
-        'kind' => 'object',
-        'owner' => $object['reporter'],
-        'label' => $object['label'],
-      ] + self::box($object);
     }
   }
 
@@ -225,6 +194,12 @@ final class Session {
       foreach (self::STORED as $name) {
         $session->$name = $data[$name];
       }
+      // Games stored before framing was removed hold wishes that no longer
+      // exist. The closed ones still render, so those wishes are dropped.
+      $session->wishes = array_filter(
+        $session->wishes,
+        static fn (string $wish): bool => Operation::tryFrom($wish) !== NULL,
+      );
       $session->paints = array_map(
         static fn (array $paint): BodyPaint => BodyPaint::fromInput($paint['pixelate'], $paint['palette'], $paint['spans']),
         $session->paints,
@@ -243,7 +218,7 @@ final class Session {
   public function untraced(): array {
     $people = array_merge(
       array_values($this->proposals),
-      array_values(array_filter($this->regions, static fn (array $region): bool => $region['kind'] === 'person')),
+      array_values($this->regions),
     );
     return array_values(array_map(
       static fn (array $person): string => $person['description'] ?? $person['label'],
@@ -270,22 +245,6 @@ final class Session {
       'ready' => 'Call photo_get with view outline, trace each numbered person, then call scan_photo.',
       default => 'Nobody has been found yet. Look at the photo with view photo, then call scan_photo.',
     };
-  }
-
-  /**
-   * Lists object names by region id.
-   *
-   * @return array<string, string>
-   *   The names.
-   */
-  public function objectNames(): array {
-    $names = [];
-    foreach ($this->regions as $id => $region) {
-      if ($region['kind'] === 'object') {
-        $names[$id] = $region['label'];
-      }
-    }
-    return $names;
   }
 
   /**

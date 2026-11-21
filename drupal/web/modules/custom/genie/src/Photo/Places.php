@@ -8,7 +8,7 @@ use Drupal\Component\Uuid\Php;
 use Drupal\genie\Game\Session;
 
 /**
- * Records who and what an assistant found in the photo, and who claims whom.
+ * Records who an assistant found in the photo, and who claims whom.
  *
  * Boxes come from assistants as [x, y, width, height] in photo pixels.
  */
@@ -36,7 +36,6 @@ final class Places {
   public const NO_REACH = 'People in front of you cover your whole person.';
 
   private const MAX_PEOPLE = 30;
-  private const MAX_OBJECTS = 20;
   private const MAX_LABEL = 40;
 
   /**
@@ -59,12 +58,8 @@ final class Places {
    *
    * @param \Drupal\genie\Game\Session $session
    *   The session.
-   * @param int $uid
-   *   The player whose assistant scanned.
    * @param mixed $people
    *   List of people with description, head and body.
-   * @param mixed $objects
-   *   List of objects with label and box.
    * @param bool $guesses
    *   TRUE when the people are boxes guessed for a prepared game, which wait
    *   for an assistant's trace. An assistant's scan traces each person.
@@ -72,13 +67,10 @@ final class Places {
    * @throws \InvalidArgumentException
    *   When the scan breaks a rule.
    */
-  public static function scan(Session $session, int $uid, mixed $people, mixed $objects, bool $guesses = FALSE): void {
+  public static function scan(Session $session, mixed $people, bool $guesses = FALSE): void {
     self::assertPhoto($session);
     if (!is_array($people) || !array_is_list($people) || count($people) > self::MAX_PEOPLE) {
       throw new \InvalidArgumentException(sprintf('People is a list of at most %d entries.', self::MAX_PEOPLE));
-    }
-    if (!is_array($objects) || !array_is_list($objects) || count($objects) > self::MAX_OBJECTS) {
-      throw new \InvalidArgumentException(sprintf('Objects is a list of at most %d entries.', self::MAX_OBJECTS));
     }
     $survey = $session->survey;
     foreach ($people as $person) {
@@ -104,18 +96,6 @@ final class Places {
           $survey->people[$index]['cells'] = Outlines::parse($person['outline'], $box, $session->photo)
             ?: throw new \InvalidArgumentException(sprintf('The outline of %s lies outside their place.', $label));
         }
-      }
-    }
-    foreach ($objects as $object) {
-      $label = self::label($object['label'] ?? NULL);
-      $box = self::box($object['box'] ?? NULL, $session);
-      $known = array_search($label, array_column($survey->objects, 'label'), TRUE);
-      if ($known === FALSE) {
-        $survey->objects[] = ['id' => self::newId(), 'label' => $label, 'reporter' => $uid] + $box;
-      }
-      // Protection depends on this box, so only the uploader moves a known one.
-      elseif ($session->uploader === $uid) {
-        $survey->objects[$known] = ['reporter' => $uid] + $box + $survey->objects[$known];
       }
     }
     $session->refresh();
@@ -164,7 +144,7 @@ final class Places {
     }
     $placeHead = $survey->people[self::indexOf($survey, $place)]['head'];
     foreach ($session->regions as $region) {
-      if ($region['kind'] === 'person' && $region['owner'] !== $uid && self::sameHead($placeHead, $region['head'])) {
+      if ($region['owner'] !== $uid && self::sameHead($placeHead, $region['head'])) {
         throw new \InvalidArgumentException(sprintf('%s already holds this place.', $region['label']));
       }
     }
@@ -322,7 +302,7 @@ final class Places {
    */
   private static function claimedHead(Session $session, array $head): ?string {
     foreach ($session->regions as $region) {
-      if ($region['kind'] === 'person' && (self::sameHead($head, $region['head']))) {
+      if (self::sameHead($head, $region['head'])) {
         return $region['person'];
       }
     }
@@ -402,7 +382,7 @@ final class Places {
   private static function label(mixed $input): string {
     $label = is_string($input) ? trim($input) : '';
     if ($label === '') {
-      throw new \InvalidArgumentException('Every person and object needs a short description.');
+      throw new \InvalidArgumentException('Every person needs a short description.');
     }
     return mb_substr($label, 0, self::MAX_LABEL);
   }

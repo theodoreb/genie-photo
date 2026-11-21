@@ -6,7 +6,6 @@ namespace Drupal\Tests\genie\Unit;
 
 use Drupal\genie\Photo\BodyPaint;
 use Drupal\genie\Photo\Darkroom;
-use Drupal\genie\Wish\Frame;
 use Drupal\genie\Photo\Outlines;
 use Drupal\genie\Photo\Places;
 use Drupal\genie\Game\Session;
@@ -32,7 +31,7 @@ final class OutlinesTest extends UnitTestCase {
       ['x' => 400, 'y' => 0, 'width' => 800, 'height' => 800],
     ]));
     $this->assertSame(40, Outlines::columns($session->photo));
-    Places::scan($session, 1, [
+    Places::scan($session, [
       [
         'description' => 'front',
         'head' => [480, 0, 160, 160],
@@ -40,7 +39,7 @@ final class OutlinesTest extends UnitTestCase {
         'outline' => [[5, 10, 14], [5, 38, 39]],
       ],
       ['description' => 'back', 'head' => [80, 0, 160, 160], 'detected' => 'P1', 'outline' => [[5, 8, 12]]],
-    ], []);
+    ]);
     [$front, $back] = array_keys($session->proposals);
     $this->assertSame([[5, 10, 14]], $session->proposals[$front]['cells'], 'Cells far from the box are dropped.');
 
@@ -69,7 +68,7 @@ final class OutlinesTest extends UnitTestCase {
     imagejpeg($photo, NULL, 100);
     $jpeg = ob_get_clean();
     $original = imagecreatefromstring($jpeg);
-    $result = imagecreatefromstring((new Darkroom())->render($jpeg, $session, new Frame(0, 0, 1600, 800)));
+    $result = imagecreatefromstring((new Darkroom())->render($jpeg, $session));
 
     $this->assertSame(0xFF0000, imagecolorat($result, 340, 220), 'The owned cell is painted.');
     $this->assertSame(0xFF0000, imagecolorat($result, 300, 220), 'The safe zone is painted.');

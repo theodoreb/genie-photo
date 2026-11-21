@@ -29,7 +29,6 @@ services:
   Drupal\genie\Game\CurrentGame: ~
   Drupal\genie\Photo\Darkroom: ~
   Drupal\genie\Game\Exports: ~
-  Drupal\genie\Wish\Framer: ~
   Drupal\genie\Game\GameView: ~
   Drupal\genie\Game\Games: ~
   Drupal\genie\Wish\KeywordInterpreter: ~

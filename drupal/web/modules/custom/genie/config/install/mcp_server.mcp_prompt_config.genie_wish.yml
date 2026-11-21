@@ -10,7 +10,7 @@ dependencies:
 arguments:
   - label: 'Wish'
     machine_name: wish
-    description: 'How you want to appear, such as "put me in the middle".'
+    description: 'How you want to appear, such as "hide my face".'
     required: true
 messages:
   - role: user

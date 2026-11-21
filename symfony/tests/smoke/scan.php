@@ -31,12 +31,11 @@ $refusal = static function (callable $call): string {
 };
 
 $yellow = ['description' => 'yellow sweater', 'head' => [100, 100, 200, 200], 'body' => [50, 100, 300, 700]];
-$cake = [['label' => 'cake', 'box' => [700, 500, 200, 200]]];
-if (!str_contains($refusal(static fn () => $site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => $cake])), 'Trace yellow sweater')) {
+if (!str_contains($refusal(static fn () => $site->tools->call($assistant, 'scan_photo', ['people' => [$yellow]])), 'Trace yellow sweater')) {
     SmokeSite::fail('A scan without an outline was not refused.');
 }
 $yellow['outline'] = [[5, 2, 7], [6, 2, 7], [7, 2, 7]];
-$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => $cake]);
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow]]);
 $person = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'][0]['id'];
 $site->tools->call($assistant, 'claim_place', ['person' => $person]);
 
@@ -45,7 +44,7 @@ $site->tools->call($assistant, 'claim_place', ['head' => [100, 100, 200, 200], '
 if (!str_contains($refusal(static fn () => $site->tools->call($assistant, 'make_wish', ['wish' => 'hide me'])), 'Trace every person')) {
     SmokeSite::fail('The refused wish did not say to trace.');
 }
-$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow], 'objects' => []]);
+$site->tools->call($assistant, 'scan_photo', ['people' => [$yellow]]);
 $mine = array_filter($site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'], static fn (array $one): bool => isset($one['player']));
 $person = array_values($mine)[0]['id'];
 $site->tools->call($assistant, 'scan_photo', [
@@ -53,7 +52,6 @@ $site->tools->call($assistant, 'scan_photo', [
         ['description' => 'yellow sweater again'] + $yellow,
         ['description' => 'green coat', 'head' => [900, 100, 200, 200], 'body' => [850, 100, 300, 700], 'outline' => [[5, 22, 27], [6, 22, 27]]],
     ],
-    'objects' => [],
 ]);
 $people = $site->imageTool($assistant, 'photo_get', ['view' => 'photo'])['info']['people'];
 $ids = array_column($people, 'id');

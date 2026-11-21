@@ -82,7 +82,7 @@ final class GameResource extends ResourceProviderBase {
       [
         'uri' => self::uri($this->ledger->game()->uuid()),
         'name' => 'Your genie game',
-        'description' => 'The regions, wishes, frame and approvals of your game, as session_get returns them.',
+        'description' => 'The places, wishes, picture state and approvals of your game, as session_get returns them.',
         'mimeType' => 'application/json',
       ],
     ];

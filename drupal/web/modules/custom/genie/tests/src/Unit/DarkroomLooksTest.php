@@ -10,7 +10,6 @@ use Drupal\genie\Photo\Darkroom;
 use Drupal\genie\Photo\Outlines;
 use Drupal\genie\Photo\Places;
 use Drupal\genie\Photo\Survey;
-use Drupal\genie\Wish\Frame;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -39,7 +38,7 @@ final class DarkroomLooksTest extends UnitTestCase {
     $session = new Session();
     $box = ['x' => 600, 'y' => 0, 'width' => 400, 'height' => 800];
     $session->pin(new Survey(1, 1, 1600, 800, 'ready', [$box, $box]));
-    Places::scan($session, 1, [
+    Places::scan($session, [
       [
         'description' => 'ann',
         'head' => [720, 40, 160, 160],
@@ -52,7 +51,7 @@ final class DarkroomLooksTest extends UnitTestCase {
         'detected' => 'P2',
         'outline' => [[5, 18, 21]],
       ],
-    ], []);
+    ]);
     [$ann, $bob] = array_keys($session->proposals);
     Places::claim($session, 1, 'ann', $ann, NULL, NULL);
     Places::claim($session, 2, 'bob', $bob, NULL, NULL);
@@ -70,7 +69,7 @@ final class DarkroomLooksTest extends UnitTestCase {
     imagejpeg($photo, NULL, 100);
     $jpeg = ob_get_clean();
     $this->original = imagecreatefromstring($jpeg);
-    $this->result = imagecreatefromstring((new Darkroom())->render($jpeg, $session, new Frame(0, 0, 1600, 800)));
+    $this->result = imagecreatefromstring((new Darkroom())->render($jpeg, $session));
     return $session;
   }
 
@@ -195,9 +194,9 @@ final class DarkroomLooksTest extends UnitTestCase {
       static fn (int $row): array => in_array($row, [0, 1, 18, 19], TRUE) ? [$row, 16, 23] : [$row, 15, 24],
       range(0, 19),
     );
-    Places::scan($session, 1, [
+    Places::scan($session, [
       ['description' => 'front', 'head' => [740, 0, 120, 120], 'detected' => 'P1', 'outline' => $outline],
-    ], []);
+    ]);
     Places::claim($session, 1, 'ann', array_key_first($session->proposals), NULL, NULL);
     Places::claim($session, 2, 'cy', NULL, [610, 10, 20, 20], [600, 0, 400, 800]);
     $corners = [15, 24, 55, 64, 735, 744, 775, 784];
@@ -208,7 +207,7 @@ final class DarkroomLooksTest extends UnitTestCase {
     ob_start();
     imagejpeg($photo, NULL, 100);
     $jpeg = ob_get_clean();
-    $result = imagecreatefromstring((new Darkroom())->render($jpeg, $session, new Frame(0, 0, 1600, 800)));
+    $result = imagecreatefromstring((new Darkroom())->render($jpeg, $session));
     $this->assertSame(0xFFFFFF, imagecolorat($result, 620, 20), 'The head is drawn.');
   }
 
@@ -246,14 +245,14 @@ final class DarkroomLooksTest extends UnitTestCase {
   public function testCartoonSplitsLightPhotoInQuarters(): void {
     $session = new Session();
     $session->pin(new Survey(1, 1, 1600, 800, 'off'));
-    Places::scan($session, 1, [
+    Places::scan($session, [
       [
         'description' => 'eve',
         'head' => [740, 40, 120, 120],
         'body' => [720, 0, 160, 400],
         'outline' => [[5, 18, 21], [6, 18, 21]],
       ],
-    ], []);
+    ]);
     Places::claim($session, 1, 'eve', array_key_first($session->proposals), NULL, NULL);
     $session->wishes = [1 => 'cartoon'];
     // Four light stripes, one under each quarter of eve.
@@ -283,7 +282,7 @@ final class DarkroomLooksTest extends UnitTestCase {
     }
     ob_start();
     imagejpeg($photo, NULL, 100);
-    return imagecreatefromstring((new Darkroom())->render(ob_get_clean(), $session, new Frame(0, 0, 1600, 800)));
+    return imagecreatefromstring((new Darkroom())->render(ob_get_clean(), $session));
   }
 
   /**

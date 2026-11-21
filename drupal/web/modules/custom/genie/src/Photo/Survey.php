@@ -26,8 +26,6 @@ final class Survey {
    *   Detected people. The first box is P1.
    * @param list<array{id: string, description: string, x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}, cells: list<array{int, int, int}>}> $people
    *   People found in the photo, the one nearest the front first.
-   * @param list<array{id: string, label: string, reporter: int, x: int, y: int, width: int, height: int}> $objects
-   *   Objects found in the photo.
    */
   public function __construct(
     public int $media,
@@ -37,7 +35,6 @@ final class Survey {
     public string $detector,
     public array $boxes = [],
     public array $people = [],
-    public array $objects = [],
   ) {}
 
 }

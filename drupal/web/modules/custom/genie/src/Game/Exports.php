@@ -6,8 +6,6 @@ namespace Drupal\genie\Game;
 
 use Drupal\genie\Photo\Darkroom;
 use Drupal\genie\Photo\PhotoStore;
-use Drupal\genie\Wish\Frame;
-use Drupal\genie\Wish\Framer;
 
 /**
  * Renders the current picture once per revision and identifies it.
@@ -16,21 +14,16 @@ final class Exports {
 
   public function __construct(
     private readonly PhotoStore $photos,
-    private readonly Framer $framer,
     private readonly Darkroom $darkroom,
   ) {}
 
   /**
-   * Returns the current picture, or NULL when no frame fits every wish.
+   * Returns the current picture.
    */
-  public function current(Session $session): ?Export {
-    $frame = $this->framer->frame($session);
-    if (!$frame instanceof Frame) {
-      return NULL;
-    }
+  public function current(Session $session): Export {
     $export = $this->photos->export($session->revision);
     if ($export === NULL) {
-      $png = $this->darkroom->render($this->photos->read(), $session, $frame);
+      $png = $this->darkroom->render($this->photos->read(), $session);
       $export = new Export($png, $this->hash($png));
       $this->photos->saveExport($session->revision, $export);
     }
