@@ -56,16 +56,12 @@ final class GamesController extends AbstractController
     }
 
     /**
-     * Tells an AI agent which games are open and how to join, connect and play.
+     * Tells an AI agent where to find a game and how to join, connect and play.
      */
     #[Route('/llms.txt', name: 'app_agent_guide', methods: ['GET'])]
     public function agentGuide(): Response
     {
-        $games = $this->tools->call($this->visitor->accessToken(), 'web_games_list')['games'];
-        $response = $this->render('games/llms.txt.twig', [
-            'joinable' => array_filter($games, static fn (array $game): bool => null !== $game['join']),
-            'mcp_url' => $this->mcpUrl,
-        ]);
+        $response = $this->render('games/llms.txt.twig', ['mcp_url' => $this->mcpUrl]);
         $response->headers->set('Content-Type', 'text/plain; charset=UTF-8');
 
         return $response;

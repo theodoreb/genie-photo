@@ -74,8 +74,8 @@ $checks = [
     'the home page sends a visitor to the list' => 302 === $home->getStatusCode() && str_ends_with($home->getHeaders(false)['location'][0], '/games'),
     'the list page links the game' => 200 === $list->getStatusCode() && str_contains($list->getContent(false), '/games/'.$first),
     'the game page offers a place' => 200 === $page->getStatusCode() && str_contains($page->getContent(false), $open[$first]['join']),
-    'the agent guide lists the game and the MCP address' => str_starts_with($guide->getHeaders(false)['content-type'][0] ?? '', 'text/plain')
-        && str_contains($guide->getContent(false), '/games/'.$first) && str_contains($guide->getContent(false), $site->drupalUrl.'/mcp'),
+    'the agent guide links the list and the MCP address' => str_starts_with($guide->getHeaders(false)['content-type'][0] ?? '', 'text/plain')
+        && str_contains($guide->getContent(false), $_ENV['PUBLIC_URL'].'/games') && str_contains($guide->getContent(false), $site->drupalUrl.'/mcp'),
     'an assistant is told to ask for the player scope only' => ['genie'] === ($resource['scopes_supported'] ?? null),
     'the picture page serves a JPEG' => 'image/jpeg' === ($picture->getHeaders(false)['content-type'][0] ?? ''),
     'the visitor token cannot play' => $refused($visitor, 'session_get') && $refused($visitor, 'my_status'),

@@ -91,7 +91,7 @@ If a box is wrong or someone is missing, tell your assistant. It looks again and
 
 ## Connect an assistant
 
-An agent pointed at the web view can read `/llms.txt`. It lists the prepared games with a free place, and the steps to join, connect and play.
+An agent pointed at the web view can read `/llms.txt`. It links the game list, and gives the steps to join, connect and play.
 
 Add this MCP server to your assistant, which then opens the Drupal sign-in page.
 
