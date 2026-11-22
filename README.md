@@ -41,21 +41,6 @@ docker compose up
 
 The ports are published on 127.0.0.1 only, so the addresses below stay the same. The image is x86-64, which Docker Desktop emulates on Apple silicon. The container has no Ollama, so wishes go through the keyword reader. Run checks inside it with `docker compose exec genie bin/smoke wish alice`.
 
-### On a public server
-
-Put a TLS proxy in front of both ports, then set these in the environment of `bin/start`:
-
-| Variable | Value |
-|---|---|
-| `GENIE_LISTEN_IP` | `0.0.0.0`, so the proxy reaches both ports |
-| `PUBLIC_URL` | the web view's public address |
-| `DRUPAL_URL` | Drupal's public address. The web view calls it too, so the server must resolve it. |
-| `GENIE_WEB_ORIGIN` | the web view's public address again, for the live-update hub |
-| `GENIE_REVERSE_PROXY` | the proxy's IP address |
-| `APP_ENV`, `APP_DEBUG`, `APP_SECRET` | `prod`, `0` and a random string |
-| `SYMFONY_TRUSTED_PROXIES` | the proxy's IP address |
-| `OPENAI_API_KEY` | optional, in Drupal's environment: OpenAI also checks the final pictures of prepared games |
-
 ## Replay the demo
 
 `bin/replay codex` or `bin/replay claude` plays a demo story with one assistant for all four players. `demo/replay.md` lists its steps, and you can paste them into your own assistants instead.
@@ -160,20 +145,30 @@ A withheld picture stays on disk. The public pages show the picture the game sta
 
 ## How it fits together
 
-- Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`.
-- Drupal in `drupal/` holds the rules, in the module `genie`. Drupal's `mcp_server` module serves assistants directly.
+```mermaid
+flowchart LR
+  A["Assistants<br>Claude, Codex, Vibe"] -- "MCP, OAuth" --> D["Drupal<br>mcp_server, genie"]
+  B["Browser"] --> S["Symfony 8 web view"]
+  S -- "MCP SDK client, OAuth" --> D
+  D -- "Symfony AI" --> M["Local models<br>DETR, wish reader"]
+  D -- "mercure_publish()" --> H["Mercure hub"]
+  H -- "EventSource" --> B
+```
+
+- Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`. Symfony keeps no game data.
+- Drupal in `drupal/` holds the rules and the data, in the module `genie`. Drupal's `mcp_server` module serves the same tools to assistants on the PHP MCP SDK. `docs/data-model.md` describes the stored data.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
 - Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
-- Every photo is scaled to a 1600-pixel long side, so blocks look the same on every photo.
-- Drupal gives each grid cell to one person, and the person in front wins: `Outlines.php`. Paint reaches a player's own cells and one block of background around them. A place claimed on the page gets its outline from the next trace.
-- Each game is a node. A `state_machine` field moves it from start to open, then closed or abandoned. A JSON field holds the play state.
-- Each player is an account named `NAME@NID` that references its game, so two games can each have an Alice.
-- A revisionable Media item holds the photo, the detector's boxes and the people, as `compound_field` rows. The game points to one revision.
-- Drupack serves Drupal and its Mercure hub, which tells each browser when the session changes. Its FrankenPHP also serves the web view.
+- Drupack serves Drupal, its Mercure hub and the web view on one FrankenPHP. The hub tells each browser when the session changes.
 - The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
 - The web view serves the public pages `/games`, `/games/{uuid}` and `/llms.txt`, and the player page at `/`.
-- Six prepared games stay open, three on paintings and three on photos: `Archive.php`. Each `kind` in `archive/manifest.json` has its own turn, over the entries whose `rotation` is true. `drush genie:archive-fill` opens them, and `bin/start` runs it. The first three pictures of each kind in the rotation ship with the module. The others come from Wikimedia Commons when their turn comes, checked against the SHA-1 in the manifest.
-- Assistants and the web view get images through MCP tools. Symfony keeps no game data. The upload is the web view's only HTTP call with a token. The join form posts to Drupal's `/play/{code}`, which checks the Origin header. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
+- Assistants and the web view get images through MCP tools. The upload is the web view's only HTTP call with a token. The join form posts to Drupal's `/play/{code}`, which checks the Origin header. The web view is a confidential OAuth client, and `bin/start` gives it a new secret in `.env.local`.
+
+The Drupal modules target older releases of both libraries. This repo patches them to run on the `main` branches of Symfony AI and the PHP MCP SDK:
+
+- `mcp_server` follows the classes mcp/sdk 0.10 moved: [`mcp_server-mcp-sdk-0.10.patch`](drupal/patches/mcp_server-mcp-sdk-0.10.patch).
+- `drupal/ai` pins Symfony AI 0.14. `drupal/composer.json` redefines its package to require Symfony AI 1.0, the alias of `main`.
+- [`docs/upstream-breaks.md`](docs/upstream-breaks.md) lists each break and its fix, with the commit of every package in use.
 
 ## Features used
 
