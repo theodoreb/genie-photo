@@ -91,7 +91,7 @@ final class GameResource extends ResourceProviderBase {
   /**
    * {@inheritdoc}
    */
-  public function getResourceContent(string $uri): ?CacheableResourceContent {
+  public function getResourceContent(string $uri): CacheableResourceContent {
     $view = $this->gameView->view((int) $this->currentUser->id());
     return CacheableResourceContent::fromArray(
       ['uri' => $uri, 'mimeType' => 'application/json', 'text' => json_encode($view, JSON_THROW_ON_ERROR)],

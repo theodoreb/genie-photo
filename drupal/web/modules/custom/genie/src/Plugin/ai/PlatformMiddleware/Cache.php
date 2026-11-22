@@ -6,7 +6,6 @@ namespace Drupal\genie\Plugin\ai\PlatformMiddleware;
 
 use Drupal\ai\Attribute\AiPlatformMiddleware;
 use Drupal\ai\Plugin\ai\PlatformMiddleware\AiPlatformMiddlewarePluginBase;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\AI\Platform\Bridge\Cache\CachePlatform;
 use Symfony\AI\Platform\PlatformInterface;
@@ -36,9 +35,7 @@ final class Cache extends AiPlatformMiddlewarePluginBase {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $fileSystem = $container->get('file_system');
-    assert($fileSystem instanceof FileSystemInterface);
-    $instance->directory = $fileSystem->realpath('private://') . '/ai-cache';
+    $instance->directory = $container->get('file_system')->realpath('private://') . '/ai-cache';
     return $instance;
   }
 

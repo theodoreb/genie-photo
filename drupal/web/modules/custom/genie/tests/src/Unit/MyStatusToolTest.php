@@ -12,12 +12,14 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\genie\Game\CurrentGame;
 use Drupal\genie\Game\Ledger;
 use Drupal\genie\Photo\PhotoStore;
 use Drupal\genie\Plugin\mcp_server\Tool\Assistant\MyStatusTool;
 use Drupal\genie\Game\RevisionPublisher;
 use Drupal\Tests\UnitTestCase;
+use Drupal\mcp_server\Definition\ToolDefinition;
 use Drupal\node\NodeInterface;
 use Mcp\Server\ClientGateway;
 use Mcp\Server\Subscription\NotificationBusInterface;
@@ -62,7 +64,8 @@ final class MyStatusToolTest extends UnitTestCase {
     }
     $photos = (new \ReflectionClass(PhotoStore::class))->newInstanceWithoutConstructor();
     $ledger = new Ledger($entityTypeManager, $this->createStub(LockBackendInterface::class), new RevisionPublisher(), $photos, $game, $this->createStub(NotificationBusInterface::class));
-    return new MyStatusTool([], 'my_status', NULL, $currentUser, $ledger);
+    $definition = new ToolDefinition('my_status', new TranslatableMarkup('My status'), new TranslatableMarkup('Names the signed-in player.'));
+    return new MyStatusTool([], 'my_status', $definition, $currentUser, $ledger);
   }
 
   /**

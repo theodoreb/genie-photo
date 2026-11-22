@@ -195,7 +195,7 @@ final class Session {
       }
       $session->paints = array_map(
         static fn (array $paint): BodyPaint => BodyPaint::fromInput($paint['pixelate'], $paint['palette'], $paint['spans']),
-        $session->paints,
+        $data['paints'],
       );
     }
     $session->uploader = (int) $game->getOwnerId();

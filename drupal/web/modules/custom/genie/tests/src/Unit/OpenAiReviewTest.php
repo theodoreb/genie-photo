@@ -39,6 +39,7 @@ final class OpenAiReviewTest extends UnitTestCase {
           ['id' => 'batch_1', 'status' => $status] + ($output === '' ? [] : ['output_file_id' => 'file-out'])
         )),
         'GET https://api.openai.com/v1/files/file-out/content' => new MockResponse($output),
+        default => throw new \LogicException("The review sent $method $url."),
       };
     });
     return new OpenAiReview('sk-test', $client);

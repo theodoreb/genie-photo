@@ -235,7 +235,7 @@ Each line names a library feature and links to the code that uses it.
 
 | Command | What it checks |
 |---|---|
-| `bin/qa` | Coding standards, PHPStan level 3 on Drupal code, linters, unit tests |
+| `bin/qa` | Coding standards, PHPStan (level 8 on the web view, level 5 on Drupal code), linters, unit tests |
 | `bin/smoke oauth alice` | A new game, sign-in and one MCP call |
 | `bin/smoke host` | The host code, the upload on the web view, and a guest joining from the invite link |
 | `bin/smoke subscribe` | A resource update reaches a `subscriptions/listen` stream |

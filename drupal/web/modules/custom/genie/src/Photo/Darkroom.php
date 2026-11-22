@@ -402,6 +402,7 @@ final class Darkroom {
         Operation::Gold => $this->gild($image, $areas),
         Operation::Cartoon => $this->cartoon($image, $before, $areas),
         Operation::Blur => $this->blur($image, $before, $areas),
+        default => throw new \LogicException("$look->value is not a look."),
       };
     }
   }
@@ -514,6 +515,7 @@ final class Darkroom {
             '1' => ($x + $y) % self::HATCH === 0 || ($x - $y) % self::HATCH === 0,
             '2' => ($x % self::DOTS - $half) ** 2 + ($y % self::DOTS - $half) ** 2 <= self::DOT_SIZE,
             '3' => FALSE,
+            default => throw new \LogicException("Band $band is not one of four."),
           };
           imagesetpixel($image, $x, $y, $ink ? 0x000000 : 0xFFFFFF);
         }

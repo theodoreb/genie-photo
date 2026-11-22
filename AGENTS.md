@@ -22,7 +22,7 @@ Genie photo: players share one group photo and make wishes through their own AI 
 
 ## Checks
 
-- `bin/qa` runs on the machine's PHP 8.4 or later. It runs the coding standards, PHPStan level 3 on Drupal code, the linters and the unit tests.
+- `bin/qa` runs on the machine's PHP 8.4 or later. It runs the coding standards, PHPStan (level 8 on `symfony/`, level 5 on Drupal code), the linters and the unit tests. The web view's unit tests are in `symfony/tests/Security/`.
 - `bin/smoke NAME` runs one smoke script. It needs the site running, and starts its own game.
 - `bin/verify-clone` starts a fresh clone and grants a wish. Ports 7225 and 8000 must be free.
 

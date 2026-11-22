@@ -65,6 +65,7 @@ final class PhotoStore {
       self::DETECTOR => $detector,
       self::BOXES => array_map(self::boxRow(...), $boxes),
     ]);
+    assert($media instanceof MediaInterface);
     $media->save();
     return $this->toSurvey($media);
   }
@@ -73,7 +74,11 @@ final class PhotoStore {
    * Returns what one media revision holds.
    */
   public function survey(int $revision): Survey {
-    return $this->toSurvey($this->media()->loadRevision($revision));
+    $media = $this->media()->loadRevision($revision);
+    if (!$media instanceof MediaInterface) {
+      throw new \RuntimeException("Media revision $revision does not exist.");
+    }
+    return $this->toSurvey($media);
   }
 
   /**
