@@ -229,6 +229,7 @@ Each line names a library feature and links to the code that uses it.
 - Security with a custom authenticator, an OAuth client of Drupal with PKCE and token refresh: [`DrupalAuthenticator.php`](symfony/src/Security/DrupalAuthenticator.php), [`DrupalOAuth.php`](symfony/src/Security/DrupalOAuth.php).
 - The browser subscribes to the Mercure hub with `EventSource`: [`GameController.php`](symfony/src/Controller/GameController.php), [`app.js`](symfony/assets/app.js), [`review.js`](symfony/assets/review.js).
 - AssetMapper and importmap load the JavaScript with no Node build: [`importmap.php`](symfony/importmap.php).
+- `MockClock` and `MockHttpClient` test the token refresh, and a mock session tests the sign-in's state check: [`PlayerTokensTest.php`](symfony/tests/Security/PlayerTokensTest.php), [`DrupalAuthenticatorTest.php`](symfony/tests/Security/DrupalAuthenticatorTest.php).
 
 ## Checks
 

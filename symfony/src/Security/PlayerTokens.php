@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security;
 
+use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\AuthenticationExpiredException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpException;
@@ -19,6 +20,7 @@ final readonly class PlayerTokens
     public function __construct(
         private RequestStack $requests,
         private DrupalOAuth $oauth,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -35,7 +37,7 @@ final readonly class PlayerTokens
         $tokens = $this->requests->getSession()->get(self::SESSION_KEY)
             ?? throw new AuthenticationExpiredException();
 
-        if ($tokens->expiresAt - self::EARLY_REFRESH_SECONDS > time()) {
+        if ($tokens->expiresAt - self::EARLY_REFRESH_SECONDS > $this->clock->now()->getTimestamp()) {
             return $tokens->accessToken;
         }
 

@@ -10,13 +10,14 @@ declare(strict_types=1);
 use App\Drupal\DrupalToolFailed;
 use App\Security\DrupalOAuth;
 use App\Tests\Smoke\SmokeSite;
+use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
 
 require dirname(__DIR__, 2).'/vendor/autoload.php';
 
 $site = new SmokeSite('alice');
-$oauth = new DrupalOAuth($site->http, $site->drupalUrl, $_ENV['PUBLIC_URL'], $_ENV['GENIE_WEB_SECRET']);
+$oauth = new DrupalOAuth($site->http, new NativeClock(), $site->drupalUrl, $_ENV['PUBLIC_URL'], $_ENV['GENIE_WEB_SECRET']);
 $visitor = $oauth->visitorToken()['token'];
 
 /**

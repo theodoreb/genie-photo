@@ -1,0 +1,9 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        # Scripts run against the live site, through bin/smoke.
+        - tests/smoke
+        - tests/bootstrap.php

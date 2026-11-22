@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security;
 
+use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -16,6 +17,7 @@ final readonly class DrupalOAuth
 
     public function __construct(
         private HttpClientInterface $http,
+        private ClockInterface $clock,
         #[Autowire('%env(DRUPAL_URL)%')]
         private string $drupalUrl,
         #[Autowire('%env(PUBLIC_URL)%')]
@@ -87,7 +89,7 @@ final readonly class DrupalOAuth
     {
         $body = $this->grant($grant);
 
-        return new TokenSet($body['access_token'], $body['refresh_token'], time() + $body['expires_in']);
+        return new TokenSet($body['access_token'], $body['refresh_token'], $this->clock->now()->getTimestamp() + $body['expires_in']);
     }
 
     /**
