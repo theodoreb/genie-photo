@@ -11,6 +11,8 @@ use Drupal\genie\Wish\Operation;
 use Drupal\genie\Wish\Wish;
 use Drupal\genie\Wish\WishInterpreter;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\AI\Platform\Exception\RuntimeException;
 use Symfony\AI\Platform\StructuredOutput\PlatformSubscriber;
 use Symfony\AI\Platform\StructuredOutput\Validator\ValidatorSubscriber;
@@ -19,9 +21,8 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Reads wishes from scripted model answers.
- *
- * @group genie
  */
+#[Group('genie')]
 final class WishInterpreterTest extends UnitTestCase {
 
   /**
@@ -69,9 +70,8 @@ final class WishInterpreterTest extends UnitTestCase {
 
   /**
    * Asks again after an answer it cannot trust, even when keywords would match.
-   *
-   * @dataProvider unusableAnswers
    */
+  #[DataProvider('unusableAnswers')]
   public function testUnusableAnswers(string $answer): void {
     $this->assertNull($this->interpreter($answer)->interpret('hide my face'));
   }
