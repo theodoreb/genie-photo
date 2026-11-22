@@ -49,7 +49,7 @@ final class GameController extends AbstractController
             return $this->signInAgain($request);
         }
 
-        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl($session), 'mcp_url' => $this->mcpUrl]);
+        return $this->render('game/home.html.twig', ['session' => $session, 'hub_url' => $this->hubUrl($session['topic']), 'mcp_url' => $this->mcpUrl]);
     }
 
     /**
@@ -73,7 +73,7 @@ final class GameController extends AbstractController
             'hash' => $hash,
             'for' => $for,
             'export' => $export,
-            'hub_url' => $this->hubUrl($session),
+            'hub_url' => $this->hubUrl($session['topic']),
             'state' => match (true) {
                 $for !== $player->name => 'other_player',
                 !$current => 'changed',
@@ -87,7 +87,7 @@ final class GameController extends AbstractController
     #[Route('/session', name: 'app_session', methods: ['GET'])]
     public function session(): JsonResponse
     {
-        return $this->json($this->tools->call($this->tokens->accessToken(), 'session_get'));
+        return $this->callTool('session_get');
     }
 
     #[Route('/photo', name: 'app_photo', methods: ['GET'])]
@@ -184,11 +184,9 @@ final class GameController extends AbstractController
 
     /**
      * Subscribes to the player's own game, whose topic Drupal names.
-     *
-     * @param array{topic: string} $session
      */
-    private function hubUrl(array $session): string
+    private function hubUrl(string $topic): string
     {
-        return $this->hubUrl.'?'.http_build_query(['match' => $session['topic']]);
+        return $this->hubUrl.'?'.http_build_query(['match' => $topic]);
     }
 }
