@@ -51,8 +51,8 @@
 
             {% if game.credit %}
                 <p class="quiet">
-                    <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date %}, {{ game.credit.date }}{% endif %}.
-                    {{ game.credit.licence }}, from Wikimedia Commons.
+                    <a href="{{ game.credit.page }}">{{ game.credit.title }}</a>{% if game.credit.author %}, {{ game.credit.author }}{% endif %}{% if game.credit.date is defined %}, {{ game.credit.date }}{% endif %}.
+                    {{ game.credit.licence }}, from {{ game.credit.source }}.
                 </p>
             {% endif %}
         </div>

@@ -254,6 +254,6 @@ GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
 
 `demo/holiday-party.jpg` is "Holiday Coronavirus" by PS Imaging, from [StockSnap](https://stocksnap.io/photo/holiday-coronavirus-OWPQGSY7C6), under CC0. It is enlarged to 1600 pixels wide.
 
-The pictures of the prepared games are in the public domain: 15 paintings and 81 photos. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each one's page on Wikimedia Commons, and each game page shows that credit. Shakuntala Patralekhan is out of the rotation, and its entry stays for the credit of its finished game.
+The prepared games use 15 paintings and 81 historical photos in the public domain, from Wikimedia Commons, and 36 stock photos: 12 each from Pexels, Unsplash and Shopify Burst, under their own free licences. The stock photos are fetched from their sites and never ship in this repository. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each picture's page, photographer and licence, and each game page shows that credit. Shakuntala Patralekhan is out of the rotation, and its entry stays for the credit of its finished game.
 
 The fonts in `symfony/assets/fonts/`, Bricolage Grotesque and Figtree, are under the SIL Open Font License 1.1. Their licence files sit beside them.

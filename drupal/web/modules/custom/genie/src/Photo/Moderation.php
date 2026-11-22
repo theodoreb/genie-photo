@@ -18,8 +18,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * Withholds sexual final pictures from the public pages.
  *
  * A local model scores every final picture. OpenAI also reviews the pictures
- * of prepared games, whose paintings and photos are public domain, when an
- * API key is set. Either one withholds a picture.
+ * of prepared games, whose paintings and photos are public, when an API key
+ * is set. Either one withholds a picture.
  */
 final class Moderation {
 

@@ -22,21 +22,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 /**
  * Keeps games open on the prepared pictures of `archive/manifest.json`.
  *
- * Paintings and photos each have their own turn, in the order of the
- * manifest. The first pictures ship with the module. The others come from
- * Wikimedia Commons when their turn comes.
+ * Each kind has its own turn, in the order of the manifest. Paintings and
+ * historical photos come from Wikimedia Commons, stock photos from Pexels,
+ * Unsplash and Burst. The first pictures ship with the module. The others
+ * are fetched when their turn comes.
  */
 final class Archive implements EventSubscriberInterface, DestructableInterface {
 
   /**
-   * How many prepared games of each kind stay open.
+   * How many prepared games stay open, by the kind the manifest names.
    */
-  public const OPEN = 3;
-
-  /**
-   * The kinds of prepared picture, as the manifest names them.
-   */
-  private const KINDS = ['painting', 'photo'];
+  public const OPEN = ['painting' => 1, 'photo' => 1, 'stock' => 4];
 
   private const LOCK = 'genie:archive';
 
@@ -120,10 +116,10 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     }
     try {
       $opened = 0;
-      foreach (self::KINDS as $kind) {
+      foreach (self::OPEN as $kind => $count) {
         $photos = array_values(array_filter($this->manifest(), static fn (array $photo): bool => $photo['kind'] === $kind && $photo['rotation']));
         $open = $this->games->openArchives(array_column($photos, 'id'));
-        for ($missing = self::OPEN - count($open); $missing > 0; $missing--) {
+        for ($missing = $count - count($open); $missing > 0; $missing--) {
           [$position, $photo] = self::nextFree($photos, (int) $this->state->get(self::NEXT . $kind, 0), $open);
           $this->state->set(self::NEXT . $kind, $position);
           if ($photo === NULL) {
@@ -180,13 +176,14 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
   /**
    * Says where a prepared photo comes from.
    *
-   * @return array{title: string, author: string, date: string, licence: string, page: string}
-   *   What to credit, and the photo's page on Wikimedia Commons.
+   * @return array{title: string, author: string, date?: string, licence: string, page: string, source: string}
+   *   What to credit, and the photo's page at its source. A stock photo has
+   *   no date.
    */
   public function credit(string $id): array {
     $photo = $this->manifest()[array_search($id, array_column($this->manifest(), 'id'), TRUE)];
     return ['title' => $photo['name']]
-      + array_intersect_key($photo, array_flip(['author', 'date', 'licence', 'page']));
+      + array_intersect_key($photo, array_flip(['author', 'date', 'licence', 'page', 'source']));
   }
 
   /**
@@ -247,13 +244,13 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
   }
 
   /**
-   * Reads a photo from the module, or from Wikimedia Commons.
+   * Reads a photo from the module, from a stock site or from Commons.
    *
    * @param array<string, mixed> $photo
    *   The manifest entry.
    *
    * @throws \RuntimeException
-   *   Commons did not answer, or holds another file under this title.
+   *   The source did not answer, or holds another file than the one prepared.
    */
   private function bytes(array $photo): string {
     $shipped = $this->folder() . '/' . $photo['id'] . '.jpg';
@@ -262,6 +259,9 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     }
     $options = ['headers' => ['User-Agent' => self::AGENT], 'timeout' => 30];
     try {
+      if (isset($photo['sha256'])) {
+        return self::verified((string) $this->http->request('GET', $photo['file'], $options)->getBody(), $photo['sha256']);
+      }
       $info = json_decode((string) $this->http->request('GET', self::API, $options + [
         'query' => [
           'action' => 'query',
@@ -281,6 +281,19 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     catch (GuzzleException | \JsonException $e) {
       throw new \RuntimeException($e->getMessage(), previous: $e);
     }
+  }
+
+  /**
+   * Returns a fetched stock photo when it is still the file prepared.
+   *
+   * @throws \RuntimeException
+   *   The stock site serves another file at this address.
+   */
+  public static function verified(string $bytes, string $sha256): string {
+    if (!hash_equals($sha256, hash('sha256', $bytes))) {
+      throw new \RuntimeException('The stock site serves another file at this address.');
+    }
+    return $bytes;
   }
 
   /**
