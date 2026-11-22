@@ -30,7 +30,7 @@ final class PlayerProvider implements UserProviderInterface
         return Player::class === $class;
     }
 
-    public function loadUserByIdentifier(string $identifier): UserInterface
+    public function loadUserByIdentifier(string $identifier): never
     {
         throw new UserNotFoundException('Players sign in through Drupal.');
     }

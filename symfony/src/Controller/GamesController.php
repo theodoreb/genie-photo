@@ -9,8 +9,8 @@ use App\Drupal\McpDrupalTools;
 use App\Security\VisitorToken;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
@@ -74,7 +74,7 @@ final class GamesController extends AbstractController
     }
 
     #[Route('/games/{game}', name: 'app_game', requirements: ['game' => Requirement::UUID], methods: ['GET'])]
-    public function show(string $game, Request $request): Response
+    public function show(string $game, #[MapQueryParameter] string $refused = ''): Response
     {
         try {
             $view = $this->tools->call($this->visitor->accessToken(), 'web_game_view', ['game' => $game]);
@@ -82,7 +82,7 @@ final class GamesController extends AbstractController
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        return $this->render('games/show.html.twig', ['game' => $view, 'error' => self::REFUSED[$request->query->getString('refused')] ?? null]);
+        return $this->render('games/show.html.twig', ['game' => $view, 'error' => self::REFUSED[$refused] ?? null]);
     }
 
     #[Route('/games/{game}/{view}', name: 'app_game_picture', requirements: ['game' => Requirement::UUID, 'view' => 'photo|frame'], methods: ['GET'])]

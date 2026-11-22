@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
@@ -30,7 +31,7 @@ final class GameController extends AbstractController
         private readonly DrupalPhotos $photos,
         private readonly PlayerTokens $tokens,
         #[Autowire('%env(DRUPAL_URL)%/.well-known/mercure')]
-        private readonly string $hubUrl,
+        private readonly string $hubBaseUrl,
         #[Autowire('%env(DRUPAL_URL)%/mcp')]
         private readonly string $mcpUrl,
     ) {
@@ -56,7 +57,7 @@ final class GameController extends AbstractController
      * Shows one picture for approval. The address says which picture and for whom, and grants nothing.
      */
     #[Route('/review/{revision}/{hash}', name: 'app_review', requirements: ['revision' => '\d+', 'hash' => '[0-9a-f]{64}'], methods: ['GET'])]
-    public function review(int $revision, string $hash, Request $request, #[CurrentUser] Player $player): Response
+    public function review(int $revision, string $hash, Request $request, #[CurrentUser] Player $player, #[MapQueryParameter] ?string $for = null): Response
     {
         try {
             $session = $this->tools->call($this->tokens->accessToken(), 'session_get');
@@ -65,7 +66,7 @@ final class GameController extends AbstractController
         }
 
         $export = $session['export'] ?? null;
-        $for = $request->query->getString('for', $player->name);
+        $for ??= $player->name;
         $current = $session['revision'] === $revision && $hash === ($export['hash'] ?? null);
 
         return $this->render('game/review.html.twig', [
@@ -187,6 +188,6 @@ final class GameController extends AbstractController
      */
     private function hubUrl(string $topic): string
     {
-        return $this->hubUrl.'?'.http_build_query(['match' => $topic]);
+        return $this->hubBaseUrl.'?'.http_build_query(['match' => $topic]);
     }
 }
