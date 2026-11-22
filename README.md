@@ -58,7 +58,7 @@ Put a TLS proxy in front of both ports, then set these in the environment of `bi
 
 ## Replay the demo
 
-`bin/replay codex` or `bin/replay claude` plays the video's story with one assistant for all four players. `demo/replay.md` lists its steps, and you can paste them into your own assistants instead.
+`bin/replay codex` or `bin/replay claude` plays a demo story with one assistant for all four players. `demo/replay.md` lists its steps, and you can paste them into your own assistants instead.
 
 ## Play
 

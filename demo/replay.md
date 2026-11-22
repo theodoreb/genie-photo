@@ -1,6 +1,6 @@
 # Replay the demo
 
-The demo video tells this story on `demo/holiday-party.jpg`. Four friends wear Santa hats and surgical masks, so each one asks an assistant to paint a smile. Then Alice asks to be blurred, and everyone approves the new picture.
+This replay tells a story on `demo/holiday-party.jpg`. Four friends wear Santa hats and surgical masks, so each one asks an assistant to paint a smile. Then Alice asks to be blurred, and everyone approves the new picture.
 
 ## Run it with one assistant
 
