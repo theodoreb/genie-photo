@@ -122,10 +122,13 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
       $opened = 0;
       foreach (self::KINDS as $kind) {
         $photos = array_values(array_filter($this->manifest(), static fn (array $photo): bool => $photo['kind'] === $kind && $photo['rotation']));
-        for ($missing = self::OPEN - $this->games->openPrepared(array_column($photos, 'id')); $missing > 0; $missing--) {
-          $position = (int) $this->state->get(self::NEXT . $kind, 0);
-          $this->state->set(self::NEXT . $kind, $position + 1);
-          $photo = $photos[$position % count($photos)];
+        $open = $this->games->openArchives(array_column($photos, 'id'));
+        for ($missing = self::OPEN - count($open); $missing > 0; $missing--) {
+          [$position, $photo] = self::nextFree($photos, (int) $this->state->get(self::NEXT . $kind, 0), $open);
+          $this->state->set(self::NEXT . $kind, $position);
+          if ($photo === NULL) {
+            break;
+          }
           try {
             $this->open($photo);
           }
@@ -136,6 +139,7 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
             ]);
             break;
           }
+          $open[] = $photo['id'];
           $opened++;
         }
       }
@@ -144,6 +148,33 @@ final class Archive implements EventSubscriberInterface, DestructableInterface {
     finally {
       $this->lock->release(self::LOCK);
     }
+  }
+
+  /**
+   * Picks the next picture in turn that has no open game.
+   *
+   * A picture still open waits for its next turn, so the list of games
+   * never shows one picture twice.
+   *
+   * @param list<array<string, mixed>> $photos
+   *   The pictures of one kind, in turn order.
+   * @param int $position
+   *   The position of the next turn.
+   * @param list<string> $open
+   *   The archive ids of the open games.
+   *
+   * @return array{0: int, 1: array<string, mixed>|null}
+   *   The position after the pick, and the picture, or NULL when every
+   *   picture has an open game.
+   */
+  public static function nextFree(array $photos, int $position, array $open): array {
+    for ($turn = $position; $turn < $position + count($photos); $turn++) {
+      $photo = $photos[$turn % count($photos)];
+      if (!in_array($photo['id'], $open, TRUE)) {
+        return [$turn + 1, $photo];
+      }
+    }
+    return [$position, NULL];
   }
 
   /**

@@ -111,19 +111,26 @@ final class Games {
   }
 
   /**
-   * Counts the open games on some of the prepared pictures.
+   * Lists the prepared pictures of the open games, one entry per game.
    *
    * @param list<string> $archive
-   *   The ids of those pictures in the archive manifest.
+   *   The ids of the pictures to look for, from the archive manifest.
+   *
+   * @return list<string>
+   *   The archive id of each open game on one of those pictures.
    */
-  public function openPrepared(array $archive): int {
-    return (int) $this->entityTypeManager->getStorage('node')->getQuery()
+  public function openArchives(array $archive): array {
+    $storage = $this->entityTypeManager->getStorage('node');
+    $ids = $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('type', 'genie_game')
       ->condition('field_genie_state', 'open')
       ->condition('field_genie_archive', $archive, 'IN')
-      ->count()
       ->execute();
+    return array_values(array_map(
+      static fn (NodeInterface $game): string => $game->get('field_genie_archive')->value,
+      $storage->loadMultiple($ids),
+    ));
   }
 
   /**
