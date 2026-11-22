@@ -56,7 +56,7 @@ The ports are published on 127.0.0.1 only, so the addresses below stay the same.
    - "turn me to gold" makes a statue;
    - "make me a cartoon" draws a black-and-white comic;
    - "blur me" blurs the person until nobody can tell who it is.
-6. Each player approves the picture on a page that shows it. Everyone who joined approves. A guest with no place yet holds the game open: they claim a place, then approve. Any later change cancels the approvals.
+6. Each player approves the picture on a page that shows it. On an uploaded photo, everyone who joined approves. A guest with no place yet holds the game open: they claim a place, then approve. A prepared game waits only for the players who took a place. Any later change cancels the approvals.
 7. When everyone has approved, the game closes for good and the page offers the download.
 
 The picture hides a head only when its player asked to be covered. People nobody has claimed stay visible.

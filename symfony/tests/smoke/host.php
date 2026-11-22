@@ -46,6 +46,8 @@ if (0 === $invite->count()) {
 
 $guest = new HttpBrowser(HttpClient::create(['timeout' => 60]));
 $guest->request('GET', $invite->attr('href'));
+// A browser names its origin on a form post, and the join form refuses a post without it.
+$guest->setServerParameter('HTTP_ORIGIN', implode('/', array_slice(explode('/', (string) $invite->attr('href')), 0, 3)));
 $guest->submit($guest->getCrawler()->filter('#genie-join')->form(['name' => 'hana']));
 if (!str_contains($guest->getCrawler()->text(), 'already called hana')) {
     SmokeSite::fail('Two players in one game got the same name.');

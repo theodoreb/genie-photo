@@ -43,6 +43,11 @@ final class Session {
   public ?int $uploader = NULL;
 
   /**
+   * Whether the game runs on an archive picture, which anyone can join.
+   */
+  public bool $prepared = FALSE;
+
+  /**
    * The workflow transition the change applies to the game, if any.
    */
   public ?string $transition = NULL;
@@ -107,8 +112,7 @@ final class Session {
   /**
    * Everyone seated in the game, with or without a place, by account id.
    *
-   * Read from the accounts, never stored here. Each of them approves the
-   * picture before the game closes.
+   * Read from the accounts, never stored here.
    *
    * @var array<int, string>
    */
@@ -199,6 +203,7 @@ final class Session {
       );
     }
     $session->uploader = (int) $game->getOwnerId();
+    $session->prepared = !$game->get('field_genie_archive')->isEmpty();
     return $session;
   }
 
@@ -254,25 +259,36 @@ final class Session {
       'update' => $this->update,
       'approved_by_you' => ($this->approvals[$uid] ?? NULL) === $hash,
       'waiting_for' => array_values($waiting),
-      'final' => $this->seated !== [] && $waiting === [],
+      'final' => $this->approvers() !== [] && $waiting === [],
     ];
   }
 
   /**
    * Lists who has not approved a picture, by account id.
    *
-   * Every seated account counts, so a guest who has no place yet still holds
-   * the game open.
-   *
    * @return array<int, string>
    *   Their names.
    */
   public function waiting(string $hash): array {
     return array_filter(
-      $this->seated,
+      $this->approvers(),
       fn (int $player): bool => ($this->approvals[$player] ?? NULL) !== $hash,
       ARRAY_FILTER_USE_KEY,
     );
+  }
+
+  /**
+   * Lists who approves the picture before the game closes, by account id.
+   *
+   * In a hosted game every seated account counts, so an invited guest who
+   * has no place yet still holds the game open. Anyone can take a seat in a
+   * prepared game, so only its players with a place count there.
+   *
+   * @return array<int, string>
+   *   Their names.
+   */
+  private function approvers(): array {
+    return $this->prepared ? array_intersect_key($this->seated, $this->players) : $this->seated;
   }
 
   /**

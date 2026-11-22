@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\genie\Game\Games;
 use Drupal\genie\Game\Ledger;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Seats a visitor in the game an invite link opens.
@@ -74,6 +75,12 @@ final class JoinForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    // An anonymous form carries no token, so another site's page could post
+    // it and seat the browser that visits that page.
+    $request = $this->getRequest();
+    if ($request->headers->get('Origin') !== $request->getSchemeAndHttpHost()) {
+      throw new AccessDeniedHttpException();
+    }
     try {
       $form_state->set('player', $this->games->join($form_state->get('game'), (string) $form_state->getValue('name')));
     }
