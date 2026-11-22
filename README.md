@@ -14,7 +14,7 @@ cd genie-photo
 bin/start
 ```
 
-`bin/start` prints a host code. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
+`bin/start` prints a host code, and `drupal/private/host-code` keeps it. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
 
 http://127.0.0.1:8000/games lists every game, and anyone can look at one without an account. Six games on historical group photos are ready to join there.
 
