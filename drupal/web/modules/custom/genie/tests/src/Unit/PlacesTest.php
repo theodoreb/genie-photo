@@ -96,6 +96,65 @@ final class PlacesTest extends UnitTestCase {
   }
 
   /**
+   * A trace on a guess's detector box replaces it, whatever its head.
+   */
+  public function testTraceReplacesGuessOnItsBox(): void {
+    $session = $this->prepared();
+    $this->assertSame(['Person 1', 'Person 2'], $session->untraced());
+
+    Places::scan($session, [
+      ['description' => 'lying', 'detected' => 'P1', 'head' => [120, 300, 60, 60], 'outline' => [[5, 0, 24]]],
+      ['description' => 'standing', 'detected' => 'P2', 'head' => [700, 300, 60, 60], 'outline' => [[5, 0, 24]]],
+    ]);
+    $this->assertSame([], $session->untraced());
+    $this->assertSame(['lying', 'standing'], array_column($session->proposals, 'label'));
+  }
+
+  /**
+   * A trace completes a guess a visitor claimed, and moves its head.
+   */
+  public function testTraceCompletesClaimedGuess(): void {
+    $session = $this->prepared();
+    $guess = array_key_first($session->proposals);
+    Places::claim($session, 2, 'bob', $guess, NULL, NULL);
+
+    Places::scan($session, [
+      ['description' => 'lying', 'detected' => 'P1', 'head' => [120, 300, 60, 60], 'outline' => [[5, 0, 24]]],
+    ]);
+    $region = $session->regions['person-2'];
+    $this->assertNotSame([], $region['cells']);
+    $this->assertSame(['x' => 120, 'y' => 300, 'width' => 60, 'height' => 60], $region['head']);
+    $this->assertSame(['Person 2'], $session->untraced());
+  }
+
+  /**
+   * A trace on one detector box keeps the guess on another.
+   */
+  public function testTraceKeepsOtherGuess(): void {
+    $session = $this->prepared();
+    Places::scan($session, [
+      ['description' => 'lying', 'detected' => 'P1', 'head' => [120, 300, 60, 60], 'outline' => [[5, 0, 24]]],
+    ]);
+    $this->assertSame(['Person 2'], $session->untraced());
+  }
+
+  /**
+   * Builds a prepared game's session: one guess per detector box.
+   */
+  private function prepared(): Session {
+    $session = new Session();
+    $session->pin(new Survey(1, 1, 1000, 500, 'off', [
+      ['x' => 100, 'y' => 100, 'width' => 300, 'height' => 300],
+      ['x' => 600, 'y' => 50, 'width' => 200, 'height' => 400],
+    ]));
+    Places::scan($session, [
+      ['description' => 'Person 1', 'detected' => 'P1', 'head' => [220, 106, 60, 60]],
+      ['description' => 'Person 2', 'detected' => 'P2', 'head' => [660, 58, 80, 80]],
+    ], guesses: TRUE);
+    return $session;
+  }
+
+  /**
    * Builds a session after one scan.
    */
   private function scanned(): Session {

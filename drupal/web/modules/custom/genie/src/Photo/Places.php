@@ -82,19 +82,21 @@ final class Places {
       if ($cells === [] && !$guesses) {
         throw new \InvalidArgumentException(sprintf('Trace %s: give outline runs on their grid cells.', $label));
       }
-      $claimed = self::claimedHead($session, $head);
+      $claimed = self::claimedPerson($session, $head, $body);
       if ($claimed === NULL) {
-        self::dropUnclaimedOn($session, $head);
+        self::dropUnclaimedOn($session, $head, $body);
         $survey->people[] = self::person($label, $head, $body, $cells);
         continue;
       }
       // A place claimed on a page has no outline until an assistant traces
-      // it. The trace fills the cells, read inside the player's own body box.
+      // it. The trace fills the cells, read inside the player's own body box,
+      // and its head replaces a guessed one.
       foreach ($survey->people as $index => $known) {
         if ($known['id'] === $claimed && $known['cells'] === []) {
           $box = ['x' => $known['x'], 'y' => $known['y'], 'width' => $known['width'], 'height' => $known['height']];
           $survey->people[$index]['cells'] = Outlines::parse($person['outline'], $box, $session->photo)
             ?: throw new \InvalidArgumentException(sprintf('The outline of %s lies outside their place.', $label));
+          $survey->people[$index]['head'] = self::headOn($person['head'], $box, $session);
         }
       }
     }
@@ -142,7 +144,8 @@ final class Places {
       $survey->people[] = $added;
       $place = $added['id'];
     }
-    $placeHead = $survey->people[self::indexOf($survey, $place)]['head'];
+    $placed = $survey->people[self::indexOf($survey, $place)];
+    $placeHead = $placed['head'];
     foreach ($session->regions as $region) {
       if ($region['owner'] !== $uid && self::sameHead($placeHead, $region['head'])) {
         throw new \InvalidArgumentException(sprintf('%s already holds this place.', $region['label']));
@@ -151,7 +154,7 @@ final class Places {
     // The person this player gave up goes back on offer.
     $session->claims[$uid] = $place;
     $session->players[$uid] = $name;
-    self::dropUnclaimedOn($session, $placeHead);
+    self::dropUnclaimedOn($session, $placeHead, $placed);
     $session->refresh();
   }
 
@@ -293,16 +296,18 @@ final class Places {
   }
 
   /**
-   * Gives the claimed person whose head a box stands for.
+   * Gives the claimed person a scanned person stands for.
    *
    * @param \Drupal\genie\Game\Session $session
    *   The session.
    * @param array{x: int, y: int, width: int, height: int} $head
-   *   The head box.
+   *   The scanned head box.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The scanned body box.
    */
-  private static function claimedHead(Session $session, array $head): ?string {
+  private static function claimedPerson(Session $session, array $head, array $body): ?string {
     foreach ($session->regions as $region) {
-      if (self::sameHead($head, $region['head'])) {
+      if (self::stands($region, $head, $body)) {
         return $region['person'];
       }
     }
@@ -310,19 +315,41 @@ final class Places {
   }
 
   /**
-   * Removes the unclaimed people this head box stands for.
+   * Removes the unclaimed people a scanned or claimed person stands for.
    *
    * @param \Drupal\genie\Game\Session $session
    *   The session.
    * @param array{x: int, y: int, width: int, height: int} $head
    *   The head box.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The body box.
    */
-  private static function dropUnclaimedOn(Session $session, array $head): void {
+  private static function dropUnclaimedOn(Session $session, array $head, array $body): void {
     $claimed = array_flip($session->claims);
     $session->survey->people = array_values(array_filter(
       $session->survey->people,
-      static fn (array $person): bool => isset($claimed[$person['id']]) || !self::sameHead($head, $person['head']),
+      static fn (array $person): bool => isset($claimed[$person['id']]) || !self::stands($person, $head, $body),
     ));
+  }
+
+  /**
+   * Tells whether a known person is the one a head and a body box show.
+   *
+   * A prepared game's guess has its head at the top of its detector box,
+   * where a seated or lying figure's head is not. A trace on the same
+   * detector box is the same person whatever its head.
+   *
+   * @param array{x: int, y: int, width: int, height: int, head: array{x: int, y: int, width: int, height: int}, cells: list<array{int, int, int}>} $known
+   *   A survey row or a region.
+   * @param array{x: int, y: int, width: int, height: int} $head
+   *   The head box.
+   * @param array{x: int, y: int, width: int, height: int} $body
+   *   The body box.
+   */
+  private static function stands(array $known, array $head, array $body): bool {
+    $box = [$known['x'], $known['y'], $known['width'], $known['height']];
+    return self::sameHead($head, $known['head'])
+      || ($known['cells'] === [] && $box === [$body['x'], $body['y'], $body['width'], $body['height']]);
   }
 
   /**
