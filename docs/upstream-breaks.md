@@ -6,12 +6,14 @@ Versions in use:
 
 | Package | Version |
 |---|---|
-| `symfony/ai-platform` | `dev-main` at `99e4396` |
+| `symfony/ai-platform` | `dev-main` at `cd9ec2c` |
 | `symfony/ai-generic-platform` | `dev-main` at `904e270` |
 | `symfony/ai-transformers-php-platform` | `dev-main` at `9db5475` |
 | `symfony/ai-failover-platform` | `dev-main` at `e9314d8` |
 | `symfony/ai-cache-platform` | `dev-main` at `7859826` |
-| `mcp/sdk` | `dev-main` at `3d2e831`, which reads 0.11.0 |
+| `symfony/ai-open-ai-platform` | `dev-main` at `8ab3f85` |
+| `symfony/ai-open-responses-platform` | `dev-main` at `92c1f34` |
+| `mcp/sdk` | `dev-main` at `7155eae`, which reads 0.11.0 |
 | `drupal/ai` | `2.x` at `5d6ae6f` |
 | `drupal/mcp_server` | `2.0.0-beta7` |
 

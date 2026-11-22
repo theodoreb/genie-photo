@@ -14,7 +14,7 @@ bin/replay claude
 The script plays all four players with the assistant you name. It starts a new game, signs the assistant in as `genie-alice`, `genie-bob`, `genie-carol` and `genie-dan`, then sends each step below. To watch the picture change, sign in to the web view with alice's account and password, which the script prints.
 
 - Codex 0.170 and Claude Code 2.1.328 were tested. The run takes about ten minutes and uses your assistant's own account.
-- The sign-ins go to a separate folder, `var/replay`. Your usual assistant configuration does not change.
+- The script works in `var/replay`, where it keeps its logs. Claude Code gains four local servers for that folder, `genie-alice` to `genie-dan`. Codex keeps their sign-ins in its usual home.
 - Claude Code signs in only from a terminal. Codex also signs in when an agent runs the script.
 - The assistants cannot approve for their players. The script clicks the approval page for them.
 - The final picture goes to `var/replay/final.png`.

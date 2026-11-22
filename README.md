@@ -16,7 +16,7 @@ bin/start
 
 `bin/start` prints a host code, and `drupal/private/host-code` keeps it. Open http://127.0.0.1:7225/genie/host, enter the code and your name, and add the photo. The web view then shows an invite link for the others. Several games can run at once.
 
-http://127.0.0.1:8000/games lists every game, and anyone can look at one without an account. Six games on historical group photos are ready to join there.
+http://127.0.0.1:8000/games lists every game, and anyone can look at one without an account. Six prepared games are ready to join there: one on a painting, one on a historical photo and four on stock photos.
 
 `bin/start` downloads this project's [Drupack build](https://github.com/theodoreb/genie-photo/releases/tag/drupack-1.0.0-rc6-genie.2) and checks its SHA-256. Drupack runs Composer, installs the Drupal site and serves both applications on loopback. Ctrl-C stops the web view. `cd drupal && ./drupack stop .` stops Drupal.
 
@@ -27,7 +27,7 @@ The build is Drupack 1.0.0-rc6 with four patches in `fork/drupack/`:
 - PHP has the FFI extension, which the person detector and the moderation model need.
 - FrankenPHP adds threads under load, because MCP listen streams and `wait_for_update` each hold one.
 
-`fork/drupack/build` rebuilds the same file from the drupal.org tag with Docker.
+`fork/drupack/build` builds this Drupack from the drupal.org tag with Docker.
 
 ### With Docker instead
 
@@ -56,7 +56,7 @@ The ports are published on 127.0.0.1 only, so the addresses below stay the same.
    - "turn me to gold" makes a statue;
    - "make me a cartoon" draws a black-and-white comic;
    - "blur me" blurs the person until nobody can tell who it is.
-6. Each player approves the picture on a page that shows it. Everyone who joined approves, including a guest who has not claimed a place yet. Any later change cancels the approvals.
+6. Each player approves the picture on a page that shows it. Everyone who joined approves. A guest with no place yet holds the game open: they claim a place, then approve. Any later change cancels the approvals.
 7. When everyone has approved, the game closes for good and the page offers the download.
 
 The picture hides a head only when its player asked to be covered. People nobody has claimed stay visible.
@@ -109,7 +109,12 @@ To play several players from one machine, add the server once per player under a
 
 The server also offers three prompts, which clients such as claude.ai list in their prompt menu: `genie_join`, `genie_paint` and `genie_wish`. Each takes one line of text and asks the assistant to use the tools above. They are config entities of `mcp_server`, in the module's `config/install`.
 
-Dismissing people who are not playing stays on the web view. The web view also has `web_picture_get`, which returns its images, and three tools for visitors: `web_games_list`, `web_game_view` and `web_game_picture`. Assistants cannot call them.
+Dismissing people who are not playing stays on the web view. The web view has six tools that assistants cannot call:
+
+- `web_picture_get` returns its images.
+- `web_proposal_dismiss` dismisses a person who is not playing.
+- `web_export_approve` records the approval a player clicks.
+- `web_games_list`, `web_game_view` and `web_game_picture` serve visitors.
 
 Only your click on the page records an approval. Your assistant cannot approve for you. The page refuses another player's account and a picture that has changed.
 
@@ -158,7 +163,7 @@ flowchart LR
 - Symfony 8 in `symfony/` is the web view. It signs players in as an OAuth client of Drupal and calls Drupal's tools with the PHP MCP SDK: `symfony/src/Drupal/McpDrupalTools.php`. Symfony keeps no game data.
 - Drupal in `drupal/` holds the rules and the data, in the module `genie`. Drupal's `mcp_server` module serves the same tools to assistants on the PHP MCP SDK. `docs/data-model.md` describes the stored data.
 - Drupal AI runs the local wish reader on Symfony AI's platform: `WishInterpreter.php`.
-- Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 42 MB model from Hugging Face. Without them, assistants find the people.
+- Symfony AI's TransformersPhp bridge runs DETR in PHP to box people: `PersonDetector.php`. It needs PHP's FFI extension, which the Drupack build adds, and a 43 MB model from Hugging Face. Without them, assistants find the people.
 - Drupack serves Drupal, its Mercure hub and the web view on one FrankenPHP. The hub tells each browser when the session changes.
 - The list and the public game pages use a token of the web view's own, from the OAuth client-credentials grant. Its scope reaches three read-only tools and nothing a player can do: `VisitorToolBase.php`.
 - The web view serves the public pages `/games`, `/games/{uuid}` and `/llms.txt`, and the player page at `/`.
@@ -194,14 +199,14 @@ Each line names a library feature and links to the code that uses it.
 - Client: `Client::builder()`, `HttpTransport` with the player's bearer token, `callTool()`, `structuredContent` and `ImageContent`: [`McpDrupalTools.php`](symfony/src/Drupal/McpDrupalTools.php).
 - Server tools with input schemas, output schemas and annotations, through Drupal's `mcp_server` module: [`Plugin/mcp_server/Tool/`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/).
 - Output schemas the SDK checks on approval results: [`ApproveExportTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php), [`ExportApproveTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/WebView/ExportApproveTool.php), [`Approvals.php`](drupal/web/modules/custom/genie/src/Game/Approvals.php).
-- `ImageContent` results for the photo and the picture: [`LedgerToolBase.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
+- `ImageContent` results for the photo and the picture: [`ImageResultTrait.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/ImageResultTrait.php).
 - URL elicitation: `ClientGateway::elicitUrl()`, `ElicitResult` and `ElicitationMode::Url` open the approval page: [`ApproveExportTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php).
 - A custom request and notification on the SDK's JSON-RPC classes: [`UrlElicitationRequest.php`](drupal/web/modules/custom/genie/src/Mcp/UrlElicitationRequest.php), [`ElicitationCompleteNotification.php`](drupal/web/modules/custom/genie/src/Mcp/ElicitationCompleteNotification.php).
 - `ProtocolVersion::isModern()` on the Streamable HTTP version header picks the elicitation path: [`ApproveExportTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/ApproveExportTool.php).
 - `ToolCallException` returns a refusal the assistant can read: [`MakeWishTool.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/Assistant/MakeWishTool.php) and the other tools.
 - Resource subscriptions: each game is a resource, and `Psr16NotificationBus` carries `notifications/resources/updated` to `subscriptions/listen` streams: [`GameResource.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/ResourceProvider/GameResource.php), [`Ledger.php`](drupal/web/modules/custom/genie/src/Game/Ledger.php), [`mcp_server-notification-bus.patch`](drupal/patches/mcp_server-notification-bus.patch).
 - Caching hints (SEP-2549): Drupal stamps `ttlMs` and `cacheScope` from its settings, and the web view keeps `server/discover` for its `ttlMs`, so a web action costs one request: [`mcp_server-cache-policy.patch`](drupal/patches/mcp_server-cache-policy.patch), [`mcp-sdk-discovery-cache.patch`](symfony/patches/mcp-sdk-discovery-cache.patch), [`McpDrupalTools.php`](symfony/src/Drupal/McpDrupalTools.php).
-- Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/LedgerToolBase.php).
+- Tools listed by game state, and `notifications/tools/list_changed` when the state moves: [`LedgerToolBase.php`](drupal/web/modules/custom/genie/src/Plugin/mcp_server/Tool/LedgerToolBase.php), [`Ledger.php`](drupal/web/modules/custom/genie/src/Game/Ledger.php).
 - The smoke scripts call the server as an MCP client: [`SmokeSite.php`](symfony/tests/smoke/lib/SmokeSite.php).
 
 ### Drupal and Drupack
@@ -222,7 +227,7 @@ Each line names a library feature and links to the code that uses it.
 ### Symfony
 
 - Security with a custom authenticator, an OAuth client of Drupal with PKCE and token refresh: [`DrupalAuthenticator.php`](symfony/src/Security/DrupalAuthenticator.php), [`DrupalOAuth.php`](symfony/src/Security/DrupalOAuth.php).
-- The browser subscribes to the Mercure hub with `EventSource`: [`GameController.php`](symfony/src/Controller/GameController.php), [`app.js`](symfony/assets/app.js), [`review.js`](symfony/assets/review.js).
+- The browser subscribes to the Mercure hub with `EventSource`: [`app.js`](symfony/assets/app.js), [`review.js`](symfony/assets/review.js). [`GameController.php`](symfony/src/Controller/GameController.php) gives the pages the hub's address.
 - AssetMapper and importmap load the JavaScript with no Node build: [`importmap.php`](symfony/importmap.php).
 - `MockClock` and `MockHttpClient` test the token refresh, and a mock session tests the sign-in's state check: [`PlayerTokensTest.php`](symfony/tests/Security/PlayerTokensTest.php), [`DrupalAuthenticatorTest.php`](symfony/tests/Security/DrupalAuthenticatorTest.php).
 
@@ -254,6 +259,6 @@ GPL-2.0-or-later, the license of Drupal. See `LICENSE`.
 
 `demo/holiday-party.jpg` is "Holiday Coronavirus" by PS Imaging, from [StockSnap](https://stocksnap.io/photo/holiday-coronavirus-OWPQGSY7C6), under CC0. It is enlarged to 1600 pixels wide.
 
-The prepared games use 15 paintings and 81 historical photos in the public domain, from Wikimedia Commons, and 36 stock photos: 12 each from Pexels, Unsplash and Shopify Burst, under their own free licences. The stock photos are fetched from their sites and never ship in this repository. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each picture's page, photographer and licence, and each game page shows that credit. Shakuntala Patralekhan is out of the rotation, and its entry stays for the credit of its finished game.
+The prepared games use 15 paintings and 81 historical photos in the public domain, from Wikimedia Commons, and 36 stock photos: 12 each from Pexels, Unsplash and Shopify Burst, under their own free licences. The stock photos are fetched from their sites and never ship in this repository. [`manifest.json`](drupal/web/modules/custom/genie/archive/manifest.json) names each picture's page and licence, and its author where the source gives one. Each game page shows that credit. Shakuntala Patralekhan is out of the rotation, and its entry stays for the credit of its finished game.
 
 The fonts in `symfony/assets/fonts/`, Bricolage Grotesque and Figtree, are under the SIL Open Font License 1.1. Their licence files sit beside them.
