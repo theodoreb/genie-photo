@@ -30,8 +30,6 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
 
     public const PENDING_KEY = 'oauth_pending';
 
-    private ?TokenSet $tokens = null;
-
     public function __construct(
         private readonly DrupalOAuth $oauth,
         private readonly McpDrupalTools $tools,
@@ -55,11 +53,14 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
         }
 
         try {
-            $this->tokens = $this->oauth->exchange($code, $pending['verifier']);
-            $status = $this->tools->call($this->tokens->accessToken, 'my_status');
+            $tokens = $this->oauth->exchange($code, $pending['verifier']);
+            $status = $this->tools->call($tokens->accessToken, 'my_status');
         } catch (HttpException|DrupalToolFailed $e) {
             throw new CustomUserMessageAuthenticationException('Drupal did not accept the sign-in.', previous: $e);
         }
+
+        // The session migrates to the signed-in player and keeps its values.
+        $this->playerTokens->keep($tokens);
 
         return new SelfValidatingPassport(
             new UserBadge($status['name'], static fn (): Player => new Player($status['uid'], $status['name'])),
@@ -68,8 +69,6 @@ final class DrupalAuthenticator extends AbstractAuthenticator implements Authent
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
-        $this->playerTokens->keep($this->tokens);
-
         // The firewall saved the page that asked for the sign-in, such as an approval link.
         $target = $this->getTargetPath($request->getSession(), $firewallName);
         $this->removeTargetPath($request->getSession(), $firewallName);

@@ -11,6 +11,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 final readonly class Player implements UserInterface
 {
+    /**
+     * @param non-empty-string $name
+     */
     public function __construct(
         public int $uid,
         public string $name,
